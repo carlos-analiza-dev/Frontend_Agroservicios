@@ -1,0 +1,9 @@
+import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
+import { Servicio } from "../interfaces/response-servicios.interface";
+
+export const ObtenerServicioId = async (id: string) => {
+  const url = `${process.env.NEXT_PUBLIC_API_UR}/servicios/${id}`;
+
+  const response = await veterinariaAPI.get<Servicio>(url);
+  return response;
+};
