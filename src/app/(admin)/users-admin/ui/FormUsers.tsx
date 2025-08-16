@@ -210,8 +210,6 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
 
   const onSubmit = (data: CrearUsuario) => {
     if (userId) {
-      console.log("DATA UP", data);
-
       mutationUpdate.mutate(data);
     } else {
       const telefonoConPrefijo = `${prefijoNumber} ${data.telefono}`;
@@ -219,7 +217,6 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
         ...data,
         telefono: telefonoConPrefijo,
       };
-      console.log("DAAT CREATE", payload);
 
       mutation.mutate(payload);
     }

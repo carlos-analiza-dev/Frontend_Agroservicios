@@ -6,9 +6,8 @@ export const ObtenerMedicos = async (
   offset: number,
   name: string
 ) => {
-  const url = `${
-    process.env.NEXT_PUBLIC_API_UR
-  }/medicos?limit=${limit}&offset=${offset}&name=${encodeURIComponent(name)}`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/medicos?limit=${limit}&offset=${offset}&name=${encodeURIComponent(name)}`;
+
   const response = await veterinariaAPI.get<ObtenerMedicosInterface>(url);
   return response.data;
 };

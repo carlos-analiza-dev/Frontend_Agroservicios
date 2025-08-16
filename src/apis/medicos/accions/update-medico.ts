@@ -5,7 +5,7 @@ export const ActualizarMedico = async (
   id: string,
   data: Partial<CrearMedicoInterface>
 ) => {
-  const url = `${process.env.NEXT_PUBLIC_API_UR}/medicos/${id}`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/medicos/${id}`;
 
   const response = await veterinariaAPI.patch(url, data);
   return response;

@@ -45,7 +45,6 @@ const TablePaises = ({ paises }: Props) => {
   const [open2, setOpen2] = useState(false);
   const [activo, setActivo] = useState(false);
   const [paisId, setPaisId] = useState("");
-  console.log("PAISES", paises);
 
   const handleEditPais = (pais: PaisesResponse) => {
     setEditPais(pais);

@@ -55,17 +55,13 @@ const UsersAdminPage = () => {
   const filterValue = roleFilter === "all" ? "" : roleFilter;
   const filterPais = paisFilter === "all" ? "" : paisFilter;
 
-  const { data, isLoading, refetch } = useGetUsersPagination(
+  const { data, isLoading } = useGetUsersPagination(
     debouncedSearchTerm,
     filterValue,
     filterPais,
     limit,
     currentPage
   );
-
-  const onRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
 
   const { data: roles } = useGetRoles();
 
@@ -184,10 +180,6 @@ const UsersAdminPage = () => {
               )}
             </SelectContent>
           </Select>
-
-          <Button onClick={() => onRefresh()} variant="outline">
-            Refrescar
-          </Button>
         </div>
 
         <div className="rounded-md border">

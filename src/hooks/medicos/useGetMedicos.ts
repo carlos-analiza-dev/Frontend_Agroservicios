@@ -1,19 +1,11 @@
 import { ObtenerMedicos } from "@/apis/medicos/accions/obtener-medicos";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-const useGetMedicos = (limit: number, offset: number, name: string) => {
-  return useInfiniteQuery({
-    queryKey: ["medicos", limit, offset, name],
-    queryFn: ({ pageParam = 0 }) =>
-      ObtenerMedicos(limit, pageParam * limit, name),
+const useGetMedicos = (limit: number, page: number, name: string) => {
+  return useQuery({
+    queryKey: ["medicos", limit, page, name],
+    queryFn: () => ObtenerMedicos(limit, (page - 1) * limit, name),
     retry: 0,
-    getNextPageParam: (lastPage, allPages) => {
-      const totalItems = lastPage.total || 0;
-      const loadedItems = allPages.length * limit;
-
-      return loadedItems < totalItems ? allPages.length : undefined;
-    },
-    initialPageParam: 0,
   });
 };
 
