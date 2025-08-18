@@ -33,7 +33,6 @@ import {
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TitlePages from "@/components/generics/TitlePages";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusMessage } from "@/components/generics/StatusMessage";
 import usePaises from "@/hooks/paises/usePaises";
 
 const TableUsers = dynamic(() => import("./ui/TableUsers"), {

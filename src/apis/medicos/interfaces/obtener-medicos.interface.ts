@@ -19,6 +19,9 @@ export interface AreasTrabajo {
   id: string;
   nombre: string;
   descripcion: string;
+  disponible: boolean;
+  unidad_venta: string;
+  tipo: string;
   isActive: boolean;
 }
 

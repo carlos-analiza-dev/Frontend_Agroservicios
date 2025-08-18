@@ -1,4 +1,7 @@
-import { Medico } from "@/apis/medicos/interfaces/obtener-medicos.interface";
+import {
+  AreasTrabajo,
+  Medico,
+} from "@/apis/medicos/interfaces/obtener-medicos.interface";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +36,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
 import { ActualizarMedico } from "@/apis/medicos/accions/update-medico";
+import FormVeterinarios from "./FormVeterinarios";
+import { FormHorarios } from "./FormHorarios";
+import TableEspecialidadesMedico from "./TableEspecialidadesMedico";
 
 interface Props {
   isLoading: boolean;
@@ -43,8 +49,15 @@ interface Props {
 const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpen2, setIsOpen2] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [medicoId, setmedicoId] = useState("");
+  const [isOpen3, setIsOpen3] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [isMedico, setisMedico] = useState<Medico | null>(null);
+  const [isOpen4, setIsOpen4] = useState(false);
+  const [isOpen5, setIsOpen5] = useState(false);
+  const [areasMedico, setAreasMedico] = useState<AreasTrabajo[] | []>([]);
 
   const handleEditActividad = (medico: string, activo: boolean) => {
     setIsOpen(true);
@@ -52,7 +65,23 @@ const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
     setIsActive(!activo);
   };
 
-  const handleEditMedico = async () => {
+  const viewEspecialidadesMedico = (especialidades: AreasTrabajo[]) => {
+    setIsOpen5(true);
+    setAreasMedico(especialidades);
+  };
+
+  const handleEditMedico = (medico: Medico) => {
+    setIsOpen4(true);
+    setIsEdit(true);
+    setisMedico(medico);
+  };
+
+  const handleIsOpen2 = (medicoId: string) => {
+    setIsOpen2(true);
+    setmedicoId(medicoId);
+  };
+
+  const handleEditStatusMedico = async () => {
     try {
       await ActualizarMedico(medicoId, { isActive: isActive });
       toast.success("Estado del medico actualizado con exito");
@@ -179,49 +208,22 @@ const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
                   </span>
                 </TableCell>
                 <TableCell className="text-center">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant={"link"}>Ver</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="w-full md:max-w-3xl max-h-[600px] overflow-y-auto">
-                      <div className="flex justify-end">
-                        <AlertDialogCancel>X</AlertDialogCancel>
-                      </div>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Horarios del medico</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Seccion para poder observar los horarios del medico
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="flex justify-end">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button>Agregar +</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <div className="flex justify-end">
-                              <AlertDialogCancel>X</AlertDialogCancel>
-                            </div>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Agregar Horario
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                En esta seccion podras agregar horarios a los
-                                medicos
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                      <div className="rounded-md border">
-                        <TableHorarios medicoId={medico.id} />
-                      </div>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    onClick={() => handleIsOpen2(medico.id)}
+                    variant={"link"}
+                  >
+                    Ver
+                  </Button>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Button variant={"link"}>Ver</Button>
+                  <Button
+                    onClick={() =>
+                      viewEspecialidadesMedico(medico.areas_trabajo)
+                    }
+                    variant={"link"}
+                  >
+                    Ver
+                  </Button>
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex justify-center items-center gap-2">
@@ -232,7 +234,7 @@ const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => {}}
+                            onClick={() => handleEditMedico(medico)}
                           >
                             <Edit className="h-4 w-4 text-blue-500" />
                           </Button>
@@ -288,10 +290,88 @@ const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditMedico}>
+            <AlertDialogAction onClick={handleEditStatusMedico}>
               {isActive ? "Activar" : "Desactivar"}
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpen2} onOpenChange={setIsOpen2}>
+        <AlertDialogContent className="w-full md:max-w-3xl max-h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Horarios del medico</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seccion para poder observar los horarios del medico
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setIsOpen3(true)}>Agregar +</Button>
+          </div>
+          <div className="rounded-md border">
+            <TableHorarios medicoId={medicoId} />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpen3} onOpenChange={setIsOpen3}>
+        <AlertDialogContent>
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Agregar Horario</AlertDialogTitle>
+            <AlertDialogDescription>
+              Complete los datos para agregar un nuevo horario
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="p-4">
+            <FormHorarios
+              medicoId={medicoId}
+              onSuccess={() => setIsOpen3(false)}
+            />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpen4} onOpenChange={setIsOpen4}>
+        <AlertDialogContent className=" max-h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar Medico</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras editar a los medicos
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="p-4">
+            <FormVeterinarios
+              onSuccess={() => setIsOpen4(false)}
+              medico={isMedico}
+              isEdit={isEdit}
+            />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpen5} onOpenChange={setIsOpen5}>
+        <AlertDialogContent className="w-full md:max-w-3xl max-h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Especialidades del Medico</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras observar las especialidades del medico
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div>
+            <TableEspecialidadesMedico areasMedico={areasMedico} />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>

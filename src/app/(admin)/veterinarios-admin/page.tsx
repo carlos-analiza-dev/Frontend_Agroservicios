@@ -3,16 +3,8 @@
 import TitlePages from "@/components/generics/TitlePages";
 import { Button } from "@/components/ui/button";
 import useGetMedicos from "@/hooks/medicos/useGetMedicos";
-import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -27,10 +19,8 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import FormVeterinarios from "./ui/FormVeterinarios";
 
@@ -38,6 +28,7 @@ const VeterinariosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
   const [searchName, setSearchName] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const { data, isLoading, isError } = useGetMedicos(
     limit,
@@ -74,26 +65,7 @@ const VeterinariosPage = () => {
               setCurrentPage(1);
             }}
           />
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className="whitespace-nowrap">Agregar +</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-full md:max-w-sxl max-h-[600px] overflow-y-auto">
-              <div className="flex justify-end">
-                <AlertDialogCancel>X</AlertDialogCancel>
-              </div>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Agregar Medico</AlertDialogTitle>
-                <AlertDialogDescription>
-                  En esta seccion podras agregar nuevos medicos
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="p-4">
-                <FormVeterinarios />
-              </div>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button onClick={() => setIsOpen(true)}>Agregar +</Button>
         </div>
       </div>
 
@@ -148,6 +120,22 @@ const VeterinariosPage = () => {
           </Pagination>
         </div>
       )}
+      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+        <AlertDialogContent className=" max-h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Agregar Medico</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras agregar nuevos medicos
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="p-4">
+            <FormVeterinarios onSuccess={() => setIsOpen(false)} />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

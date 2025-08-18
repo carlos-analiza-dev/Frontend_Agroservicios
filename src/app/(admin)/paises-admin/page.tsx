@@ -37,7 +37,7 @@ const PaisesPage = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mt-5">
-        <TitlePages title="Gestion de Paises" />
+        <TitlePages title="Gestión de Paises" />
         <AlertDialog open={open} onOpenChange={() => setOpen(!open)}>
           <AlertDialogTrigger asChild>
             <Button>Agregar +</Button>

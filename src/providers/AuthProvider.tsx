@@ -1,23 +1,20 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useAuthStore } from "./store/useAuthStore";
 import { FullScreenLoader } from "@/components/generics/FullScreenLoader";
+import { useEffect } from "react";
+import { useAuthStore } from "./store/useAuthStore";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const { status, checkStatus } = useAuthStore();
+  const { status, checkStatus, token, user, hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      await checkStatus();
-      setIsLoading(false);
-    };
+    if (!hasHydrated) return;
 
-    initializeAuth();
-  }, [checkStatus]);
+    if (token && user) return;
 
-  if (isLoading || status === "checking") {
+    checkStatus();
+  }, [checkStatus, token, user, hasHydrated]);
+
+  if (!hasHydrated || status === "checking") {
     return <FullScreenLoader />;
   }
 

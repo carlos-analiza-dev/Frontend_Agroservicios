@@ -3,5 +3,5 @@ export interface CrearHoarioInterface {
   diaSemana: number;
   horaInicio: string;
   horaFin: string;
-  disponible: boolean;
+  disponible?: boolean;
 }

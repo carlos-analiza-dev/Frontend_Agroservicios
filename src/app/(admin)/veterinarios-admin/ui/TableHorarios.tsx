@@ -36,6 +36,7 @@ import { isAxiosError } from "axios";
 import { CheckCircle, Edit, XCircle } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { FormHorarios } from "./FormHorarios";
 
 interface Props {
   medicoId: string;
@@ -45,8 +46,11 @@ const TableHorarios = ({ medicoId }: Props) => {
   const { data: horarios, isLoading } = useGetHorariosByMedico(medicoId);
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpen2, setIsOpen2] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [horarioId, setHorarioId] = useState("");
+  const [horario, setHorario] = useState<Horario | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
 
   const handleEditDisponibilidad = (horario: string, activo: boolean) => {
     setIsOpen(true);
@@ -54,7 +58,13 @@ const TableHorarios = ({ medicoId }: Props) => {
     setIsActive(!activo);
   };
 
-  const handleEditHorario = async () => {
+  const handleEditHorario = (horario: Horario) => {
+    setIsOpen2(true);
+    setIsEdit(true);
+    setHorario(horario);
+  };
+
+  const handleEditStatusHorario = async () => {
     try {
       await UpdateHorario(horarioId, { disponible: isActive });
       toast.success("Estado de horario actualizado con exito");
@@ -137,7 +147,7 @@ const TableHorarios = ({ medicoId }: Props) => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => {}}
+                          onClick={() => handleEditHorario(horario)}
                         >
                           <Edit className="h-4 w-4 text-blue-500" />
                         </Button>
@@ -195,10 +205,32 @@ const TableHorarios = ({ medicoId }: Props) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditHorario}>
+            <AlertDialogAction onClick={handleEditStatusHorario}>
               {isActive ? "Activar" : "Desactivar"}
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpen2} onOpenChange={setIsOpen2}>
+        <AlertDialogContent>
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Quieres editar el horario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras editar el horario de un medico
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="p-4">
+            <FormHorarios
+              medicoId={medicoId}
+              onSuccess={() => setIsOpen2(false)}
+              horario={horario}
+              isEdit={isEdit}
+            />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>

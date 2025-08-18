@@ -2,8 +2,11 @@ import {
   FileText,
   Globe,
   LayoutDashboard,
+  Locate,
+  LocateFixed,
   Microscope,
   Settings,
+  UserCog,
   Users,
 } from "lucide-react";
 
@@ -19,6 +22,9 @@ export const navItems = [
     items: [
       { name: "Usuarios", href: "/users-admin", icon: Users },
       { name: "Paises", href: "/paises-admin", icon: Globe },
+      { name: "Departamentos", href: "/deptos-admin", icon: Locate },
+
+      { name: "Roles", href: "/roles-admin", icon: UserCog },
       { name: "Veterinarios", href: "/veterinarios-admin", icon: Microscope },
     ],
   },

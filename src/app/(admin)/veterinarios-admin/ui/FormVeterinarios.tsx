@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { CrearMedicoInterface } from "@/apis/medicos/interfaces/crear-medico.interface";
 import { toast } from "react-toastify";
@@ -23,11 +23,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CrearMedico } from "@/apis/medicos/accions/crear-medico";
+import { isAxiosError } from "axios";
+import { Medico } from "@/apis/medicos/interfaces/obtener-medicos.interface";
+import { ActualizarMedico } from "@/apis/medicos/accions/update-medico";
 
-const FormVeterinarios = () => {
+interface Props {
+  medico?: Medico | null;
+  isEdit?: boolean;
+  onSuccess: () => void;
+}
+const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
   const { data: veterinarios } = useGetVeterinarios();
   const { data: categorias } = useGetServiciosActivos();
   const [selectedSubservices, setSelectedSubservices] = useState<string[]>([]);
+  const [selectedUsuario, setSelectedUsuario] = useState("");
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -37,14 +49,118 @@ const FormVeterinarios = () => {
     formState: { errors },
   } = useForm<CrearMedicoInterface>({
     defaultValues: {
-      isActive: true,
-      areas_trabajo: [],
+      numero_colegiado: medico?.numero_colegiado,
+      especialidad: medico?.especialidad,
+      universidad_formacion: medico?.universidad_formacion,
+      anios_experiencia: medico?.anios_experiencia,
+      isActive: medico?.isActive,
+
+      areas_trabajo: medico?.areas_trabajo.map((area) => area.id),
     },
   });
 
+  useEffect(() => {
+    if (medico) {
+      reset({
+        numero_colegiado: medico.numero_colegiado,
+        especialidad: medico.especialidad,
+        universidad_formacion: medico.universidad_formacion,
+        anios_experiencia: medico.anios_experiencia,
+
+        isActive: medico.isActive,
+      });
+      setSelectedSubservices(medico.areas_trabajo.map((area) => area.id));
+      setSelectedUsuario(medico.usuario.id);
+    }
+  }, [medico, reset]);
+
+  const createMutation = useMutation({
+    mutationFn: (data: CrearMedicoInterface) => CrearMedico(data),
+    onSuccess: () => {
+      toast.success("Medico creado exitosamente");
+      reset();
+      setSelectedSubservices([]);
+      setSelectedUsuario("");
+      queryClient.invalidateQueries({ queryKey: ["medicos"] });
+      queryClient.invalidateQueries({ queryKey: ["users-veterinarios"] });
+      onSuccess();
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al crear el medico";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de crear el medico. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: Partial<CrearMedicoInterface>) =>
+      ActualizarMedico(medico?.id ?? "", data),
+    onSuccess: () => {
+      toast.success("Medico actualizado exitosamente");
+      reset();
+      setSelectedSubservices([]);
+      setSelectedUsuario("");
+      queryClient.invalidateQueries({ queryKey: ["medicos"] });
+      queryClient.invalidateQueries({ queryKey: ["users-veterinarios"] });
+      onSuccess();
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al actualizar el medico";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de crear el actualizar. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
+
+  const resetForm = () => {
+    reset();
+    setSelectedSubservices([]);
+    setSelectedUsuario("");
+  };
+
   const onSubmit = (data: CrearMedicoInterface) => {
-    data.areas_trabajo = selectedSubservices;
-    toast.success("Los datos del médico han sido guardados correctamente.");
+    if (!isEdit && !selectedUsuario) {
+      toast.error("Debes seleccionar un usuario");
+      return;
+    }
+
+    if (selectedSubservices.length === 0) {
+      toast.error("Debes seleccionar al menos un área de trabajo");
+      return;
+    }
+
+    const medicoData: CrearMedicoInterface = {
+      ...data,
+      ...(!isEdit && { usuarioId: selectedUsuario }),
+      areas_trabajo: selectedSubservices,
+    };
+
+    if (isEdit) {
+      updateMutation.mutate(medicoData);
+    } else {
+      createMutation.mutate(medicoData);
+    }
   };
 
   const handleSubserviceToggle = (subserviceId: string) => {
@@ -57,6 +173,13 @@ const FormVeterinarios = () => {
       return newSubservices;
     });
   };
+
+  const handleUsuarioChange = (value: string) => {
+    setSelectedUsuario(value);
+    setValue("usuarioId", value);
+  };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
@@ -125,40 +248,36 @@ const FormVeterinarios = () => {
           <Accordion type="multiple" className="w-full">
             {categorias?.map((categoria) => (
               <AccordionItem value={categoria.id} key={categoria.id}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={categoria.subServicios.every((sub) =>
-                        selectedSubservices.includes(sub.id)
-                      )}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          const newSubs = [
-                            ...selectedSubservices,
-                            ...categoria.subServicios
-                              .map((sub) => sub.id)
-                              .filter(
-                                (id) => !selectedSubservices.includes(id)
-                              ),
-                          ];
-                          setSelectedSubservices(newSubs);
-                          setValue("areas_trabajo", newSubs);
-                        } else {
-                          const newSubs = selectedSubservices.filter(
-                            (id) =>
-                              !categoria.subServicios.some(
-                                (sub) => sub.id === id
-                              )
-                          );
-                          setSelectedSubservices(newSubs);
-                          setValue("areas_trabajo", newSubs);
-                        }
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <span>{categoria.nombre}</span>
-                  </div>
-                </AccordionTrigger>
+                <div className="flex items-center">
+                  <Checkbox
+                    checked={categoria.subServicios.every((sub) =>
+                      selectedSubservices.includes(sub.id)
+                    )}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const newSubs = [
+                          ...selectedSubservices,
+                          ...categoria.subServicios
+                            .map((sub) => sub.id)
+                            .filter((id) => !selectedSubservices.includes(id)),
+                        ];
+                        setSelectedSubservices(newSubs);
+                        setValue("areas_trabajo", newSubs);
+                      } else {
+                        const newSubs = selectedSubservices.filter(
+                          (id) =>
+                            !categoria.subServicios.some((sub) => sub.id === id)
+                        );
+                        setSelectedSubservices(newSubs);
+                        setValue("areas_trabajo", newSubs);
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <AccordionTrigger className="hover:no-underline flex-1 text-left">
+                    {categoria.nombre}
+                  </AccordionTrigger>
+                </div>
                 <AccordionContent className="pl-8 space-y-2">
                   {categoria.subServicios.map((subservicio) => (
                     <div
@@ -192,14 +311,22 @@ const FormVeterinarios = () => {
 
       <div className="space-y-2">
         <Label htmlFor="usuarioId">Usuario *</Label>
-        <Select>
+        <Select value={selectedUsuario} onValueChange={handleUsuarioChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona un veterinario" />
+            <SelectValue
+              placeholder={
+                isEdit ? medico?.usuario.name : "Selecciona un usuario"
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Veterinario</SelectLabel>
-              <SelectItem value="apple">Apple</SelectItem>
+              <SelectLabel>Veterinarios</SelectLabel>
+              {veterinarios?.map((vet) => (
+                <SelectItem value={vet.id} key={vet.id}>
+                  {vet.name}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -209,17 +336,25 @@ const FormVeterinarios = () => {
       </div>
 
       <div className="flex justify-end gap-4 pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            reset();
-            setSelectedSubservices([]);
-          }}
-        >
-          Limpiar
+        {!isEdit && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            disabled={isSubmitting}
+          >
+            {isEdit ? "Restablecer" : "Limpiar"}
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting
+            ? isEdit
+              ? "Actualizando..."
+              : "Registrando..."
+            : isEdit
+              ? "Actualizar Médico"
+              : "Registrar Médico"}
         </Button>
-        <Button type="submit">Registrar Médico</Button>
       </div>
     </form>
   );
