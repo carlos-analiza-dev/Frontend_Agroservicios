@@ -24,17 +24,28 @@ import {
 } from "@/components/ui/table";
 import { Pencil } from "lucide-react";
 import React, { useState } from "react";
-import TableMunicipios from "./TableMunicipios";
 import useGetMunicipiosByDepto from "@/hooks/municipios/useGetMunicipiosByDepto";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 
 interface Props {
   departamentos: ResponseDeptos | undefined;
   handleEdit: (depto: Departamento) => void;
 }
 
+const FormCreateMunicipio = dynamic(() => import("./FormCreateMunicipio"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableMunicipios = dynamic(() => import("./TableMunicipios"), {
+  loading: () => <TableUsersSkeleton />,
+});
+
 const TableDeptos = ({ departamentos, handleEdit }: Props) => {
   const [deptoId, setDeptoId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const {
     data: municipios,
     isError,
@@ -44,6 +55,10 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
   const handleViewMunicipios = (deptoId: string) => {
     setIsOpen(true);
     setDeptoId(deptoId);
+  };
+
+  const handleAddMunicipio = () => {
+    setIsFormOpen(true);
   };
 
   return (
@@ -99,7 +114,7 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
       </Table>
 
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent className="h-[600px] w-full md:max-w-2xl">
+        <AlertDialogContent className="w-full md:max-w-2xl max-h-[600px] overflow-y-auto">
           <div className="flex justify-end">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
@@ -110,9 +125,28 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
               el departamento
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={handleAddMunicipio}>Agregar +</Button>
+          </div>
           <div className="rounded-md border">
             <TableMunicipios municipios={municipios?.data} />
           </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <AlertDialogContent className="w-full md:max-w-md">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Crear Municipio</AlertDialogTitle>
+          </AlertDialogHeader>
+          <FormCreateMunicipio
+            deptoId={deptoId}
+            departamentos={departamentos?.departamentos || []}
+            onSucces={() => setIsFormOpen(false)}
+          />
         </AlertDialogContent>
       </AlertDialog>
     </>

@@ -36,15 +36,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
 import { ActualizarMedico } from "@/apis/medicos/accions/update-medico";
-import FormVeterinarios from "./FormVeterinarios";
-import { FormHorarios } from "./FormHorarios";
-import TableEspecialidadesMedico from "./TableEspecialidadesMedico";
+import dynamic from "next/dynamic";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import LoaderComponents from "@/components/generics/LoaderComponents";
 
 interface Props {
   isLoading: boolean;
   isError: boolean;
   veterinarios: Medico[] | undefined;
 }
+
+const TableEspecialidadesMedico = dynamic(
+  () => import("./TableEspecialidadesMedico"),
+  { loading: () => <TableUsersSkeleton /> }
+);
+
+const FormVeterinarios = dynamic(() => import("./FormVeterinarios"), {
+  loading: () => <LoaderComponents />,
+});
+
+const FormHorarios = dynamic(() => import("./FormHorarios"), {
+  loading: () => <LoaderComponents />,
+});
 
 const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
   const queryClient = useQueryClient();

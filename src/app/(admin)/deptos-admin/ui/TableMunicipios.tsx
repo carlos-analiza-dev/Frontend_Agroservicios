@@ -1,4 +1,7 @@
-import { ResponseMunicipios } from "@/apis/municipios/interfaces/response-municipios.interface";
+import {
+  Municipio,
+  ResponseMunicipios,
+} from "@/apis/municipios/interfaces/response-municipios.interface";
 import {
   Table,
   TableBody,
@@ -9,15 +12,37 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
 
 interface Props {
   municipios: ResponseMunicipios | undefined;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
 }
 
-const TableMunicipios = ({ municipios, onEdit, onDelete }: Props) => {
+const FormCreateMunicipio = dynamic(() => import("./FormCreateMunicipio"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableMunicipios = ({ municipios }: Props) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editMunicipio, setEditMunicipio] = useState<Municipio | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const handleEditMunicipio = (municipio: Municipio) => {
+    setIsFormOpen(true);
+    setIsEdit(true);
+    setEditMunicipio(municipio);
+  };
+
   if (!municipios || municipios.municipios.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
@@ -27,54 +52,63 @@ const TableMunicipios = ({ municipios, onEdit, onDelete }: Props) => {
   }
 
   return (
-    <div className="rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader className="bg-gray-50">
-          <TableRow>
-            <TableHead className="w-[120px]">Estado</TableHead>
-            <TableHead>Municipio</TableHead>
-            <TableHead className="text-right w-[150px]">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {municipios.municipios.map((municipio) => (
-            <TableRow key={municipio.id}>
-              <TableCell>
-                <Badge
-                  variant={municipio.isActive ? "default" : "destructive"}
-                  className="justify-center w-full"
-                >
-                  {municipio.isActive ? "Activo" : "Inactivo"}
-                </Badge>
-              </TableCell>
-              <TableCell className="font-medium">{municipio.nombre}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  {onEdit && (
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-center">Estado</TableHead>
+              <TableHead className="text-center">Municipio</TableHead>
+              <TableHead className="text-center">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {municipios.municipios.map((municipio) => (
+              <TableRow key={municipio.id}>
+                <TableCell className="text-center">
+                  <Badge
+                    variant={municipio.isActive ? "default" : "destructive"}
+                    className="justify-center w-full"
+                  >
+                    {municipio.isActive ? "Activo" : "Inactivo"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  {municipio.nombre}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onEdit(municipio.id)}
+                      onClick={() => handleEditMunicipio(municipio)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(municipio.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AlertDialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <AlertDialogContent className="w-full md:max-w-md">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar Municipio</AlertDialogTitle>
+          </AlertDialogHeader>
+          <FormCreateMunicipio
+            editMunicipio={editMunicipio}
+            isEdit={isEdit}
+            onSucces={() => setIsFormOpen(false)}
+          />
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

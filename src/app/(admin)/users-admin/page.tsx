@@ -34,9 +34,10 @@ import LoaderComponents from "@/components/generics/LoaderComponents";
 import TitlePages from "@/components/generics/TitlePages";
 import { Skeleton } from "@/components/ui/skeleton";
 import usePaises from "@/hooks/paises/usePaises";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 
 const TableUsers = dynamic(() => import("./ui/TableUsers"), {
-  loading: () => <LoaderComponents />,
+  loading: () => <TableUsersSkeleton />,
 });
 
 const FormUsers = dynamic(() => import("./ui/FormUsers"), {

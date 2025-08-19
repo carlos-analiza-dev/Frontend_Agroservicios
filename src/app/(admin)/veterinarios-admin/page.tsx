@@ -13,7 +13,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import TableMedicos from "./ui/TableMedicos";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -22,7 +21,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormVeterinarios from "./ui/FormVeterinarios";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormVeterinarios = dynamic(() => import("./ui/FormVeterinarios"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableMedicos = dynamic(() => import("./ui/TableMedicos"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const VeterinariosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);

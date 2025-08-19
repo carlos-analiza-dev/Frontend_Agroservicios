@@ -38,7 +38,9 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
   const { data: veterinarios } = useGetVeterinarios();
   const { data: categorias } = useGetServiciosActivos();
   const [selectedSubservices, setSelectedSubservices] = useState<string[]>([]);
-  const [selectedUsuario, setSelectedUsuario] = useState("");
+  const [selectedUsuario, setSelectedUsuario] = useState(
+    isEdit && medico ? medico.usuario.id : ""
+  );
   const queryClient = useQueryClient();
 
   const {
@@ -187,6 +189,7 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
         <Label htmlFor="numero_colegiado">Número de Colegiado *</Label>
         <Input
           id="numero_colegiado"
+          placeholder="Ingrese el numero de colegiado"
           {...register("numero_colegiado", { required: "Campo obligatorio" })}
         />
         {errors.numero_colegiado && (
@@ -200,6 +203,7 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
         <Label htmlFor="especialidad">Especialidad *</Label>
         <Input
           id="especialidad"
+          placeholder="Especialidad del medico"
           {...register("especialidad", { required: "Campo obligatorio" })}
         />
         {errors.especialidad && (
@@ -213,6 +217,7 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
         </Label>
         <Input
           id="universidad_formacion"
+          placeholder="Universidad de formacion"
           {...register("universidad_formacion", {
             required: "Campo obligatorio",
           })}
@@ -228,6 +233,7 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
         <Label htmlFor="anios_experiencia">Años de Experiencia *</Label>
         <Input
           id="anios_experiencia"
+          placeholder="Ingrese los años de experiencia (numnero)"
           type="number"
           {...register("anios_experiencia", {
             required: "Campo obligatorio",
@@ -311,25 +317,32 @@ const FormVeterinarios = ({ onSuccess, medico, isEdit }: Props) => {
 
       <div className="space-y-2">
         <Label htmlFor="usuarioId">Usuario *</Label>
-        <Select value={selectedUsuario} onValueChange={handleUsuarioChange}>
-          <SelectTrigger>
-            <SelectValue
-              placeholder={
-                isEdit ? medico?.usuario.name : "Selecciona un usuario"
-              }
+        {isEdit ? (
+          <div className="p-2 border rounded-md bg-muted">
+            <p className="text-sm">{medico?.usuario.name}</p>
+            <input
+              type="hidden"
+              value={medico?.usuario.id}
+              {...register("usuarioId")}
             />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Veterinarios</SelectLabel>
-              {veterinarios?.map((vet) => (
-                <SelectItem value={vet.id} key={vet.id}>
-                  {vet.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          </div>
+        ) : (
+          <Select value={selectedUsuario} onValueChange={handleUsuarioChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona un usuario" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Veterinarios</SelectLabel>
+                {veterinarios?.map((vet) => (
+                  <SelectItem value={vet.id} key={vet.id}>
+                    {vet.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        )}
         {errors.usuarioId && (
           <p className="text-sm text-red-500">{errors.usuarioId.message}</p>
         )}

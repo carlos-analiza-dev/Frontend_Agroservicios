@@ -1,6 +1,7 @@
 import {
   FileText,
   Globe,
+  Handbag,
   LayoutDashboard,
   Locate,
   LocateFixed,
@@ -23,9 +24,9 @@ export const navItems = [
       { name: "Usuarios", href: "/users-admin", icon: Users },
       { name: "Paises", href: "/paises-admin", icon: Globe },
       { name: "Departamentos", href: "/deptos-admin", icon: Locate },
-
-      { name: "Roles", href: "/roles-admin", icon: UserCog },
+      { name: "Servicios/Productos", href: "/servicios-admin", icon: Handbag },
       { name: "Veterinarios", href: "/veterinarios-admin", icon: Microscope },
+      { name: "Roles", href: "/roles-admin", icon: UserCog },
     ],
   },
   {

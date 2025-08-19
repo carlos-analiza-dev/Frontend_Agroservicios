@@ -27,7 +27,7 @@ interface FormHorariosProps {
   isEdit?: boolean;
 }
 
-export function FormHorarios({
+export default function FormHorarios({
   medicoId,
   onSuccess,
   horario,

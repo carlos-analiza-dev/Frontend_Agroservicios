@@ -7,7 +7,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,11 +26,15 @@ import {
 } from "@/components/ui/tooltip";
 import { CheckCircle, Edit, XCircle } from "lucide-react";
 import React, { useState } from "react";
-import FormCrearPais from "./FormCrearPais";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ActualizarPaises } from "@/apis/paises/accions/update-pais";
 import { toast } from "react-toastify";
-import { AlertDialogAction } from "@radix-ui/react-alert-dialog";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormCrearPais = dynamic(() => import("./FormCrearPais"), {
+  loading: () => <LoaderComponents />,
+});
 
 interface Props {
   paises: PaisesResponse[] | undefined;

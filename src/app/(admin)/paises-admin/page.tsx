@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import usePaises from "@/hooks/paises/usePaises";
 import React, { useState } from "react";
-import TablePaises from "./ui/TablePaises";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -16,7 +15,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import FormCrearPais from "./ui/FormCrearPais";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormCrearPais = dynamic(() => import("./ui/FormCrearPais"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TablePaises = dynamic(() => import("./ui/TablePaises"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const PaisesPage = () => {
   const { data: paises, isLoading, isError } = usePaises();

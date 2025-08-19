@@ -36,11 +36,16 @@ import { isAxiosError } from "axios";
 import { CheckCircle, Edit, XCircle } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { FormHorarios } from "./FormHorarios";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
 
 interface Props {
   medicoId: string;
 }
+
+const FormHorarios = dynamic(() => import("./FormHorarios"), {
+  loading: () => <LoaderComponents />,
+});
 
 const TableHorarios = ({ medicoId }: Props) => {
   const { data: horarios, isLoading } = useGetHorariosByMedico(medicoId);

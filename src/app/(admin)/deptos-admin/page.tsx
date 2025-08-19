@@ -11,15 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -29,12 +20,20 @@ import {
 import useGetDepartamentosByPais from "@/hooks/departamentos/useGetDepartamentosByPais";
 import usePaises from "@/hooks/paises/usePaises";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState } from "react";
-import FormCreateDepto from "./ui/FormCreateDepto";
 import { Departamento } from "@/apis/departamentos/interfaces/response-departamentos.interface";
-import TableDeptos from "./ui/TableDeptos";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const TableDeptos = dynamic(() => import("./ui/TableDeptos"), {
+  loading: () => <TableUsersSkeleton />,
+});
+
+const FormCreateDepto = dynamic(() => import("./ui/FormCreateDepto"), {
+  loading: () => <LoaderComponents />,
+});
 
 const DeptosAdminPage = () => {
   const { user } = useAuthStore();
