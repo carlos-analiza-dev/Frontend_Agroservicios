@@ -1,5 +1,5 @@
+import { ResponseSubServicios } from "@/apis/sub-servicio/interface/obtener-sub-serviciosbyservicio.interface";
 import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
-import { ResponseSubServicios } from "@/core/sub-servicio/interface/obtener-sub-serviciosbyservicio.interface";
 
 export const ObtenerServicioPaisCantidad = async (
   servicioId: string,

@@ -20,7 +20,6 @@ const LoginForm = () => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<LoginInterface>();
 
   const validateEmail = (value: string) => {
@@ -28,10 +27,6 @@ const LoginForm = () => {
       return "Correo electrónico inválido";
     }
     return true;
-  };
-
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
   };
 
   const onSubmit = async (data: LoginInterface) => {
@@ -71,7 +66,6 @@ const LoginForm = () => {
       toast.error("Ocurrió un error durante el inicio de sesión");
     } finally {
       setIsPosting(false);
-      reset();
     }
   };
 

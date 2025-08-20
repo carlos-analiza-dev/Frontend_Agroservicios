@@ -1,57 +1,53 @@
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { Role } from "@/apis/roles/interfaces/response-roles-filters.interface";
-import { CreateRolI } from "@/apis/roles/interfaces/crear-rol.interface";
-import { AddRol } from "@/apis/roles/accions/create-rol";
-import { UpdateRol } from "@/apis/roles/accions/update-rol";
+import { CrearServicio } from "@/apis/servicios/interfaces/crear-servicio.interface";
+import { AddServicio } from "@/apis/servicios/accions/crear-servicio";
+import { EditarServicio } from "@/apis/servicios/accions/editar-servicio";
+import { Servicio } from "@/apis/servicios/interfaces/response-servicios.interface";
 
 interface Props {
-  editRol?: Role | null;
+  editServicio?: Servicio | null;
   isEdit?: boolean;
   onSuccess: () => void;
-  isOpen: boolean;
 }
 
-const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
+const FormCategorias = ({ onSuccess, editServicio, isEdit }: Props) => {
   const queryClient = useQueryClient();
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors },
-  } = useForm<CreateRolI>();
+  } = useForm<CrearServicio>();
 
   useEffect(() => {
-    if (isOpen) {
-      if (isEdit && editRol) {
-        reset({
-          name: editRol.name,
-          description: editRol.description,
-          isActive: editRol.isActive,
-        });
-      } else {
-        reset({
-          name: "",
-          description: "",
-          isActive: true,
-        });
-      }
+    if (isEdit && editServicio) {
+      reset({
+        nombre: editServicio.nombre,
+        descripcion: editServicio.descripcion,
+        isActive: editServicio.isActive,
+      });
+    } else {
+      reset({
+        nombre: "",
+        descripcion: "",
+        isActive: true,
+      });
     }
-  }, [isOpen, isEdit, editRol, reset]);
+  }, [isEdit, editServicio, reset]);
 
   const mutation = useMutation({
-    mutationFn: (data: CreateRolI) => AddRol(data),
+    mutationFn: (data: CrearServicio) => AddServicio(data),
     onSuccess: () => {
-      toast.success("Rol creado exitosamente");
-      queryClient.invalidateQueries({ queryKey: ["roles-filters"] });
+      toast.success("Categoría creada exitosamente");
+      queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
       reset();
       onSuccess();
     },
@@ -62,22 +58,23 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
           ? messages[0]
           : typeof messages === "string"
             ? messages
-            : "Hubo un error al crear el rol";
+            : "Hubo un error al crear la categoría";
 
         toast.error(errorMessage);
       } else {
         toast.error(
-          "Hubo un error al momento de crear el rol. Inténtalo de nuevo."
+          "Hubo un error al momento de crear la categoría. Inténtalo de nuevo."
         );
       }
     },
   });
 
   const mutationUpdate = useMutation({
-    mutationFn: (data: CreateRolI) => UpdateRol(editRol?.id ?? "", data),
+    mutationFn: (data: CrearServicio) =>
+      EditarServicio(editServicio?.id ?? "", data),
     onSuccess: () => {
-      toast.success("Rol actualizado exitosamente");
-      queryClient.invalidateQueries({ queryKey: ["roles-filters"] });
+      toast.success("Categoría actualizada exitosamente");
+      queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
       reset();
       onSuccess();
     },
@@ -88,18 +85,18 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
           ? messages[0]
           : typeof messages === "string"
             ? messages
-            : "Hubo un error al actualizar el rol";
+            : "Hubo un error al actualizar la categoría";
 
         toast.error(errorMessage);
       } else {
         toast.error(
-          "Hubo un error al momento de actualizar el rol. Inténtalo de nuevo."
+          "Hubo un error al momento de actualizar la categoría. Inténtalo de nuevo."
         );
       }
     },
   });
 
-  const onSubmit = (data: CreateRolI) => {
+  const onSubmit = (data: CrearServicio) => {
     if (isEdit) {
       mutationUpdate.mutate(data);
     } else {
@@ -110,45 +107,54 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name" className="font-bold">
-          Nombre del Rol*
+        <Label htmlFor="nombre" className="font-bold">
+          Nombre de la Categoría*
         </Label>
         <Input
-          id="name"
-          {...register("name", {
-            required: "El nombre del rol es requerido",
+          id="nombre"
+          {...register("nombre", {
+            required: "El nombre de la categoría es requerido",
             minLength: {
               value: 3,
               message: "El nombre debe tener al menos 3 caracteres",
             },
+            maxLength: {
+              value: 50,
+              message: "El nombre no puede tener más de 50 caracteres",
+            },
           })}
-          placeholder="Ej: Administrador, Usuario, etc."
+          placeholder="Ej: Laboratorio, Reproducción, etc."
         />
-        {errors.name && (
+        {errors.nombre && (
           <p className="text-sm font-medium text-red-500">
-            {errors.name.message as string}
+            {errors.nombre.message as string}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="font-bold">
+        <Label htmlFor="descripcion" className="font-bold">
           Descripción*
         </Label>
-        <Input
-          id="description"
-          {...register("description", {
+        <textarea
+          id="descripcion"
+          {...register("descripcion", {
             required: "La descripción es requerida",
             minLength: {
               value: 10,
               message: "La descripción debe tener al menos 10 caracteres",
             },
+            maxLength: {
+              value: 255,
+              message: "La descripción no puede tener más de 255 caracteres",
+            },
           })}
-          placeholder="Describe las funciones y permisos de este rol"
+          placeholder="Describe los servicios que incluye esta categoría"
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
-        {errors.description && (
+        {errors.descripcion && (
           <p className="text-sm font-medium text-red-500">
-            {errors.description.message as string}
+            {errors.descripcion.message as string}
           </p>
         )}
       </div>
@@ -164,15 +170,12 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
             defaultChecked
           />
           <Label htmlFor="isActive" className="text-sm font-normal">
-            Rol activo
+            Categoría activa
           </Label>
         </div>
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="outline" onClick={() => {}}>
-          Cancelar
-        </Button>
         <Button
           type="submit"
           disabled={mutation.isPending || mutationUpdate.isPending}
@@ -202,7 +205,7 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
               {isEdit ? "Actualizando..." : "Creando..."}
             </>
           ) : (
-            <>{isEdit ? "Actualizar Rol" : "Crear Rol"}</>
+            <>{isEdit ? "Actualizar Categoría" : "Crear Categoría"}</>
           )}
         </Button>
       </div>
@@ -210,4 +213,4 @@ const FormCreateRol = ({ onSuccess, editRol, isEdit, isOpen }: Props) => {
   );
 };
 
-export default FormCreateRol;
+export default FormCategorias;

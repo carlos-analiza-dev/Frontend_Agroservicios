@@ -255,7 +255,6 @@ const RolesPageAdmin = () => {
 
           <FormCreateRol
             isOpen={isFormOpen}
-            onOpenChange={setIsFormOpen}
             editRol={editRol}
             isEdit={isEdit}
             onSuccess={() => setIsFormOpen(false)}

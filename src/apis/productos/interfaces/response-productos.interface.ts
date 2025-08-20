@@ -1,4 +1,4 @@
-export interface ResponseServicios {
+export interface ResponseProductos {
   servicios: Servicio[];
   total: number;
 }
@@ -6,29 +6,25 @@ export interface ResponseServicios {
 export interface Servicio {
   id: string;
   nombre: string;
-  descripcion: string;
-  isActive: boolean;
-  subServicios: SubServicio[];
-}
-
-export interface SubServicio {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  servicioId: string;
+  codigo: string;
   tipo: string;
   unidad_venta: string;
-  disponible: boolean;
+  descripcion: string;
+  servicioId: null;
   isActive: boolean;
+  disponible: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  servicio: null;
   preciosPorPais: PreciosPorPai[];
 }
 
 export interface PreciosPorPai {
   id: string;
   precio: string;
-  tiempo: number;
-  cantidadMin: number;
-  cantidadMax: number;
+  tiempo: null;
+  cantidadMin: null;
+  cantidadMax: null;
   pais: Pais;
 }
 

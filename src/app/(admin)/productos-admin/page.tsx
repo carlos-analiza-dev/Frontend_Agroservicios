@@ -1,8 +1,17 @@
 "use client";
-
-import useGetServiciosAdmin from "@/hooks/servicios/useGetServiciosAdmin";
 import React, { useState } from "react";
+import useGetProductos from "@/hooks/productos/useGetProductos";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,50 +21,19 @@ import {
 } from "@/components/ui/select";
 import { StatusMessage } from "@/components/generics/StatusMessage";
 import TitlePages from "@/components/generics/TitlePages";
-
-import { Plus } from "lucide-react";
-import CardsCategorias from "./ui/CardsCategorias";
-import PaginacionCategorias from "./ui/PaginacionCategorias";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import FormCategorias from "./ui/FormCategorias";
+import CardProducts from "./ui/CardProducts";
 import CardSkeleton from "@/components/generics/CardSkeleton";
 
-const ServiciosCategoriasAdminPage = () => {
+const PageProductosAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isOpen, setIsOpen] = useState(false);
 
   const offset = (currentPage - 1) * itemsPerPage;
+  const { data, isLoading, isError } = useGetProductos(itemsPerPage, offset);
 
-  const { data, isLoading, isError, error } = useGetServiciosAdmin(
-    itemsPerPage,
-    offset
-  );
-
-  if (isLoading) {
-    return <CardSkeleton />;
-  }
-
-  if (isError) {
-    return (
-      <div className="container mx-auto p-6">
-        <StatusMessage type="error" />
-      </div>
-    );
-  }
-
-  const servicios = data?.data.servicios || [];
-  const totalServicios = data?.data.total || 0;
-
-  const totalPages = Math.ceil(totalServicios / itemsPerPage);
+  const productos = data?.data?.servicios || [];
+  const totalProductos = data?.data?.total || 0;
+  const totalPages = Math.ceil(totalProductos / itemsPerPage);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -109,35 +87,27 @@ const ServiciosCategoriasAdminPage = () => {
     return pages;
   };
 
+  if (isLoading) {
+    return <CardSkeleton />;
+  }
+
+  if (isError) {
+    return <StatusMessage type="error" />;
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <TitlePages title=" Administración de Categorias y Servicios" />
+          <TitlePages title="Administración de Productos" />
           <p className="text-muted-foreground">
-            Gestione los servicios y categorías disponibles
+            Gestione los productos del inventario
           </p>
         </div>
-
-        <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-          <AlertDialogTrigger asChild>
-            <Button>
-              Agregar Categoria <Plus />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <div className="flex justify-end">
-              <AlertDialogCancel>X</AlertDialogCancel>
-            </div>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Agregar Categoria</AlertDialogTitle>
-              <AlertDialogDescription>
-                En esta seccion podras agregar categorias para los servicios
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <FormCategorias onSuccess={() => setIsOpen(false)} />
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Producto
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -157,17 +127,17 @@ const ServiciosCategoriasAdminPage = () => {
               <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm font-medium">elementos por página</span>
+          <span className="text-sm font-medium">productos por página</span>
         </div>
 
         <div className="text-sm text-muted-foreground">
           Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
-          {Math.min(currentPage * itemsPerPage, totalServicios)} de{" "}
-          {totalServicios} categorias
+          {Math.min(currentPage * itemsPerPage, totalProductos)} de{" "}
+          {totalProductos} productos
         </div>
       </div>
 
-      <CardsCategorias servicios={servicios} />
+      <CardProducts productos={productos} />
 
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -175,16 +145,55 @@ const ServiciosCategoriasAdminPage = () => {
             Página {currentPage} de {totalPages}
           </div>
 
-          <PaginacionCategorias
-            handlePageChange={handlePageChange}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            getPageNumbers={getPageNumbers}
-          />
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              {getPageNumbers().map((page, index) => (
+                <React.Fragment key={index}>
+                  {page < 0 ? (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => handlePageChange(page)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                </React.Fragment>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
   );
 };
 
-export default ServiciosCategoriasAdminPage;
+export default PageProductosAdmin;
