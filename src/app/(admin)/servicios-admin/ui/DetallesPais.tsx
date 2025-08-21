@@ -40,40 +40,58 @@ const DetallesPais = ({ subServicio }: Props) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {subServicio.preciosPorPais.map((precio, index) => (
-        <div key={index} className="flex items-center gap-1 p-2 border rounded">
-          <Badge variant="outline" className="text-xs font-semibold">
-            {precio.pais.nombre}
-          </Badge>
-          <Badge variant="default" className="text-xs">
-            {precio.pais.simbolo_moneda}
-            {precio.precio}
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            {precio.cantidadMin}-{precio.cantidadMax} animales
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {precio.tiempo}hrs
-          </Badge>
-          <Button onClick={() => handleEditPrecio(precio)} variant={"link"}>
-            Editar
-          </Button>
-        </div>
-      ))}
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+        {subServicio.preciosPorPais.map((precio, index) => (
+          <div
+            key={index}
+            className="flex flex-col p-3 border rounded-lg bg-card"
+          >
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge variant="outline" className="text-xs font-semibold">
+                {precio.pais.nombre}
+              </Badge>
+              <Badge variant="default" className="text-xs">
+                {precio.pais.simbolo_moneda}
+                {precio.precio}
+              </Badge>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge variant="secondary" className="text-xs">
+                {precio.cantidadMin}-{precio.cantidadMax} animales
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {precio.tiempo}hrs
+              </Badge>
+            </div>
+
+            <Button
+              onClick={() => handleEditPrecio(precio)}
+              variant={"outline"}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
+              Editar
+            </Button>
+          </div>
+        ))}
+      </div>
 
       {subServicio.preciosPorPais.length === 0 && (
-        <span className="text-sm text-muted-foreground">
-          Sin precios configurados
-        </span>
+        <div className="flex justify-center py-6">
+          <span className="text-sm text-muted-foreground">
+            Sin precios configurados
+          </span>
+        </div>
       )}
 
       <AlertDialog open={isOpenPrecios} onOpenChange={setIsOpenPrecios}>
-        <AlertDialogContent className="w-full md:max-w-xl">
-          <div className="flex justify-end">
+        <AlertDialogContent className="w-[95vw] max-w-xl mx-auto max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-end sticky top-0 bg-background py-2 z-10">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
-          <AlertDialogHeader>
+          <AlertDialogHeader className="px-1 sm:px-4">
             <AlertDialogTitle>
               {isEditPrecio ? "Editar Precio" : "Agregar Precio"}
             </AlertDialogTitle>
@@ -83,14 +101,16 @@ const DetallesPais = ({ subServicio }: Props) => {
                 : "Completa los campos para agregar un nuevo precio para este servicio."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <FormAddPrecios
-            subServicioId={subServicio.id}
-            paises={paises}
-            editPrecio={editPrecio}
-            onCancel={() => setIsOpenPrecios(false)}
-            isEditing={isEditPrecio}
-            onSuccess={() => setIsOpenPrecios(false)}
-          />
+          <div className="px-1 sm:px-4 pb-4">
+            <FormAddPrecios
+              subServicioId={subServicio.id}
+              paises={paises}
+              editPrecio={editPrecio}
+              onCancel={() => setIsOpenPrecios(false)}
+              isEditing={isEditPrecio}
+              onSuccess={() => setIsOpenPrecios(false)}
+            />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

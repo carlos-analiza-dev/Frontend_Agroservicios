@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/select";
 import { StatusMessage } from "@/components/generics/StatusMessage";
 import TitlePages from "@/components/generics/TitlePages";
-import CardProducts from "./ui/CardProducts";
 import CardSkeleton from "@/components/generics/CardSkeleton";
+import TableProducts from "./ui/TableProducts";
 
 const PageProductosAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,10 +91,6 @@ const PageProductosAdmin = () => {
     return <CardSkeleton />;
   }
 
-  if (isError) {
-    return <StatusMessage type="error" />;
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -137,7 +133,7 @@ const PageProductosAdmin = () => {
         </div>
       </div>
 
-      <CardProducts productos={productos} />
+      <TableProducts productos={productos} />
 
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

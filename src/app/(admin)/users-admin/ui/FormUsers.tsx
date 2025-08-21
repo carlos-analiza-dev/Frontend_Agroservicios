@@ -21,6 +21,7 @@ import userById from "@/hooks/users/userById";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -35,6 +36,7 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
   const { data: user } = userById(userId ?? "");
   const queryClient = useQueryClient();
   const [codigoPais, setCodigoPais] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -246,15 +248,24 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
         {!userId && (
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña*</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password", {
-                required: "La contraseña es requerida",
-                validate: validatePassword,
-              })}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password", {
+                  required: "La contraseña es requerida",
+                  validate: validatePassword,
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-sm font-medium text-red-500">
                 {errors.password.message as string}

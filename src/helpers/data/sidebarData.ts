@@ -1,5 +1,6 @@
 import {
   BriefcaseMedical,
+  Building2,
   ChartBarStacked,
   FileText,
   Globe,
@@ -28,6 +29,11 @@ export const navItems = [
         name: "Servicios",
         href: "/servicios-admin",
         icon: ChartBarStacked,
+      },
+      {
+        name: "Proveedores",
+        href: "/proveedores-admin",
+        icon: Building2,
       },
       { name: "Productos", href: "/productos-admin", icon: Handbag },
       {

@@ -44,14 +44,6 @@ const ServiciosCategoriasAdminPage = () => {
     return <CardSkeleton />;
   }
 
-  if (isError) {
-    return (
-      <div className="container mx-auto p-6">
-        <StatusMessage type="error" />
-      </div>
-    );
-  }
-
   const servicios = data?.data.servicios || [];
   const totalServicios = data?.data.total || 0;
 

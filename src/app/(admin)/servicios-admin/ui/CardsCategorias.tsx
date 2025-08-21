@@ -89,95 +89,126 @@ const CardsCategorias = ({ servicios }: Props) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground py-8">
-              No hay servicios disponibles
+              No hay categorias ni servicios disponibles
             </div>
           </CardContent>
         </Card>
       ) : (
         servicios.map((servicio) => (
-          <Card key={servicio.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-5">
-                  <CardTitle className="text-xl">{servicio.nombre}</CardTitle>
+          <Card key={servicio.id} className="w-full overflow-hidden">
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div className="flex flex-col xs:flex-row xs:items-center gap-3">
+                  <CardTitle className="text-lg sm:text-xl">
+                    {servicio.nombre}
+                  </CardTitle>
                   <Button
                     onClick={() => handleEditCategoria(servicio)}
                     variant={"outline"}
                     size="sm"
+                    className="w-full xs:w-auto"
                   >
                     Editar Categoría
                   </Button>
                 </div>
-                <Badge variant={servicio.isActive ? "default" : "secondary"}>
+                <Badge
+                  variant={servicio.isActive ? "default" : "secondary"}
+                  className="self-start sm:self-center"
+                >
                   {servicio.isActive ? "Activo" : "Inactivo"}
                 </Badge>
               </div>
-              <CardDescription>{servicio.descripcion}</CardDescription>
+              <CardDescription className="mt-2">
+                {servicio.descripcion}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+
+            <CardContent className="p-4 sm:p-6">
               <Separator className="mb-4" />
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-lg">
+
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h3 className="font-medium text-base sm:text-lg">
                   Servicios de la categoria{" "}
                   <span className="font-bold">{servicio.nombre}</span>:
                 </h3>
                 <Button
                   onClick={() => handleAddSubServicio(servicio.id)}
                   size="sm"
+                  className="w-full sm:w-auto"
                 >
                   Agregar Servicio
                 </Button>
               </div>
-              <div className="space-y-3 ml-2">
-                {servicio.subServicios.map((subServicio) => (
-                  <div
-                    key={subServicio.id}
-                    className="border-l-2 border-primary pl-3 py-2"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-5 items-center">
-                        <div className="font-medium">{subServicio.nombre}</div>
+
+              <div className="space-y-3 ml-0 sm:ml-2">
+                {servicio.subServicios && servicio.subServicios.length > 0 ? (
+                  servicio.subServicios.map((subServicio, index) => (
+                    <div
+                      key={subServicio.id}
+                      className="border-l-2 border-r-2 border-t-2 border-b-2 border-primary p-3 sm:pl-3 sm:py-2"
+                    >
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:px-4">
+                        <div className="flex flex-col xs:flex-row xs:items-center gap-3">
+                          <div className="h-6 w-6 text-xs rounded-full bg-black text-white flex justify-center items-center flex-shrink-0 self-start">
+                            {index + 1}
+                          </div>
+                          <div className="font-medium text-sm sm:text-base">
+                            {subServicio.nombre}
+                          </div>
+                          <Button
+                            onClick={() => handleAddPrecio(subServicio.id)}
+                            variant={"outline"}
+                            size={"sm"}
+                            className="w-full xs:w-auto"
+                          >
+                            Agregar Precio
+                          </Button>
+                        </div>
                         <Button
-                          onClick={() => handleAddPrecio(subServicio.id)}
-                          variant={"link"}
+                          variant={"outline"}
+                          size={"sm"}
+                          onClick={() =>
+                            handleEditSubServicio(subServicio, servicio.id)
+                          }
+                          className="w-full md:w-auto"
                         >
-                          Agregar Precio
+                          Editar Servicio
                         </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleEditSubServicio(subServicio, servicio.id)
-                        }
-                      >
-                        Editar Servicio
-                      </Button>
+
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {subServicio.descripcion}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {subServicio.unidad_venta}
+                        </Badge>
+                        <Badge
+                          variant={
+                            subServicio.disponible ? "default" : "secondary"
+                          }
+                          className="text-xs"
+                        >
+                          {subServicio.disponible
+                            ? "Disponible"
+                            : "No disponible"}
+                        </Badge>
+                      </div>
+
+                      <div className="mt-3">
+                        <h1 className="font-bold text-sm sm:text-base">
+                          Paquetes por Pais
+                        </h1>
+                        <DetallesPais subServicio={subServicio} />
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {subServicio.descripcion}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {subServicio.unidad_venta}
-                      </Badge>
-                      <Badge
-                        variant={
-                          subServicio.disponible ? "default" : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {subServicio.disponible
-                          ? "Disponible"
-                          : "No disponible"}
-                      </Badge>
-                    </div>
-                    <div className="mt-2">
-                      <h1 className="font-bold">Paquetes por Pais</h1>
-                      <DetallesPais subServicio={subServicio} />
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-6 sm:py-8">
+                    No hay servicios disponibles
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
