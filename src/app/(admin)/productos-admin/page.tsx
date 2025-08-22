@@ -19,12 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatusMessage } from "@/components/generics/StatusMessage";
 import TitlePages from "@/components/generics/TitlePages";
 import CardSkeleton from "@/components/generics/CardSkeleton";
 import TableProducts from "./ui/TableProducts";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import FormProductos from "./ui/FormProductos";
 
 const PageProductosAdmin = () => {
+  const [isOpenSubServicio, setIsOpenSubServicio] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -100,7 +109,7 @@ const PageProductosAdmin = () => {
             Gestione los productos del inventario
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsOpenSubServicio(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Producto
         </Button>
@@ -188,6 +197,21 @@ const PageProductosAdmin = () => {
           </Pagination>
         </div>
       )}
+
+      <AlertDialog open={isOpenSubServicio} onOpenChange={setIsOpenSubServicio}>
+        <AlertDialogContent className="h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Agregar Producto</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras agregar nuevos productos
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <FormProductos onSuccess={() => setIsOpenSubServicio(false)} />
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

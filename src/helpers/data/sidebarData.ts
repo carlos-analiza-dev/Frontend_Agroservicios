@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Locate,
   Settings,
+  Tag,
   UserCog,
   Users,
 } from "lucide-react";
@@ -34,6 +35,11 @@ export const navItems = [
         name: "Proveedores",
         href: "/proveedores-admin",
         icon: Building2,
+      },
+      {
+        name: "Marcas",
+        href: "/marcas-admin",
+        icon: Tag,
       },
       { name: "Productos", href: "/productos-admin", icon: Handbag },
       {

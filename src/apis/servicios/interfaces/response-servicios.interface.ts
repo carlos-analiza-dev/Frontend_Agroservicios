@@ -16,6 +16,8 @@ export interface SubServicio {
   nombre: string;
   descripcion: string;
   servicioId: string;
+  marcaId: string;
+  proveedorId: string;
   tipo: string;
   unidad_venta: string;
   disponible: boolean;

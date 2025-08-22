@@ -46,7 +46,7 @@ const TableProducts = ({ productos }: Props) => {
                   <TableHead className="text-center font-bold">
                     Código
                   </TableHead>
-                  <TableHead className="text-center font-bold">Tipo</TableHead>
+
                   <TableHead className="text-center font-bold">
                     Unidad
                   </TableHead>
@@ -78,9 +78,7 @@ const TableProducts = ({ productos }: Props) => {
                     <TableCell className="text-center">
                       {producto.codigo}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline">{producto.tipo}</Badge>
-                    </TableCell>
+
                     <TableCell className="text-center">
                       <Badge variant="outline">{producto.unidad_venta}</Badge>
                     </TableCell>
@@ -106,26 +104,8 @@ const TableProducts = ({ productos }: Props) => {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center flex-wrap gap-1 max-w-[150px]">
-                        {producto.preciosPorPais
-                          .slice(0, 2)
-                          .map((precio, index) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {precio.pais.simbolo_moneda}
-                              {precio.precio}
-                            </Badge>
-                          ))}
-                        {producto.preciosPorPais.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{producto.preciosPorPais.length - 2}
-                          </Badge>
-                        )}
-                      </div>
+                    <TableCell className="flex justify-center">
+                      <Button variant={"link"}>Ver</Button>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">

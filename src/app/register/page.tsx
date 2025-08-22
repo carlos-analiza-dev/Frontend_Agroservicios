@@ -29,7 +29,7 @@ export default function RegisterPage() {
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-green-700">
-              Registro en AgroServicios
+              Registro en El Sembrador FDN
             </CardTitle>
             <CardDescription>
               Completa el formulario para crear tu cuenta

@@ -93,12 +93,10 @@ const DetallesPais = ({ subServicio }: Props) => {
           </div>
           <AlertDialogHeader className="px-1 sm:px-4">
             <AlertDialogTitle>
-              {isEditPrecio ? "Editar Precio" : "Agregar Precio"}
+              Editar Paquete para {subServicio.nombre}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {isEditPrecio
-                ? "Modifica los detalles del precio por país."
-                : "Completa los campos para agregar un nuevo precio para este servicio."}
+              Modifica los detalles del paquete por país.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="px-1 sm:px-4 pb-4">

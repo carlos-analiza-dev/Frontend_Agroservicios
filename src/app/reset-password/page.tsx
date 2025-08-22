@@ -81,7 +81,7 @@ const ResetPasswordPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-green-700">
-              AgroServicios
+              El Sembrador FDN
             </CardTitle>
             <CardDescription>¿No recuerdas tu contraseña?</CardDescription>
           </CardHeader>

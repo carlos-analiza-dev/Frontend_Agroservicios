@@ -29,7 +29,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-green-700">
-              AgroServicios
+              El Sembrador FDN
             </CardTitle>
             <CardDescription>
               Accede a tu cuenta para gestionar tus servicios agrícolas

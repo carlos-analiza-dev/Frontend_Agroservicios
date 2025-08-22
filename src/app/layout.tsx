@@ -12,7 +12,7 @@ const poppins = Raleway({
 });
 
 export const metadata: Metadata = {
-  title: "Agroservicios Analiza",
+  title: "El Sembrador",
   description:
     "En este sitio se te brindara una diversidad de agroservicios para tu mejora continua.",
 };

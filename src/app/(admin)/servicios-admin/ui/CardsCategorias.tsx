@@ -47,8 +47,12 @@ const CardsCategorias = ({ servicios }: Props) => {
   const [selectedServicioId, setSelectedServicioId] = useState<string>("");
   const [selectedSubServicioId, setSelectedSubServicioId] =
     useState<string>("");
+  const [servicioSelected, setServicioSelected] = useState<SubServicio | null>(
+    null
+  );
+  const [selectedCat, setSelectedCat] = useState<Servicio | null>(null);
 
-  const { data: paisesData, isLoading: isLoadingPaises } = usePaises();
+  const { data: paisesData } = usePaises();
   const paises: PaisOption[] =
     paisesData?.data.map((pais) => ({
       value: pais.id,
@@ -62,10 +66,11 @@ const CardsCategorias = ({ servicios }: Props) => {
     setEditServicio(servicio);
   };
 
-  const handleAddSubServicio = (servicioId: string) => {
+  const handleAddSubServicio = (servicio: Servicio) => {
     setIsEditSubServicio(false);
     setIsOpenSubServicio(true);
-    setSelectedServicioId(servicioId);
+    setSelectedServicioId(servicio.id);
+    setSelectedCat(servicio);
     setEditSubServicio(null);
   };
 
@@ -76,10 +81,11 @@ const CardsCategorias = ({ servicios }: Props) => {
     setEditSubServicio(subServicio);
   };
 
-  const handleAddPrecio = (subServicioId: string) => {
+  const handleAddPrecio = (subServicio: SubServicio) => {
     setIsEditPrecio(false);
     setIsOpenPrecios(true);
-    setSelectedSubServicioId(subServicioId);
+    setSelectedSubServicioId(subServicio.id);
+    setServicioSelected(subServicio);
     setEditPrecio(null);
   };
 
@@ -132,7 +138,7 @@ const CardsCategorias = ({ servicios }: Props) => {
                   <span className="font-bold">{servicio.nombre}</span>:
                 </h3>
                 <Button
-                  onClick={() => handleAddSubServicio(servicio.id)}
+                  onClick={() => handleAddSubServicio(servicio)}
                   size="sm"
                   className="w-full sm:w-auto"
                 >
@@ -156,12 +162,12 @@ const CardsCategorias = ({ servicios }: Props) => {
                             {subServicio.nombre}
                           </div>
                           <Button
-                            onClick={() => handleAddPrecio(subServicio.id)}
+                            onClick={() => handleAddPrecio(subServicio)}
                             variant={"outline"}
                             size={"sm"}
                             className="w-full xs:w-auto"
                           >
-                            Agregar Precio
+                            Agregar Paquete
                           </Button>
                         </div>
                         <Button
@@ -245,7 +251,10 @@ const CardsCategorias = ({ servicios }: Props) => {
           </div>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {isEditSubServicio ? "Editar Servicio" : "Crear Servicio"}
+              {isEditSubServicio
+                ? `Editar Servicio - ${editSubServicio?.nombre}
+                `
+                : `Crear Servicio para ${selectedCat?.nombre}`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {isEditSubServicio
@@ -271,12 +280,11 @@ const CardsCategorias = ({ servicios }: Props) => {
           </div>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {isEditPrecio ? "Editar Precio" : "Agregar Precio"}
+              Agregar Paquete para {servicioSelected?.nombre}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {isEditPrecio
-                ? "Modifica los detalles del precio por país."
-                : "Completa los campos para agregar un nuevo precio para este servicio."}
+              Completa los campos para agregar un nuevo paquete para este
+              servicio.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FormAddPrecios
