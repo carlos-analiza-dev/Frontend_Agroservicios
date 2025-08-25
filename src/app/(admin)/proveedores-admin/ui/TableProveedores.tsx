@@ -130,6 +130,7 @@ const TableProveedores = ({ data, isLoading }: Props) => {
             <TableHead>Teléfono</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Ubicación</TableHead>
+
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -179,7 +180,8 @@ const TableProveedores = ({ data, isLoading }: Props) => {
                 <TableCell>{proveedor.telefono}</TableCell>
                 <TableCell>{proveedor.correo}</TableCell>
                 <TableCell>
-                  {proveedor.municipio.nombre}, {proveedor.departamento.nombre}
+                  {proveedor.pais.nombre}, {proveedor.municipio.nombre},{" "}
+                  {proveedor.departamento.nombre}
                 </TableCell>
                 <TableCell>
                   <Badge

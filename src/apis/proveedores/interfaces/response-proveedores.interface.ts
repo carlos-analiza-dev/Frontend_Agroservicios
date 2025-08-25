@@ -17,6 +17,7 @@ export interface Proveedor {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  pais: Pais;
   departamento: Departamento;
   municipio: Departamento;
   created_by: AtedBy;
@@ -39,5 +40,16 @@ export interface AtedBy {
 export interface Departamento {
   id: string;
   nombre: string;
+  isActive: boolean;
+}
+
+export interface Pais {
+  id: string;
+  nombre: string;
+  code: string;
+  code_phone: string;
+  nombre_moneda: string;
+  simbolo_moneda: string;
+  nombre_documento: string;
   isActive: boolean;
 }

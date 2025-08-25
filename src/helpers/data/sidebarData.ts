@@ -1,10 +1,12 @@
 import {
+  Boxes,
   BriefcaseMedical,
   Building2,
   ChartBarStacked,
   FileText,
   Globe,
   Handbag,
+  Layers3,
   LayoutDashboard,
   Locate,
   Settings,
@@ -41,6 +43,8 @@ export const navItems = [
         href: "/marcas-admin",
         icon: Tag,
       },
+      { name: "Categorías", href: "/categorias-admin", icon: Layers3 },
+      { name: "Sub categorías", href: "/sub-categorias-admin", icon: Boxes },
       { name: "Productos", href: "/productos-admin", icon: Handbag },
       {
         name: "Veterinarios",

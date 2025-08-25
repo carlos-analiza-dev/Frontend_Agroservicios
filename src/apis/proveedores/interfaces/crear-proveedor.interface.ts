@@ -8,5 +8,6 @@ export interface CrearProveedorInterface {
   nombre_contacto: string;
   departamentoId: string;
   municipioId: string;
+  paisId: string;
   is_active?: boolean;
 }

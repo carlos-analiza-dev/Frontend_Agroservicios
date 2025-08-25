@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import useGetDeptosActivesByPais from "@/hooks/departamentos/useGetDeptosActivesByPais";
 import useGetMunicipiosActivosByDepto from "@/hooks/municipios/useGetMunicipiosActivosByDepto";
-import { useAuthStore } from "@/providers/store/useAuthStore";
+import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import React, { useEffect } from "react";
@@ -37,8 +37,8 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
     watch,
     formState: { errors },
   } = useForm<CrearProveedorInterface>();
-  const { user } = useAuthStore();
-  const paisId = user?.pais.id || "";
+  const paisId = watch("paisId");
+  const { data: paises } = useGetPaisesActivos();
 
   const { data: departamentos } = useGetDeptosActivesByPais(paisId);
   const deptoId = watch("departamentoId");
@@ -56,6 +56,7 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
         telefono: editProveedor.telefono,
         correo: editProveedor.correo,
         nombre_contacto: editProveedor.nombre_contacto,
+        paisId: editProveedor.pais.id,
         departamentoId: editProveedor.departamento.id,
         municipioId: editProveedor.municipio.id,
       });
@@ -242,20 +243,53 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
       </div>
 
       <div className="space-y-1">
+        <Label className="font-bold">Pais*</Label>
+        <Select
+          onValueChange={(value) => setValue("paisId", value)}
+          defaultValue={editProveedor?.pais.id}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un pais" />
+          </SelectTrigger>
+          <SelectContent>
+            {paises && paises?.data.length > 0 ? (
+              paises?.data.map((pais) => (
+                <SelectItem key={pais.id} value={pais.id}>
+                  {pais.nombre}
+                </SelectItem>
+              ))
+            ) : (
+              <p>No se encontraron paises</p>
+            )}
+          </SelectContent>
+        </Select>
+        {errors.paisId && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.paisId.message as string}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1">
         <Label className="font-bold">Departamento*</Label>
         <Select
           onValueChange={(value) => setValue("departamentoId", value)}
           defaultValue={editProveedor?.departamento.id}
+          disabled={!paisId}
         >
           <SelectTrigger>
             <SelectValue placeholder="Seleccione un departamento" />
           </SelectTrigger>
           <SelectContent>
-            {departamentos?.data.map((departamento) => (
-              <SelectItem key={departamento.id} value={departamento.id}>
-                {departamento.nombre}
-              </SelectItem>
-            ))}
+            {departamentos && departamentos.data.length > 0 ? (
+              departamentos?.data.map((departamento) => (
+                <SelectItem key={departamento.id} value={departamento.id}>
+                  {departamento.nombre}
+                </SelectItem>
+              ))
+            ) : (
+              <p>No se encontraron departamentos</p>
+            )}
           </SelectContent>
         </Select>
         {errors.departamentoId && (
@@ -276,11 +310,15 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
             <SelectValue placeholder="Seleccione un municipio" />
           </SelectTrigger>
           <SelectContent>
-            {municipios?.data.map((municipio) => (
-              <SelectItem key={municipio.id} value={municipio.id}>
-                {municipio.nombre}
-              </SelectItem>
-            ))}
+            {municipios && municipios.data.length > 0 ? (
+              municipios?.data.map((municipio) => (
+                <SelectItem key={municipio.id} value={municipio.id}>
+                  {municipio.nombre}
+                </SelectItem>
+              ))
+            ) : (
+              <p>No se encontraron municipios</p>
+            )}
           </SelectContent>
         </Select>
         {errors.municipioId && (

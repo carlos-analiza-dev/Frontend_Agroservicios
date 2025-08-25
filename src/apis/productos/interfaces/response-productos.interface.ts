@@ -7,6 +7,9 @@ export interface Servicio {
   id: string;
   nombre: string;
   codigo: string;
+  codigo_barra: string;
+  atributos: string;
+  tax_rate: string;
   tipo: string;
   unidad_venta: string;
   descripcion: string;
@@ -17,10 +20,21 @@ export interface Servicio {
   updatedAt: Date;
   marcaId: string;
   proveedorId: string;
+  categoriaId: string;
   servicio: null;
   marca: Marca;
   proveedor: Proveedor;
-  preciosPorPais: any[];
+  categoria: Categoria | null;
+  preciosPorPais: PreciosPorPai[];
+}
+
+export interface Categoria {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Marca {
@@ -37,7 +51,6 @@ export interface Marca {
 export interface AtedBy {
   id: string;
   email: string;
-  password: string;
   name: string;
   identificacion: string;
   direccion: string;
@@ -79,6 +92,16 @@ export interface Role {
   isActive: boolean;
 }
 
+export interface PreciosPorPai {
+  id: string;
+  precio: string;
+  costo: string;
+  tiempo: null;
+  cantidadMin: null;
+  cantidadMax: null;
+  pais: Pais;
+}
+
 export interface Proveedor {
   id: string;
   nit_rtn: string;
@@ -91,6 +114,7 @@ export interface Proveedor {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  pais: Pais;
   departamento: Departamento;
   municipio: Departamento;
   created_by: AtedBy;

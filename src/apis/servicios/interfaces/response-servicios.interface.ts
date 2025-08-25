@@ -15,9 +15,13 @@ export interface SubServicio {
   id: string;
   nombre: string;
   descripcion: string;
+  codigo_barra: string;
+  atributos: string;
+  tax_rate: number;
   servicioId: string;
   marcaId: string;
   proveedorId: string;
+  categoriaId: string;
   tipo: string;
   unidad_venta: string;
   disponible: boolean;
@@ -28,6 +32,7 @@ export interface SubServicio {
 export interface PreciosPorPai {
   id: string;
   precio: string;
+  costo: string;
   tiempo: number;
   cantidadMin: number;
   cantidadMax: number;
