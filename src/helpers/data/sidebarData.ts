@@ -13,6 +13,12 @@ import {
   Tag,
   UserCog,
   Users,
+  Package,
+  PackageOpen,
+  ClipboardList,
+  Warehouse,
+  Droplet,
+  FlaskConical,
 } from "lucide-react";
 
 export const navItems = [
@@ -46,12 +52,38 @@ export const navItems = [
       { name: "Categorías", href: "/categorias-admin", icon: Layers3 },
       { name: "Sub categorías", href: "/sub-categorias-admin", icon: Boxes },
       { name: "Productos", href: "/productos-admin", icon: Handbag },
+      { name: "Insumos", href: "/insumos-admin", icon: FlaskConical },
       {
         name: "Veterinarios",
         href: "/veterinarios-admin",
         icon: BriefcaseMedical,
       },
       { name: "Roles", href: "/roles-admin", icon: UserCog },
+    ],
+  },
+  {
+    category: "Inventarios",
+    items: [
+      {
+        name: "Insumos",
+        href: "/insumos-inventario-admin",
+        icon: ClipboardList,
+      },
+      {
+        name: "Productos",
+        href: "/productos-inventario-admin",
+        icon: Package,
+      },
+      {
+        name: "Existencias",
+        href: "/existencias-inventario-admin",
+        icon: Warehouse,
+      },
+      {
+        name: "Movimientos",
+        href: "/movimientos-inventario-admin",
+        icon: PackageOpen,
+      },
     ],
   },
   {

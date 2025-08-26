@@ -12,7 +12,6 @@ export interface Servicio {
   tax_rate: string;
   tipo: string;
   unidad_venta: string;
-  descripcion: string;
   servicioId: null;
   isActive: boolean;
   disponible: boolean;

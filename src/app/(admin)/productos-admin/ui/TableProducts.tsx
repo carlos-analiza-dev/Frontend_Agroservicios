@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import FormProductos from "./FormProductos";
+import FormEditPrecios from "./FormEditPrecios";
 
 interface Props {
   productos: Servicio[];
@@ -46,13 +47,26 @@ interface Props {
 
 const TableProducts = ({ productos }: Props) => {
   const [editSubServicio, setEditSubServicio] = useState<Servicio | null>(null);
+  const [editPrecioSubServicio, setEditPrecioSubServicio] =
+    useState<Servicio | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenPrecios, setIsOpenPrecios] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
   const handleEditProducto = (producto: Servicio) => {
     setIsOpen(true);
     setIsEdit(true);
     setEditSubServicio(producto);
+  };
+
+  const handleEditPrecios = (producto: Servicio) => {
+    setIsOpenPrecios(true);
+    setEditPrecioSubServicio(producto);
+  };
+
+  const handleClosePrecios = () => {
+    setIsOpenPrecios(false);
+    setEditPrecioSubServicio(null);
   };
 
   return (
@@ -121,11 +135,6 @@ const TableProducts = ({ productos }: Props) => {
                             <h4 className="font-semibold text-base">
                               {producto.nombre}
                             </h4>
-                            {producto.descripcion && (
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {producto.descripcion}
-                              </p>
-                            )}
                           </div>
                           <Badge
                             variant="outline"
@@ -269,16 +278,9 @@ const TableProducts = ({ productos }: Props) => {
                           size="sm"
                           title="Gestionar precios"
                           className="h-8 w-8 p-0"
+                          onClick={() => handleEditPrecios(producto)}
                         >
                           <DollarSign className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          title="Gestionar inventario"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Package className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -308,12 +310,6 @@ const TableProducts = ({ productos }: Props) => {
                             </Badge>
                           </div>
                         </div>
-
-                        {producto.descripcion && (
-                          <p className="text-sm text-muted-foreground">
-                            {producto.descripcion}
-                          </p>
-                        )}
 
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
@@ -396,6 +392,7 @@ const TableProducts = ({ productos }: Props) => {
                             variant="outline"
                             size="sm"
                             className="flex-1"
+                            onClick={() => handleEditProducto(producto)}
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Editar
@@ -404,6 +401,7 @@ const TableProducts = ({ productos }: Props) => {
                             variant="outline"
                             size="sm"
                             className="flex-1"
+                            onClick={() => handleEditPrecios(producto)}
                           >
                             <DollarSign className="h-4 w-4 mr-1" />
                             Precios
@@ -436,38 +434,7 @@ const TableProducts = ({ productos }: Props) => {
                           </Badge>
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Detalles
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <DollarSign className="h-4 w-4 mr-2" />
-                            Gestionar Precios
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Package className="h-4 w-4 mr-2" />
-                            Gestionar Inventario
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
-
-                    {producto.descripcion && (
-                      <p className="text-sm text-muted-foreground">
-                        {producto.descripcion}
-                      </p>
-                    )}
 
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
@@ -559,6 +526,26 @@ const TableProducts = ({ productos }: Props) => {
                         </p>
                       </div>
                     )}
+                    <div className="flex justify-between gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEditProducto(producto)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEditPrecios(producto)}
+                      >
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        Precios
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -583,6 +570,27 @@ const TableProducts = ({ productos }: Props) => {
             editSubServicio={editSubServicio}
             isEdit={isEdit}
           />
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpenPrecios} onOpenChange={setIsOpenPrecios}>
+        <AlertDialogContent className="max-w-md">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gestionar Precios</AlertDialogTitle>
+            <AlertDialogDescription>
+              Edita los precios y costos del producto
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {editPrecioSubServicio && (
+            <FormEditPrecios
+              onSuccess={handleClosePrecios}
+              editSubServicio={editPrecioSubServicio}
+              isEdit={true}
+            />
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>

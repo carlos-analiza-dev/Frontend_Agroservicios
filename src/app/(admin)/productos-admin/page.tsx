@@ -40,7 +40,6 @@ const PageProductosAdmin = () => {
   const [isOpenSubServicio, setIsOpenSubServicio] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedPais, setSelectedPais] = useState<string>(paisId || "all");
   const { data: paises } = usePaises();
 
   const offset = (currentPage - 1) * itemsPerPage;
@@ -48,7 +47,7 @@ const PageProductosAdmin = () => {
   const { data, isLoading, isError } = useGetProductos(
     itemsPerPage,
     offset,
-    selectedPais === "all" ? undefined : selectedPais
+    user?.pais.id
   );
   const productos = data?.data?.servicios || [];
   const totalProductos = data?.data?.total || 0;
@@ -66,13 +65,7 @@ const PageProductosAdmin = () => {
     setCurrentPage(1);
   };
 
-  const handlePaisChange = (value: string) => {
-    setSelectedPais(value);
-    setCurrentPage(1);
-  };
-
   const clearPaisFilter = () => {
-    setSelectedPais("all");
     setCurrentPage(1);
   };
 
@@ -153,51 +146,6 @@ const PageProductosAdmin = () => {
             </SelectContent>
           </Select>
           <span className="text-sm font-medium">productos por página</span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium">Filtrar por país:</span>
-            <Select value={selectedPais} onValueChange={handlePaisChange}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Todos los países" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los países</SelectItem>
-                {paises && paises.data.length > 0 ? (
-                  paises.data.map((pais) => (
-                    <SelectItem key={pais.id} value={pais.id}>
-                      {pais.nombre}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    No se encontraron países
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedPais && (
-            <Button variant="outline" size="sm" onClick={clearPaisFilter}>
-              Limpiar filtro
-            </Button>
-          )}
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
-          {Math.min(currentPage * itemsPerPage, totalProductos)} de{" "}
-          {totalProductos} productos
-          {selectedPais && paises && (
-            <span className="ml-2">
-              (Filtrado por:{" "}
-              {paises.data.find((p) => p.id === selectedPais)?.nombre ||
-                selectedPais}
-              )
-            </span>
-          )}
         </div>
       </div>
 

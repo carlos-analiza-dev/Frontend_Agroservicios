@@ -16,8 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { UnidadMedida } from "@/helpers/data/unidadMedidas";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
 import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
-import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import React, { useEffect } from "react";
@@ -31,19 +31,18 @@ interface Props {
 }
 
 const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const { data: marcasActivas } = useGetMarcasActivas();
   const { data: proveedoresActivos } = useGetProveedoresActivos();
   const { data: categorias } = useGetCategorias();
-  const { data: paisesActivos } = useGetPaisesActivos();
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<CrearSubServicio>();
 
@@ -53,8 +52,8 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         nombre: editSubServicio.nombre,
         tipo: editSubServicio.tipo,
         unidad_venta: editSubServicio.unidad_venta,
-        descripcion: editSubServicio.descripcion,
         disponible: editSubServicio.disponible,
+        isActive: editSubServicio.isActive,
         marcaId: editSubServicio.marcaId,
         proveedorId: editSubServicio.proveedorId,
         categoriaId: editSubServicio.categoriaId,
@@ -62,7 +61,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         codigo_barra: editSubServicio.codigo_barra,
         precio: Number(editSubServicio.preciosPorPais?.[0]?.precio),
         costo: Number(editSubServicio.preciosPorPais?.[0]?.costo),
-        paisId: editSubServicio.preciosPorPais?.[0]?.pais.id,
       });
       setValue("unidad_venta", editSubServicio.unidad_venta);
     } else {
@@ -70,8 +68,8 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         nombre: "",
         tipo: "producto",
         unidad_venta: "unidad",
-        descripcion: "",
         disponible: true,
+        isActive: true,
         marcaId: undefined,
         proveedorId: undefined,
         categoriaId: undefined,
@@ -79,7 +77,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         codigo_barra: undefined,
         precio: undefined,
         costo: undefined,
-        paisId: undefined,
       });
     }
   }, [isEdit, editSubServicio, reset, setValue]);
@@ -144,6 +141,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       tax_rate: Number(data.tax_rate),
       precio: Number(data.precio),
       costo: Number(data.costo),
+      paisId: user?.pais.id,
     };
     if (isEdit) {
       mutationUpdate.mutate(payload);
@@ -154,6 +152,28 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="codigo" className="font-bold">
+          Código de Producto*
+        </Label>
+        <Input
+          id="codigo"
+          {...register("codigo", {
+            required: "El código es requerido",
+            maxLength: {
+              value: 20,
+              message: "El código no puede tener más de 20 caracteres",
+            },
+          })}
+          placeholder="Ej: PROD-190019"
+          defaultValue={isEdit ? editSubServicio?.codigo : ""}
+        />
+        {errors.codigo && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.codigo.message as string}
+          </p>
+        )}
+      </div>
       <div className="space-y-2">
         <Label htmlFor="nombre" className="font-bold">
           Nombre del Producto*
@@ -176,6 +196,147 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         {errors.nombre && (
           <p className="text-sm font-medium text-red-500">
             {errors.nombre.message as string}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="codigo_barra" className="font-bold">
+          Código de Barra*
+        </Label>
+        <Input
+          id="codigo_barra"
+          {...register("codigo_barra", {
+            required: "El código de barra es requerido",
+            maxLength: {
+              value: 20,
+              message: "El código de barra no puede tener más de 20 caracteres",
+            },
+          })}
+          placeholder="Ej: 7501031311309"
+          defaultValue={isEdit ? editSubServicio?.codigo_barra : ""}
+        />
+        {errors.codigo_barra && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.codigo_barra.message as string}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="marcaId" className="font-bold">
+          Marca
+        </Label>
+        <Select
+          defaultValue={isEdit ? editSubServicio?.marcaId : ""}
+          onValueChange={(value) => setValue("marcaId", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona una marca" />
+          </SelectTrigger>
+          <SelectContent>
+            {marcasActivas?.map((marca) => (
+              <SelectItem key={marca.id} value={marca.id}>
+                {marca.nombre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="categoriaId" className="font-bold">
+          Categoria
+        </Label>
+        <Select
+          defaultValue={isEdit ? editSubServicio?.categoriaId : ""}
+          onValueChange={(value) => setValue("categoriaId", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona una categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            {categorias?.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.nombre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {!isEdit && (
+        <>
+          <div className="flex justify-between">
+            <div className="space-y-2">
+              <Label htmlFor="precio" className="font-bold">
+                Precio*
+              </Label>
+              <Input
+                id="precio"
+                type="number"
+                step="0.01"
+                {...register("precio", {
+                  required: "El precio es requerido",
+                  min: { value: 0, message: "El precio no puede ser negativo" },
+                })}
+                placeholder="0.00"
+                defaultValue={
+                  isEdit ? editSubServicio?.preciosPorPais?.[0]?.precio : ""
+                }
+              />
+              {errors.precio && (
+                <p className="text-sm font-medium text-red-500">
+                  {errors.precio.message as string}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="costo" className="font-bold">
+                Costo*
+              </Label>
+              <Input
+                id="costo"
+                type="number"
+                step="0.01"
+                {...register("costo", {
+                  required: "El costo es requerido",
+                  min: { value: 0, message: "El costo no puede ser negativo" },
+                })}
+                placeholder="0.00"
+                defaultValue={
+                  isEdit ? editSubServicio?.preciosPorPais?.[0]?.costo : ""
+                }
+              />
+              {errors.costo && (
+                <p className="text-sm font-medium text-red-500">
+                  {errors.costo.message as string}
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="tax_rate" className="font-bold">
+          Impuesto (Tax Rate %)
+        </Label>
+        <Input
+          id="tax_rate"
+          type="number"
+          step="0.01"
+          {...register("tax_rate", {
+            required: "El impuesto es requerido",
+            min: { value: 0, message: "El impuesto no puede ser negativo" },
+          })}
+          placeholder="Ej: 15"
+          defaultValue={isEdit ? editSubServicio?.tax_rate : ""}
+        />
+        {errors.tax_rate && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.tax_rate.message as string}
           </p>
         )}
       </div>
@@ -207,56 +368,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="descripcion" className="font-bold">
-          Descripción del Producto*
-        </Label>
-        <Textarea
-          id="descripcion"
-          {...register("descripcion", {
-            required: "La descripción es requerida",
-            minLength: {
-              value: 10,
-              message: "La descripción debe tener al menos 10 caracteres",
-            },
-            maxLength: {
-              value: 500,
-              message: "La descripción no puede tener más de 500 caracteres",
-            },
-          })}
-          placeholder="Describe en detalle este producto"
-          className="min-h-[100px]"
-        />
-        {errors.descripcion && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.descripcion.message as string}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="codigo_barra" className="font-bold">
-          Código de Barra*
-        </Label>
-        <Input
-          id="codigo_barra"
-          {...register("codigo_barra", {
-            required: "El código de barra es requerido",
-            maxLength: {
-              value: 20,
-              message: "El código de barra no puede tener más de 20 caracteres",
-            },
-          })}
-          placeholder="Ej: 7501031311309"
-          defaultValue={isEdit ? editSubServicio?.codigo_barra : ""}
-        />
-        {errors.codigo_barra && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.codigo_barra.message as string}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="atributos" className="font-bold">
           Atributos*
         </Label>
@@ -276,106 +387,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         {errors.atributos && (
           <p className="text-sm font-medium text-red-500">
             {errors.atributos.message as string}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="tax_rate" className="font-bold">
-          Impuesto (Tax Rate %)
-        </Label>
-        <Input
-          id="tax_rate"
-          type="number"
-          step="0.01"
-          {...register("tax_rate", {
-            required: "El impuesto es requerido",
-            min: { value: 0, message: "El impuesto no puede ser negativo" },
-          })}
-          placeholder="Ej: 15"
-          defaultValue={isEdit ? editSubServicio?.tax_rate : ""}
-        />
-        {errors.tax_rate && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.tax_rate.message as string}
-          </p>
-        )}
-      </div>
-
-      <div className="flex justify-between">
-        <div className="space-y-2">
-          <Label htmlFor="precio" className="font-bold">
-            Precio*
-          </Label>
-          <Input
-            id="precio"
-            type="number"
-            step="0.01"
-            {...register("precio", {
-              required: "El precio es requerido",
-              min: { value: 0, message: "El precio no puede ser negativo" },
-            })}
-            placeholder="0.00"
-            defaultValue={
-              isEdit ? editSubServicio?.preciosPorPais?.[0]?.precio : ""
-            }
-          />
-          {errors.precio && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.precio.message as string}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="costo" className="font-bold">
-            Costo*
-          </Label>
-          <Input
-            id="costo"
-            type="number"
-            step="0.01"
-            {...register("costo", {
-              required: "El costo es requerido",
-              min: { value: 0, message: "El costo no puede ser negativo" },
-            })}
-            placeholder="0.00"
-            defaultValue={
-              isEdit ? editSubServicio?.preciosPorPais?.[0]?.costo : ""
-            }
-          />
-          {errors.costo && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.costo.message as string}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="paisId" className="font-bold">
-          País*
-        </Label>
-        <Select
-          defaultValue={
-            isEdit ? editSubServicio?.preciosPorPais?.[0]?.pais?.id : ""
-          }
-          onValueChange={(value) => setValue("paisId", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona un país" />
-          </SelectTrigger>
-          <SelectContent>
-            {paisesActivos?.data.map((pais) => (
-              <SelectItem key={pais.id} value={pais.id}>
-                {pais.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.paisId && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.paisId?.message as string}
           </p>
         )}
       </div>
@@ -401,63 +412,41 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="categoriaId" className="font-bold">
-          Categoria
-        </Label>
-        <Select
-          defaultValue={isEdit ? editSubServicio?.categoriaId : ""}
-          onValueChange={(value) => setValue("categoriaId", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona una categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            {categorias?.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {isEdit && (
+        <>
+          <div className="space-y-2">
+            <Label className="font-bold">Estado</Label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="disponible"
+                {...register("disponible")}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                defaultChecked
+              />
+              <Label htmlFor="disponible" className="text-sm font-normal">
+                Producto disponible
+              </Label>
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="marcaId" className="font-bold">
-          Marca
-        </Label>
-        <Select
-          defaultValue={isEdit ? editSubServicio?.marcaId : ""}
-          onValueChange={(value) => setValue("marcaId", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona una marca" />
-          </SelectTrigger>
-          <SelectContent>
-            {marcasActivas?.map((marca) => (
-              <SelectItem key={marca.id} value={marca.id}>
-                {marca.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="font-bold">Estado</Label>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="disponible"
-            {...register("disponible")}
-            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            defaultChecked
-          />
-          <Label htmlFor="disponible" className="text-sm font-normal">
-            Producto disponible
-          </Label>
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label className="font-bold">Actividad</Label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="actividad"
+                {...register("isActive")}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                defaultChecked
+              />
+              <Label htmlFor="actividad" className="text-sm font-normal">
+                Producto activo
+              </Label>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex justify-end space-x-3 pt-4">
         <Button

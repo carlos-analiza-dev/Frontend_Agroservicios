@@ -15,6 +15,7 @@ import {
 import useGetDeptosActivesByPais from "@/hooks/departamentos/useGetDeptosActivesByPais";
 import useGetMunicipiosActivosByDepto from "@/hooks/municipios/useGetMunicipiosActivosByDepto";
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import React, { useEffect } from "react";
@@ -28,6 +29,7 @@ interface Props {
 }
 
 const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const {
     register,
@@ -37,10 +39,10 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
     watch,
     formState: { errors },
   } = useForm<CrearProveedorInterface>();
-  const paisId = watch("paisId");
-  const { data: paises } = useGetPaisesActivos();
 
-  const { data: departamentos } = useGetDeptosActivesByPais(paisId);
+  const { data: departamentos } = useGetDeptosActivesByPais(
+    user?.pais.id ?? ""
+  );
   const deptoId = watch("departamentoId");
   const { data: municipios } = useGetMunicipiosActivosByDepto(deptoId);
 
@@ -243,39 +245,11 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
       </div>
 
       <div className="space-y-1">
-        <Label className="font-bold">Pais*</Label>
-        <Select
-          onValueChange={(value) => setValue("paisId", value)}
-          defaultValue={editProveedor?.pais.id}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccione un pais" />
-          </SelectTrigger>
-          <SelectContent>
-            {paises && paises?.data.length > 0 ? (
-              paises?.data.map((pais) => (
-                <SelectItem key={pais.id} value={pais.id}>
-                  {pais.nombre}
-                </SelectItem>
-              ))
-            ) : (
-              <p>No se encontraron paises</p>
-            )}
-          </SelectContent>
-        </Select>
-        {errors.paisId && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.paisId.message as string}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1">
         <Label className="font-bold">Departamento*</Label>
         <Select
           onValueChange={(value) => setValue("departamentoId", value)}
           defaultValue={editProveedor?.departamento.id}
-          disabled={!paisId}
+          disabled={!user?.pais.id}
         >
           <SelectTrigger>
             <SelectValue placeholder="Seleccione un departamento" />
