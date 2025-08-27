@@ -5,7 +5,7 @@ const useGetProductos = (limit: number, offset: number, pais?: string) => {
   return useQuery({
     queryKey: ["productos-admin", limit, offset, pais],
     queryFn: () => ObtenerProductos(limit, offset, pais),
-    retry: 0,
+    retry: false,
     staleTime: 60 * 100 * 5,
   });
 };

@@ -93,14 +93,6 @@ const CardProducts = ({ productos }: Props) => {
                   </DropdownMenu>
                 </div>
 
-                {/* Descripción */}
-                {producto.descripcion && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {producto.descripcion}
-                  </p>
-                )}
-
-                {/* Información básica */}
                 <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
                   <div className="flex items-center gap-1">
                     <Box className="h-3 w-3 text-muted-foreground" />
@@ -149,7 +141,6 @@ const CardProducts = ({ productos }: Props) => {
                   )}
                 </div>
 
-                {/* Precios */}
                 <div className="mb-3">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="h-4 w-4 text-green-600" />
@@ -185,7 +176,6 @@ const CardProducts = ({ productos }: Props) => {
                   )}
                 </div>
 
-                {/* Estados y atributos */}
                 <div className="flex flex-wrap gap-2 mb-3">
                   <Badge
                     variant={producto.isActive ? "default" : "secondary"}
@@ -213,7 +203,6 @@ const CardProducts = ({ productos }: Props) => {
                   </div>
                 )}
 
-                {/* Fechas */}
                 <div className="flex items-center gap-1 text-xs text-muted-foreground pt-2 border-t">
                   <Calendar className="h-3 w-3" />
                   <span>
@@ -221,7 +210,6 @@ const CardProducts = ({ productos }: Props) => {
                   </span>
                 </div>
 
-                {/* Acciones rápidas */}
                 <div className="flex gap-2 mt-3 pt-3 border-t">
                   <Button
                     variant="outline"

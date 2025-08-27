@@ -87,6 +87,10 @@ export const navItems = [
     ],
   },
   {
+    category: "Impuestos",
+    items: [{ name: "Impuestos", href: "/impuestos-admin", icon: FileText }],
+  },
+  {
     category: "Administración",
     items: [
       { name: "Reportes", href: "/admin/reports", icon: FileText },

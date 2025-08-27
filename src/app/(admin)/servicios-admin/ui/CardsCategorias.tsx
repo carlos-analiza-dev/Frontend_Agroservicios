@@ -170,16 +170,28 @@ const CardsCategorias = ({ servicios }: Props) => {
                             Agregar Paquete
                           </Button>
                         </div>
-                        <Button
-                          variant={"outline"}
-                          size={"sm"}
-                          onClick={() =>
-                            handleEditSubServicio(subServicio, servicio.id)
-                          }
-                          className="w-full md:w-auto"
-                        >
-                          Editar Servicio
-                        </Button>
+                        <div className="flex gap-4">
+                          <Button
+                            variant={"outline"}
+                            size={"sm"}
+                            onClick={() =>
+                              handleEditSubServicio(subServicio, servicio.id)
+                            }
+                            className="w-full md:w-auto"
+                          >
+                            Ver Inusmos
+                          </Button>
+                          <Button
+                            variant={"outline"}
+                            size={"sm"}
+                            onClick={() =>
+                              handleEditSubServicio(subServicio, servicio.id)
+                            }
+                            className="w-full md:w-auto"
+                          >
+                            Editar Servicio
+                          </Button>
+                        </div>
                       </div>
 
                       <p className="text-sm text-muted-foreground mt-2">

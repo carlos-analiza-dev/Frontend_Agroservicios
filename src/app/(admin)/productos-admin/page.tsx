@@ -40,7 +40,6 @@ const PageProductosAdmin = () => {
   const [isOpenSubServicio, setIsOpenSubServicio] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const { data: paises } = usePaises();
 
   const offset = (currentPage - 1) * itemsPerPage;
 

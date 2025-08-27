@@ -15,6 +15,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { UnidadMedida } from "@/helpers/data/unidadMedidas";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
+import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
@@ -37,6 +38,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
   const { data: marcasActivas } = useGetMarcasActivas();
   const { data: proveedoresActivos } = useGetProveedoresActivos();
   const { data: categorias } = useGetCategorias();
+  const { data: impuestos } = useGetTaxesPais();
 
   const {
     register,
@@ -323,22 +325,21 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         <Label htmlFor="tax_rate" className="font-bold">
           Impuesto (Tax Rate %)
         </Label>
-        <Input
-          id="tax_rate"
-          type="number"
-          step="0.01"
-          {...register("tax_rate", {
-            required: "El impuesto es requerido",
-            min: { value: 0, message: "El impuesto no puede ser negativo" },
-          })}
-          placeholder="Ej: 15"
+        <Select
           defaultValue={isEdit ? editSubServicio?.tax_rate : ""}
-        />
-        {errors.tax_rate && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.tax_rate.message as string}
-          </p>
-        )}
+          onValueChange={(value) => setValue("tax_rate", Number(value))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona un impuesto" />
+          </SelectTrigger>
+          <SelectContent>
+            {impuestos?.map((imp) => (
+              <SelectItem key={imp.id} value={imp.porcentaje}>
+                {imp.nombre} - {(parseFloat(imp.porcentaje) * 100).toFixed(1)}%
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

@@ -5,7 +5,7 @@ const useGetServiciosAdmin = (limit: number, offset: number) => {
   return useQuery({
     queryKey: ["servicios-admin", limit, offset],
     queryFn: () => ObtenerServicio(limit, offset),
-    retry: 0,
+    retry: false,
     staleTime: 60 * 100 * 5,
   });
 };

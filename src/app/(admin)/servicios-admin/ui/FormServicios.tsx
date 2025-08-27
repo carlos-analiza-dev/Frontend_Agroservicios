@@ -19,6 +19,12 @@ import { AddSubServicio } from "@/apis/sub-servicio/accions/crear-sub-servicio";
 import { UpdateSubServicio } from "@/apis/sub-servicio/accions/update-sub-servicio";
 import { Textarea } from "@/components/ui/textarea";
 import { UnidadMedida } from "@/helpers/data/unidadMedidas";
+import useGetInsumos from "@/hooks/insumos/useGetInsumos";
+import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
+import { Insumo } from "@/apis/insumos/interfaces/response-insumos.interface";
+import { Plus, Trash2 } from "lucide-react";
+import { InsumoDis } from "@/apis/insumos/interfaces/response-insumos-disponibles.interface";
+import { CrearServicioInsumos } from "@/apis/insumos-servicio/accions/crear-servicio-insumos";
 
 interface Props {
   servicioId: string;
@@ -38,6 +44,12 @@ const FormServicios = ({
   onOpenChange,
 }: Props) => {
   const queryClient = useQueryClient();
+  const { data: insumos } = useGetInsumosDisponibles();
+  const [insumosSeleccionados, setInsumosSeleccionados] = useState<InsumoDis[]>(
+    []
+  );
+  const [insumoSeleccionado, setInsumoSeleccionado] = useState<string>("");
+  const [cantidadInsumo, setCantidadInsumo] = useState<number>(1);
 
   const {
     register,
@@ -69,16 +81,85 @@ const FormServicios = ({
           disponible: true,
           servicioId: servicioId,
         });
+        setInsumosSeleccionados([]);
       }
     }
   }, [isOpen, isEdit, editSubServicio, reset, servicioId, setValue]);
 
+  const agregarInsumo = () => {
+    if (!insumoSeleccionado || cantidadInsumo <= 0) {
+      toast.error("Selecciona un insumo y una cantidad válida");
+      return;
+    }
+
+    const insumoExistente = insumos?.insumos.find(
+      (insumo) => insumo.id === insumoSeleccionado
+    );
+
+    if (!insumoExistente) {
+      toast.error("Insumo no encontrado");
+      return;
+    }
+
+    const yaAgregado = insumosSeleccionados.find(
+      (insumo) => insumo.id === insumoSeleccionado
+    );
+
+    if (yaAgregado) {
+      toast.error("Este insumo ya fue agregado");
+      return;
+    }
+
+    const nuevoInsumo: InsumoDis = {
+      ...insumoExistente,
+      cantidad: cantidadInsumo,
+    };
+
+    setInsumosSeleccionados([...insumosSeleccionados, nuevoInsumo]);
+    setInsumoSeleccionado("");
+    setCantidadInsumo(1);
+  };
+
+  const eliminarInsumo = (id: string) => {
+    setInsumosSeleccionados(
+      insumosSeleccionados.filter((insumo) => insumo.id !== id)
+    );
+  };
+
+  const crearInsumosMutation = useMutation({
+    mutationFn: (data: { subServicioId: string; insumos: InsumoDis[] }) => {
+      const promises = data.insumos.map((insumo) =>
+        CrearServicioInsumos({
+          servicioId: data.subServicioId,
+          insumoId: insumo.id,
+          cantidad: insumo.cantidad ?? 1,
+        })
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast.success("Insumos del servicio creados exitosamente");
+      queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
+    },
+    onError: (error) => {
+      toast.error("Error al crear los insumos del servicio");
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: (data: CrearSubServicio) => AddSubServicio(data),
-    onSuccess: () => {
+    onSuccess: (subServicioCreado) => {
+      if (insumosSeleccionados.length > 0) {
+        crearInsumosMutation.mutate({
+          subServicioId: subServicioCreado.data.id,
+          insumos: insumosSeleccionados,
+        });
+      }
+
       toast.success("Servicio creado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
       reset();
+      setInsumosSeleccionados([]);
       onSuccess();
       onOpenChange(false);
     },
@@ -103,10 +184,18 @@ const FormServicios = ({
   const mutationUpdate = useMutation({
     mutationFn: (data: CrearSubServicio) =>
       UpdateSubServicio(editSubServicio?.id ?? "", data),
-    onSuccess: () => {
+    onSuccess: (subServicioActualizado) => {
+      if (insumosSeleccionados.length > 0 && editSubServicio?.id) {
+        crearInsumosMutation.mutate({
+          subServicioId: editSubServicio.id,
+          insumos: insumosSeleccionados,
+        });
+      }
+
       toast.success("Servicio actualizado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
       reset();
+      setInsumosSeleccionados([]);
       onSuccess();
       onOpenChange(false);
     },
@@ -135,6 +224,11 @@ const FormServicios = ({
       mutation.mutate({ ...data, servicioId });
     }
   };
+
+  const isLoading =
+    mutation.isPending ||
+    mutationUpdate.isPending ||
+    crearInsumosMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -217,6 +311,80 @@ const FormServicios = ({
         )}
       </div>
 
+      {!isEdit && (
+        <div className="space-y-4 border rounded-md p-4">
+          <Label className="font-bold text-lg">Insumos del Servicio</Label>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="insumo">Seleccionar Insumo</Label>
+              <Select
+                value={insumoSeleccionado}
+                onValueChange={setInsumoSeleccionado}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un insumo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {insumos?.insumos.map((insumo) => (
+                    <SelectItem key={insumo.id} value={insumo.id}>
+                      {insumo.nombre} - {insumo.codigo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cantidad">Cantidad</Label>
+              <Input
+                id="cantidad"
+                type="number"
+                min="1"
+                value={cantidadInsumo}
+                onChange={(e) => setCantidadInsumo(Number(e.target.value))}
+                placeholder="Cantidad"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <Button type="button" onClick={agregarInsumo} className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Insumo
+              </Button>
+            </div>
+          </div>
+
+          {insumosSeleccionados.length > 0 && (
+            <div className="mt-4">
+              <Label className="font-bold">Insumos agregados:</Label>
+              <div className="mt-2 space-y-2">
+                {insumosSeleccionados.map((insumo) => (
+                  <div
+                    key={insumo.id}
+                    className="flex items-center justify-between p-2 border rounded-md"
+                  >
+                    <div>
+                      <span className="font-medium">{insumo.nombre}</span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        - {insumo.cantidad} {insumo.unidad_venta}
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => eliminarInsumo(insumo.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       <div className="space-y-2">
         <Label className="font-bold">Estado</Label>
         <div className="flex items-center space-x-2">

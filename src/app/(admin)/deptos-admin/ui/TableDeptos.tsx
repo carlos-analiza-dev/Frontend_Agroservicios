@@ -46,11 +46,7 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
   const [deptoId, setDeptoId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const {
-    data: municipios,
-    isError,
-    isLoading,
-  } = useGetMunicipiosByDepto(deptoId);
+  const { data: municipios } = useGetMunicipiosByDepto(deptoId);
 
   const handleViewMunicipios = (deptoId: string) => {
     setIsOpen(true);

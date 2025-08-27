@@ -39,6 +39,7 @@ import { ActualizarMedico } from "@/apis/medicos/accions/update-medico";
 import dynamic from "next/dynamic";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 import LoaderComponents from "@/components/generics/LoaderComponents";
+import { StatusMessage } from "@/components/generics/StatusMessage";
 
 interface Props {
   isLoading: boolean;
@@ -178,14 +179,18 @@ const TableMedicos = ({ isError, isLoading, veterinarios }: Props) => {
             ))
           ) : isError ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-red-500">
-                Error al cargar los veterinarios
+              <TableCell colSpan={10} className="text-center">
+                <div className="flex justify-center py-4">
+                  <StatusMessage type="empty" />
+                </div>
               </TableCell>
             </TableRow>
           ) : veterinarios && veterinarios.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                No se encontraron veterinarios
+              <TableCell colSpan={10} className="text-center">
+                <div className="flex justify-center py-4">
+                  <StatusMessage type="empty" />
+                </div>
               </TableCell>
             </TableRow>
           ) : (
