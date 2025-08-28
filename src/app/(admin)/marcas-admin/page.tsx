@@ -19,7 +19,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Plus, Search } from "lucide-react";
-import TableMarcas from "./ui/TableMarcas";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -27,9 +26,18 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import FormMarcas from "./ui/FormMarcas";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormMarcas = dynamic(() => import("./ui/FormMarcas"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableMarcas = dynamic(() => import("./ui/TableMarcas"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const MarcasAdminPage = () => {
   const [page, setPage] = useState(1);

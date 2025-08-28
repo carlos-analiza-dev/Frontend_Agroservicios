@@ -45,7 +45,7 @@ const FormSubCategoria = ({ onSucces, editSubCategoria, isEdit }: Props) => {
       reset({
         nombre: editSubCategoria.nombre,
         descripcion: editSubCategoria.descripcion,
-        categoriaId: editSubCategoria.categoria?.descripcion,
+        categoriaId: editSubCategoria.categoria?.id,
         is_active: editSubCategoria.is_active,
       });
     }

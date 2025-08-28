@@ -1,17 +1,9 @@
 "use client";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import TitlePages from "@/components/generics/TitlePages";
-import CardCategorias from "./ui/CardCategorias";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -20,8 +12,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormCategorias from "./ui/FormCategorias";
 import SkeletonCategorias from "@/components/generics/SkeletonCategorias";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormCategorias = dynamic(() => import("./ui/FormCategorias"), {
+  loading: () => <LoaderComponents />,
+});
+
+const CardCategorias = dynamic(() => import("./ui/CardCategorias"), {
+  loading: () => <SkeletonCategorias />,
+});
 
 const CategoriasPageAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -10,19 +10,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import useGetSubCategorias from "@/hooks/subcategorias/useGetSubCategorias";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
-import CardSubcategorias from "./ui/CardSubcategorias";
-import FormSubCategoria from "./ui/FormSubCategoria";
 import SkeletonCategorias from "@/components/generics/SkeletonCategorias";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormSubCategoria = dynamic(() => import("./ui/FormSubCategoria"), {
+  loading: () => <LoaderComponents />,
+});
+
+const CardSubcategorias = dynamic(() => import("./ui/CardSubcategorias"), {
+  loading: () => <SkeletonCategorias />,
+});
 
 const SubCategoriasPageAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);

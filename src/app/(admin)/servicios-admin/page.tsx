@@ -10,11 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatusMessage } from "@/components/generics/StatusMessage";
 import TitlePages from "@/components/generics/TitlePages";
 
 import { Plus } from "lucide-react";
-import CardsCategorias from "./ui/CardsCategorias";
 import PaginacionCategorias from "./ui/PaginacionCategorias";
 import {
   AlertDialog,
@@ -25,8 +23,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import FormCategorias from "./ui/FormCategorias";
 import CardSkeleton from "@/components/generics/CardSkeleton";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormCategorias = dynamic(() => import("./ui/FormCategorias"), {
+  loading: () => <LoaderComponents />,
+});
+
+const CardsCategorias = dynamic(() => import("./ui/CardsCategorias"), {
+  loading: () => <CardSkeleton />,
+});
 
 const ServiciosCategoriasAdminPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,10 +42,7 @@ const ServiciosCategoriasAdminPage = () => {
 
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const { data, isLoading, isError, error } = useGetServiciosAdmin(
-    itemsPerPage,
-    offset
-  );
+  const { data, isLoading } = useGetServiciosAdmin(itemsPerPage, offset);
 
   if (isLoading) {
     return <CardSkeleton />;

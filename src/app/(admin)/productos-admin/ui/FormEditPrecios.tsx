@@ -60,7 +60,7 @@ const FormEditPrecios = ({ onSuccess, editSubServicio, isEdit }: Props) => {
     onSuccess: () => {
       toast.success("Producto actualizado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["productos-admin"] });
-      queryClient.invalidateQueries({ queryKey: ["productos-admin"] });
+
       reset();
       onSuccess();
     },

@@ -1,6 +1,5 @@
 "use client";
 import useGetInsumos from "@/hooks/insumos/useGetInsumos";
-import usePaises from "@/hooks/paises/usePaises";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import React, { useState } from "react";
 import {
@@ -11,17 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Package, Plus, Filter } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import TitlePages from "@/components/generics/TitlePages";
-import TableInsumos from "./ui/TableInsumos";
 import {
   Pagination,
   PaginationContent,
@@ -39,7 +30,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormInsumos from "./ui/FormInsumos";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import dynamic from "next/dynamic";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormInsumos = dynamic(() => import("./ui/FormInsumos"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableInsumos = dynamic(() => import("./ui/TableInsumos"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const InsumosAdminPage = () => {
   const { user } = useAuthStore();

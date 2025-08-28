@@ -5,7 +5,7 @@ export interface CrearSubServicio {
   unidad_venta: string;
   codigo_barra?: string;
   atributos?: string;
-  tax_rate?: number;
+  taxId?: string;
   precio?: number;
   costo?: number;
   descripcion?: string;

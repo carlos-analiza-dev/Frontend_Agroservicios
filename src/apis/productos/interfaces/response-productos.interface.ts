@@ -9,67 +9,41 @@ export interface Servicio {
   codigo: string;
   codigo_barra: string;
   atributos: string;
-  tax_rate: string;
   tipo: string;
   unidad_venta: string;
+  descripcion: null | string;
   servicioId: null;
   isActive: boolean;
   disponible: boolean;
   createdAt: Date;
   updatedAt: Date;
-  marcaId: string;
-  proveedorId: string;
-  categoriaId: string;
+
   servicio: null;
-  marca: Marca;
-  proveedor: Proveedor;
-  categoria: Categoria | null;
   preciosPorPais: PreciosPorPai[];
+  marca: Categoria;
+  proveedor: Proveedor;
+  categoria: Categoria;
+  tax: Tax | null;
 }
 
 export interface Categoria {
   id: string;
   nombre: string;
-  descripcion: string;
+  descripcion?: string;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  pais_origen?: string;
 }
 
-export interface Marca {
+export interface PreciosPorPai {
   id: string;
-  nombre: string;
-  pais_origen: string;
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
-  created_by: AtedBy;
-  updated_by: AtedBy;
-}
-
-export interface AtedBy {
-  id: string;
-  email: string;
-  name: string;
-  identificacion: string;
-  direccion: string;
-  sexo: string;
-  telefono: string;
-  isActive: boolean;
-  isAuthorized: boolean;
-  createdAt: Date;
-  role: Role;
+  precio: string;
+  costo: string;
+  tiempo: null;
+  cantidadMin: null;
+  cantidadMax: null;
   pais: Pais;
-  departamento: Departamento;
-  municipio: Departamento;
-  profileImages: any[];
-}
-
-export interface Departamento {
-  id: string;
-  nombre: string;
-  isActive: boolean;
-  municipios?: Departamento[];
 }
 
 export interface Pais {
@@ -81,24 +55,6 @@ export interface Pais {
   simbolo_moneda: string;
   nombre_documento: string;
   isActive: boolean;
-  departamentos: Departamento[];
-}
-
-export interface Role {
-  id: string;
-  name: string;
-  description: string;
-  isActive: boolean;
-}
-
-export interface PreciosPorPai {
-  id: string;
-  precio: string;
-  costo: string;
-  tiempo: null;
-  cantidadMin: null;
-  cantidadMax: null;
-  pais: Pais;
 }
 
 export interface Proveedor {
@@ -113,9 +69,10 @@ export interface Proveedor {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
-  pais: Pais;
-  departamento: Departamento;
-  municipio: Departamento;
-  created_by: AtedBy;
-  updated_by: AtedBy;
+}
+
+export interface Tax {
+  id: string;
+  nombre: string;
+  porcentaje: string;
 }

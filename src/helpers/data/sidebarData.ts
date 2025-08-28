@@ -19,6 +19,7 @@ import {
   Warehouse,
   Droplet,
   FlaskConical,
+  HousePlus,
 } from "lucide-react";
 
 export const navItems = [
@@ -34,6 +35,7 @@ export const navItems = [
       { name: "Usuarios", href: "/users-admin", icon: Users },
       { name: "Paises", href: "/paises-admin", icon: Globe },
       { name: "Departamentos", href: "/deptos-admin", icon: Locate },
+      { name: "Sucursales", href: "/sucursales-admin", icon: HousePlus },
       {
         name: "Servicios",
         href: "/servicios-admin",

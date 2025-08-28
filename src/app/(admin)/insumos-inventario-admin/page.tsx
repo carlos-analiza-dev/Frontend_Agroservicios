@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/pagination";
 import { Search, Filter, Package } from "lucide-react";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import TableInventarioInsumo from "./ui/TableInventarioInsumo";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -31,7 +30,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormInventario from "./ui/FormInventario";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormInventario = dynamic(() => import("./ui/FormInventario"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableInventarioInsumo = dynamic(
+  () => import("./ui/TableInventarioInsumo"),
+  {
+    loading: () => <TableUsersSkeleton />,
+  }
+);
 
 const PageInventarioInsumosAdmin = () => {
   const { user } = useAuthStore();

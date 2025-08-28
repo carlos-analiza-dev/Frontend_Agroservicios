@@ -1,6 +1,6 @@
 import { Servicio } from "@/apis/productos/interfaces/response-productos.interface";
-import { AddSubServicio } from "@/apis/sub-servicio/accions/crear-sub-servicio";
-import { UpdateSubServicio } from "@/apis/sub-servicio/accions/update-sub-servicio";
+import { AddProducto } from "@/apis/sub-servicio/accions/crear-sub-servicio";
+import { UpdateProducto } from "@/apis/sub-servicio/accions/update-sub-servicio";
 import { CrearSubServicio } from "@/apis/sub-servicio/interface/crear-sub-servicio.interface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,13 +56,14 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         unidad_venta: editSubServicio.unidad_venta,
         disponible: editSubServicio.disponible,
         isActive: editSubServicio.isActive,
-        marcaId: editSubServicio.marcaId,
-        proveedorId: editSubServicio.proveedorId,
-        categoriaId: editSubServicio.categoriaId,
+        marcaId: editSubServicio.marca.id,
+        proveedorId: editSubServicio.proveedor.id,
+        categoriaId: editSubServicio.categoria.id,
         atributos: editSubServicio.atributos,
         codigo_barra: editSubServicio.codigo_barra,
         precio: Number(editSubServicio.preciosPorPais?.[0]?.precio),
         costo: Number(editSubServicio.preciosPorPais?.[0]?.costo),
+        taxId: editSubServicio.tax?.id,
       });
       setValue("unidad_venta", editSubServicio.unidad_venta);
     } else {
@@ -79,12 +80,13 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         codigo_barra: undefined,
         precio: undefined,
         costo: undefined,
+        taxId: undefined,
       });
     }
   }, [isEdit, editSubServicio, reset, setValue]);
 
   const mutation = useMutation({
-    mutationFn: (data: CrearSubServicio) => AddSubServicio(data),
+    mutationFn: (data: CrearSubServicio) => AddProducto(data),
     onSuccess: () => {
       toast.success("Producto creado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["productos-admin"] });
@@ -111,7 +113,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
 
   const mutationUpdate = useMutation({
     mutationFn: (data: CrearSubServicio) =>
-      UpdateSubServicio(editSubServicio?.id ?? "", data),
+      UpdateProducto(editSubServicio?.id ?? "", data),
     onSuccess: () => {
       toast.success("Producto actualizado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["productos-admin"] });
@@ -140,7 +142,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
     const payload = {
       ...data,
       tipo: "producto",
-      tax_rate: Number(data.tax_rate),
       precio: Number(data.precio),
       costo: Number(data.costo),
       paisId: user?.pais.id,
@@ -230,7 +231,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           Marca
         </Label>
         <Select
-          defaultValue={isEdit ? editSubServicio?.marcaId : ""}
+          defaultValue={isEdit ? editSubServicio?.marca.id : ""}
           onValueChange={(value) => setValue("marcaId", value)}
         >
           <SelectTrigger>
@@ -251,7 +252,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           Categoria
         </Label>
         <Select
-          defaultValue={isEdit ? editSubServicio?.categoriaId : ""}
+          defaultValue={isEdit ? editSubServicio?.categoria.id : ""}
           onValueChange={(value) => setValue("categoriaId", value)}
         >
           <SelectTrigger>
@@ -326,15 +327,15 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           Impuesto (Tax Rate %)
         </Label>
         <Select
-          defaultValue={isEdit ? editSubServicio?.tax_rate : ""}
-          onValueChange={(value) => setValue("tax_rate", Number(value))}
+          defaultValue={isEdit ? editSubServicio?.tax?.id : ""}
+          onValueChange={(value) => setValue("taxId", value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona un impuesto" />
           </SelectTrigger>
           <SelectContent>
             {impuestos?.map((imp) => (
-              <SelectItem key={imp.id} value={imp.porcentaje}>
+              <SelectItem key={imp.id} value={imp.id}>
                 {imp.nombre} - {(parseFloat(imp.porcentaje) * 100).toFixed(1)}%
               </SelectItem>
             ))}
@@ -397,7 +398,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           Proveedor
         </Label>
         <Select
-          defaultValue={isEdit ? editSubServicio?.proveedorId : ""}
+          defaultValue={isEdit ? editSubServicio?.proveedor.id : ""}
           onValueChange={(value) => setValue("proveedorId", value)}
         >
           <SelectTrigger>

@@ -1,19 +1,8 @@
 "use client";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import TableImpuestos from "./ui/TableImpuestos";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import {
@@ -24,11 +13,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormImpuestos from "./ui/FormImpuestos";
+
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+
+const FormImpuestos = dynamic(() => import("./ui/FormImpuestos"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableImpuestos = dynamic(() => import("./ui/TableImpuestos"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const ImpuestosPaisAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: impuestos, isLoading, isError } = useGetTaxesPais();
+  const { data: impuestos, isLoading } = useGetTaxesPais();
 
   if (isLoading) {
     return <TableUsersSkeleton />;

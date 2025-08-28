@@ -180,7 +180,7 @@ const TableProveedores = ({ data, isLoading }: Props) => {
                 <TableCell>{proveedor.telefono}</TableCell>
                 <TableCell>{proveedor.correo}</TableCell>
                 <TableCell>
-                  {proveedor.pais.nombre}, {proveedor.municipio.nombre},{" "}
+                  {proveedor.pais?.nombre}, {proveedor.municipio.nombre},{" "}
                   {proveedor.departamento.nombre}
                 </TableCell>
                 <TableCell>

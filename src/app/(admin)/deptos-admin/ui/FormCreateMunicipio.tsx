@@ -61,6 +61,7 @@ const FormCreateMunicipio = ({
     onSuccess: () => {
       toast.success("Municipio creado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["municipios-depto"] });
+      queryClient.invalidateQueries({ queryKey: ["departamentos-pais"] });
       reset();
       onSucces();
     },

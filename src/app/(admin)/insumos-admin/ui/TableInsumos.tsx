@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Barcode, CheckCircle, Edit, Package, XCircle } from "lucide-react";
+import { Barcode, Edit, Package } from "lucide-react";
 import React, { useState } from "react";
 import FormInsumos from "./FormInsumos";
 
@@ -41,13 +41,13 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Producto</TableHead>
-            <TableHead>Código</TableHead>
-            <TableHead>Marca</TableHead>
-            <TableHead>Proveedor</TableHead>
-            <TableHead>Costo</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead className="text-center font-bold">Producto</TableHead>
+            <TableHead className="text-center font-bold">Código</TableHead>
+            <TableHead className="text-center font-bold">Marca</TableHead>
+            <TableHead className="text-center font-bold">Proveedor</TableHead>
+            <TableHead className="text-center font-bold">Costo</TableHead>
+            <TableHead className="text-center font-bold">Estado</TableHead>
+            <TableHead className="text-center font-bold">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,13 +75,13 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                 </div>
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-center">
                 <Badge variant="secondary" className="font-mono">
                   {insumo.codigo}
                 </Badge>
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-center">
                 {insumo.marca ? (
                   <Badge variant="outline">{insumo.marca.nombre}</Badge>
                 ) : (
@@ -89,7 +89,7 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                 )}
               </TableCell>
 
-              <TableCell>
+              <TableCell className="flex justify-center">
                 {insumo.proveedor ? (
                   <div className="max-w-[120px]">
                     <div className="text-sm font-medium truncate">
@@ -104,13 +104,13 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                 )}
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-center">
                 <div className="font-semibold text-green-600">
                   {insumo.pais?.simbolo_moneda || "L"}{" "}
                   {Number(insumo.costo).toFixed(2)}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 <Badge
                   variant={insumo.disponible ? "default" : "secondary"}
                   className={
@@ -123,7 +123,7 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                 </Badge>
               </TableCell>
 
-              <TableCell className="text-right">
+              <TableCell className="text-center">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -132,24 +132,6 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                   onClick={() => handleEditInsumo(insumo)}
                 >
                   <Edit className="h-4 w-4 text-blue-500" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={
-                    insumo.disponible
-                      ? "Deshabilitar Insumo"
-                      : "Habilitar Insumo"
-                  }
-                  className="h-8 w-8"
-                  onClick={() => {}}
-                >
-                  {insumo.disponible ? (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  )}
                 </Button>
               </TableCell>
             </TableRow>

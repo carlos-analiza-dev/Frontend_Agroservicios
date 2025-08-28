@@ -20,8 +20,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import FormProveedor from "./ui/FormProveedor";
-import TableProveedores from "./ui/TableProveedores";
+import dynamic from "next/dynamic";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormProveedor = dynamic(() => import("./ui/FormProveedor"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableProveedores = dynamic(() => import("./ui/TableProveedores"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const ProveedoresAdmin = () => {
   const [page, setPage] = useState(1);

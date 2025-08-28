@@ -130,12 +130,12 @@ const CardProducts = ({ productos }: Props) => {
                     </div>
                   )}
 
-                  {producto.tax_rate && (
+                  {producto.tax?.porcentaje && (
                     <div className="flex items-center gap-1">
                       <Percent className="h-3 w-3 text-muted-foreground" />
                       <span className="font-medium">Impuesto:</span>
                       <span className="text-muted-foreground ml-1">
-                        {Number(producto.tax_rate) * 100}%
+                        {Number(producto.tax.porcentaje) * 100}%
                       </span>
                     </div>
                   )}

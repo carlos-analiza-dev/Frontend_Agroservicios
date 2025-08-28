@@ -9,18 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  MoreHorizontal,
-  Eye,
   Edit,
-  Package,
   DollarSign,
   Tag,
   Box,
@@ -232,9 +224,9 @@ const TableProducts = ({ productos }: Props) => {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      {producto.tax_rate ? (
+                      {producto.tax?.porcentaje ? (
                         <Badge variant="outline" className="text-xs">
-                          {Number(producto.tax_rate) * 100}%
+                          {Number(producto.tax?.porcentaje) * 100}%
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">
@@ -364,9 +356,9 @@ const TableProducts = ({ productos }: Props) => {
                         )}
 
                         <div className="flex flex-wrap gap-2">
-                          {producto.tax_rate && (
+                          {producto.tax?.porcentaje && (
                             <Badge variant="outline" className="text-xs">
-                              {Number(producto.tax_rate) * 100}% impuesto
+                              {Number(producto.tax?.porcentaje) * 100}% impuesto
                             </Badge>
                           )}
                           <Badge
@@ -458,8 +450,8 @@ const TableProducts = ({ productos }: Props) => {
                       <div>
                         <span className="font-medium">Impuesto:</span>
                         <div className="text-muted-foreground">
-                          {producto.tax_rate
-                            ? `${Number(producto.tax_rate) * 100}%`
+                          {producto.tax?.porcentaje
+                            ? `${Number(producto.tax?.porcentaje) * 100}%`
                             : "N/A"}
                         </div>
                       </div>

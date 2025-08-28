@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import TitlePages from "@/components/generics/TitlePages";
 import CardSkeleton from "@/components/generics/CardSkeleton";
-import TableProducts from "./ui/TableProducts";
+
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -30,9 +30,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormProductos from "./ui/FormProductos";
-import usePaises from "@/hooks/paises/usePaises";
 import { useAuthStore } from "@/providers/store/useAuthStore";
+import LoaderComponents from "@/components/generics/LoaderComponents";
+import dynamic from "next/dynamic";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+
+const FormProductos = dynamic(() => import("./ui/FormProductos"), {
+  loading: () => <LoaderComponents />,
+});
+
+const TableProducts = dynamic(() => import("./ui/TableProducts"), {
+  loading: () => <TableUsersSkeleton />,
+});
 
 const PageProductosAdmin = () => {
   const { user } = useAuthStore();
@@ -43,11 +52,7 @@ const PageProductosAdmin = () => {
 
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const { data, isLoading, isError } = useGetProductos(
-    itemsPerPage,
-    offset,
-    user?.pais.id
-  );
+  const { data, isLoading } = useGetProductos(itemsPerPage, offset, paisId);
   const productos = data?.data?.servicios || [];
   const totalProductos = data?.data?.total || 0;
   const totalPages = Math.ceil(totalProductos / itemsPerPage);
@@ -61,10 +66,6 @@ const PageProductosAdmin = () => {
   const handleItemsPerPageChange = (value: string) => {
     const newItemsPerPage = parseInt(value);
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
-  const clearPaisFilter = () => {
     setCurrentPage(1);
   };
 
@@ -170,7 +171,7 @@ const PageProductosAdmin = () => {
               </PaginationItem>
 
               {getPageNumbers().map((page, index) => (
-                <React.Fragment key={index}>
+                <React.Fragment key={`page-${page}-${index}`}>
                   {page < 0 ? (
                     <PaginationItem>
                       <PaginationEllipsis />
