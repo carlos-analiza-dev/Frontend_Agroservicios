@@ -23,6 +23,7 @@ import {
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FormProveedor = dynamic(() => import("./ui/FormProveedor"), {
   loading: () => <LoaderComponents />,
@@ -33,18 +34,18 @@ const TableProveedores = dynamic(() => import("./ui/TableProveedores"), {
 });
 
 const ProveedoresAdmin = () => {
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const offset = (page - 1) * limit;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const offset = (currentPage - 1) * itemsPerPage;
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data, isLoading, error } = useGetAllProveedores(limit, offset);
+  const { data, isLoading, error } = useGetAllProveedores(itemsPerPage, offset);
 
-  const totalPages = data ? Math.ceil(data.total / limit) : 0;
+  const totalPages = data ? Math.ceil(data.total / itemsPerPage) : 0;
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setPage(newPage);
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -87,49 +88,11 @@ const ProveedoresAdmin = () => {
 
       {totalPages > 1 && (
         <div className="mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(page - 1)}
-                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNumber;
-                if (totalPages <= 5) {
-                  pageNumber = i + 1;
-                } else if (page <= 3) {
-                  pageNumber = i + 1;
-                } else if (page >= totalPages - 2) {
-                  pageNumber = totalPages - 4 + i;
-                } else {
-                  pageNumber = page - 2 + i;
-                }
-
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      isActive={pageNumber === page}
-                      onClick={() => handlePageChange(pageNumber)}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(page + 1)}
-                  className={
-                    page === totalPages ? "pointer-events-none opacity-50" : ""
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <Paginacion
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       )}
 

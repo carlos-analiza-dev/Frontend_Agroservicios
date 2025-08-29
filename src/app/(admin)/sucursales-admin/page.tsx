@@ -69,21 +69,6 @@ const SucursalesAdminPage = () => {
 
   const { data: municipios } = useGetMunicipiosActivosByDepto(departament);
 
-  const filteredSucursales =
-    sucursales?.data?.filter(
-      (sucursal) =>
-        sucursal.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sucursal.direccion_complemento
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        sucursal.municipio.nombre
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        sucursal.departamento.nombre
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    ) || [];
-
   const totalPages = Math.ceil((sucursales?.total || 0) / limit);
 
   const handleDepartamentoChange = (value: string) => {
@@ -253,7 +238,7 @@ const SucursalesAdminPage = () => {
 
           <TableSucursales
             isLoading={isLoading}
-            filteredSucursales={filteredSucursales}
+            filteredSucursales={sucursales?.data}
             searchTerm={searchTerm}
           />
 

@@ -38,14 +38,9 @@ const FormCreateDepto = dynamic(() => import("./ui/FormCreateDepto"), {
 const DeptosAdminPage = () => {
   const { user } = useAuthStore();
   const [paisId, setPaisId] = useState(user?.pais.id ?? "");
-  const {
-    data: paises,
-    isError: errorPaises,
-    isLoading: loadingPaises,
-  } = usePaises();
+  const { data: paises, isLoading: loadingPaises } = usePaises();
   const {
     data: departamentos,
-    isError: errorDeptos,
     isLoading: loadingDeptos,
     refetch,
   } = useGetDepartamentosByPais(paisId);

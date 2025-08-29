@@ -1,15 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import useGetProductos from "@/hooks/productos/useGetProductos";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import {
@@ -20,8 +11,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TitlePages from "@/components/generics/TitlePages";
-import CardSkeleton from "@/components/generics/CardSkeleton";
-
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -34,6 +23,10 @@ import { useAuthStore } from "@/providers/store/useAuthStore";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import dynamic from "next/dynamic";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
+import useGetCategorias from "@/hooks/categorias/useGetCategorias";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FormProductos = dynamic(() => import("./ui/FormProductos"), {
   loading: () => <LoaderComponents />,
@@ -45,15 +38,36 @@ const TableProducts = dynamic(() => import("./ui/TableProducts"), {
 
 const PageProductosAdmin = () => {
   const { user } = useAuthStore();
-  let paisId = user?.pais.id;
+  let pais = user?.pais.id || "";
   const [isOpenSubServicio, setIsOpenSubServicio] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const [selectedCategoria, setSelectedCategoria] = useState("");
+  const [selectedMarca, setSelectedMarca] = useState("");
+  const [selectedProveedor, setSelectedProveedor] = useState("");
+
+  const proveedorId = selectedProveedor === "all" ? "" : selectedProveedor;
+  const categoriaId = selectedCategoria === "all" ? "" : selectedCategoria;
+  const marcaId = selectedMarca === "all" ? "" : selectedMarca;
+
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const { data, isLoading } = useGetProductos(itemsPerPage, offset, paisId);
-  const productos = data?.data?.servicios || [];
+  const { data, isLoading } = useGetProductos({
+    limit: itemsPerPage,
+    offset: offset,
+    pais: pais,
+    categoria: categoriaId,
+    marca: marcaId,
+    proveedor: proveedorId,
+  });
+
+  const { data: marcas } = useGetMarcasActivas();
+  const { data: categorias } = useGetCategorias();
+  const { data: proveedores } = useGetProveedoresActivos();
+
+  const productos = data?.data.productos || [];
+
   const totalProductos = data?.data?.total || 0;
   const totalPages = Math.ceil(totalProductos / itemsPerPage);
 
@@ -69,50 +83,31 @@ const PageProductosAdmin = () => {
     setCurrentPage(1);
   };
 
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+  const handleCategoriaChange = (value: string) => {
+    setSelectedCategoria(value);
+    setCurrentPage(1);
+  };
 
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
+  const handleMarcaChange = (value: string) => {
+    setSelectedMarca(value);
+    setCurrentPage(1);
+  };
 
-      let startPage = Math.max(2, currentPage - 1);
-      let endPage = Math.min(totalPages - 1, currentPage + 1);
+  const handleProveedorChange = (value: string) => {
+    setSelectedProveedor(value);
+    setCurrentPage(1);
+  };
 
-      if (currentPage <= 3) {
-        endPage = 4;
-      }
-
-      if (currentPage >= totalPages - 2) {
-        startPage = totalPages - 3;
-      }
-
-      if (startPage > 2) {
-        pages.push(-1);
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-
-      if (endPage < totalPages - 1) {
-        pages.push(-2);
-      }
-
-      pages.push(totalPages);
-    }
-
-    return pages;
+  const clearFilters = () => {
+    setSelectedCategoria("");
+    setSelectedMarca("");
+    setSelectedProveedor("");
+    setCurrentPage(1);
   };
 
   if (isLoading) {
-    return <CardSkeleton />;
+    return <TableUsersSkeleton />;
   }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -128,7 +123,78 @@ const PageProductosAdmin = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Categoría</label>
+          <Select
+            value={selectedCategoria}
+            onValueChange={handleCategoriaChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categorias?.map((categoria) => (
+                <SelectItem key={categoria.id} value={categoria.id.toString()}>
+                  {categoria.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Marca</label>
+          <Select value={selectedMarca} onValueChange={handleMarcaChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las marcas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las marcas</SelectItem>
+              {marcas?.map((marca) => (
+                <SelectItem key={marca.id} value={marca.id.toString()}>
+                  {marca.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Proveedor</label>
+          <Select
+            value={selectedProveedor}
+            onValueChange={handleProveedorChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todos los proveedores" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los proveedores</SelectItem>
+              {proveedores?.map((proveedor) => (
+                <SelectItem key={proveedor.id} value={proveedor.id.toString()}>
+                  {proveedor.nombre_legal}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            disabled={
+              !selectedCategoria && !selectedMarca && !selectedProveedor
+            }
+          >
+            Limpiar filtros
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex sm:flex-row items-start sm:items-center gap-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium">Mostrar</span>
           <Select
@@ -157,51 +223,11 @@ const PageProductosAdmin = () => {
             Página {currentPage} de {totalPages}
           </div>
 
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-
-              {getPageNumbers().map((page, index) => (
-                <React.Fragment key={`page-${page}-${index}`}>
-                  {page < 0 ? (
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  ) : (
-                    <PaginationItem>
-                      <PaginationLink
-                        isActive={currentPage === page}
-                        onClick={() => handlePageChange(page)}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )}
-                </React.Fragment>
-              ))}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <Paginacion
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       )}
 

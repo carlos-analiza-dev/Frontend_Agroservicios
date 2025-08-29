@@ -24,6 +24,7 @@ import {
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FormVeterinarios = dynamic(() => import("./ui/FormVeterinarios"), {
   loading: () => <LoaderComponents />,
@@ -35,30 +36,24 @@ const TableMedicos = dynamic(() => import("./ui/TableMedicos"), {
 
 const VeterinariosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const offset = (currentPage - 1) * itemsPerPage;
   const [searchName, setSearchName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   const { data, isLoading, isError } = useGetMedicos(
-    limit,
+    itemsPerPage,
     currentPage,
     searchName
   );
 
-  const totalPages = Math.ceil((data?.total || 0) / limit);
+  const totalPages = Math.ceil((data?.total || 0) / itemsPerPage);
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -89,44 +84,16 @@ const VeterinariosPage = () => {
       {!isLoading && data && data?.data?.length > 0 && (
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
-            Mostrando {(currentPage - 1) * limit + 1} -{" "}
-            {Math.min(currentPage * limit, data?.total || 0)} de{" "}
+            Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
+            {Math.min(currentPage * itemsPerPage, data?.total || 0)} de{" "}
             {data?.total || 0} veterinarios
           </div>
 
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePreviousPage}
-                  isActive={currentPage <= 1}
-                  className={
-                    currentPage <= 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-
-              <PaginationItem>
-                <span className="px-4">
-                  Página {currentPage} de {totalPages}
-                </span>
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNextPage}
-                  isActive={currentPage >= totalPages}
-                  className={
-                    currentPage >= totalPages
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <Paginacion
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       )}
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>

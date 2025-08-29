@@ -33,6 +33,16 @@ import {
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import dynamic from "next/dynamic";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FormInsumos = dynamic(() => import("./ui/FormInsumos"), {
   loading: () => <LoaderComponents />,
@@ -50,63 +60,46 @@ const InsumosAdminPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [selectedMarca, setSelectedMarca] = useState("");
+  const [selectedProveedor, setSelectedProveedor] = useState("");
+
+  const proveedorId = selectedProveedor === "all" ? "" : selectedProveedor;
+
+  const marcaId = selectedMarca === "all" ? "" : selectedMarca;
+
+  const { data: marcas } = useGetMarcasActivas();
+  const { data: proveedores } = useGetProveedoresActivos();
+
   const offset = (currentPage - 1) * itemsPerPage;
 
   const {
     data: insumos,
     isLoading,
     isError,
-  } = useGetInsumos(itemsPerPage, offset, paisId);
+  } = useGetInsumos(itemsPerPage, offset, paisId, proveedorId, marcaId);
 
   const insumos_total = insumos?.data.data || [];
   const totalInsumos = insumos?.data?.total || 0;
   const totalPages = Math.ceil(totalInsumos / itemsPerPage);
 
-  const filteredInsumos = insumos_total.filter(
-    (insumo) =>
-      insumo.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      insumo.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      insumo.marca?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      insumo.proveedor?.nombre_legal
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  const handleMarcaChange = (value: string) => {
+    setSelectedMarca(value);
+    setCurrentPage(1);
+  };
 
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+  const handleProveedorChange = (value: string) => {
+    setSelectedProveedor(value);
+    setCurrentPage(1);
+  };
 
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const startPage = Math.max(
-        1,
-        currentPage - Math.floor(maxVisiblePages / 2)
-      );
-      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  const clearFilters = () => {
+    setSelectedMarca("");
+    setSelectedProveedor("");
+    setCurrentPage(1);
+  };
 
-      if (startPage > 1) {
-        pages.push(1);
-        if (startPage > 2) {
-          pages.push("ellipsis");
-        }
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          pages.push("ellipsis");
-        }
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   if (isError) {
@@ -140,6 +133,55 @@ const InsumosAdminPage = () => {
         </Button>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Marca</label>
+          <Select value={selectedMarca} onValueChange={handleMarcaChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las marcas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las marcas</SelectItem>
+              {marcas?.map((marca) => (
+                <SelectItem key={marca.id} value={marca.id.toString()}>
+                  {marca.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Proveedor</label>
+          <Select
+            value={selectedProveedor}
+            onValueChange={handleProveedorChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todos los proveedores" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los proveedores</SelectItem>
+              {proveedores?.map((proveedor) => (
+                <SelectItem key={proveedor.id} value={proveedor.id.toString()}>
+                  {proveedor.nombre_legal}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            disabled={!selectedMarca && !selectedProveedor}
+          >
+            Limpiar filtros
+          </Button>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -166,7 +208,7 @@ const InsumosAdminPage = () => {
                 </div>
               ))}
             </div>
-          ) : filteredInsumos.length === 0 ? (
+          ) : insumos_total.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
@@ -181,70 +223,21 @@ const InsumosAdminPage = () => {
           ) : (
             <>
               <div className="rounded-md border">
-                <TableInsumos filteredInsumos={filteredInsumos} />
+                <TableInsumos filteredInsumos={insumos_total} />
               </div>
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-6">
                   <div className="text-sm text-muted-foreground">
-                    Mostrando {Math.min(itemsPerPage, filteredInsumos.length)}{" "}
-                    de {totalInsumos} insumos
+                    Mostrando {Math.min(itemsPerPage, insumos_total.length)} de{" "}
+                    {totalInsumos} insumos
                   </div>
 
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage > 1)
-                              setCurrentPage(currentPage - 1);
-                          }}
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        />
-                      </PaginationItem>
-
-                      {getPageNumbers().map((page, index) => (
-                        <PaginationItem key={index}>
-                          {page === "ellipsis" ? (
-                            <PaginationEllipsis />
-                          ) : (
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentPage(page as number);
-                              }}
-                              isActive={currentPage === page}
-                            >
-                              {page}
-                            </PaginationLink>
-                          )}
-                        </PaginationItem>
-                      ))}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage < totalPages)
-                              setCurrentPage(currentPage + 1);
-                          }}
-                          className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  <Paginacion
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </>

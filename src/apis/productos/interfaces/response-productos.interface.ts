@@ -1,9 +1,9 @@
 export interface ResponseProductos {
-  servicios: Servicio[];
+  productos: Producto[];
   total: number;
 }
 
-export interface Servicio {
+export interface Producto {
   id: string;
   nombre: string;
   codigo: string;
@@ -11,19 +11,20 @@ export interface Servicio {
   atributos: string;
   tipo: string;
   unidad_venta: string;
-  descripcion: null | string;
+  descripcion: string;
   servicioId: null;
   isActive: boolean;
   disponible: boolean;
   createdAt: Date;
   updatedAt: Date;
-
+  categoriaId: string;
   servicio: null;
   preciosPorPais: PreciosPorPai[];
   marca: Categoria;
   proveedor: Proveedor;
   categoria: Categoria;
-  tax: Tax | null;
+  tax: Tax;
+  imagenes: ImageneProductos[];
 }
 
 export interface Categoria {
@@ -34,6 +35,15 @@ export interface Categoria {
   created_at: Date;
   updated_at: Date;
   pais_origen?: string;
+}
+
+export interface ImageneProductos {
+  id: string;
+  url: string;
+  key: string;
+  mimeType: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface PreciosPorPai {

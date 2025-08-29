@@ -1,4 +1,4 @@
-import { Servicio } from "@/apis/productos/interfaces/response-productos.interface";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import {
   Percent,
   Building,
   Package2,
+  ImageIcon,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -32,26 +33,27 @@ import {
 } from "@/components/ui/alert-dialog";
 import FormProductos from "./FormProductos";
 import FormEditPrecios from "./FormEditPrecios";
+import ProductoImagenes from "./ProductoImagenes";
 
 interface Props {
-  productos: Servicio[];
+  productos: Producto[];
 }
 
 const TableProducts = ({ productos }: Props) => {
-  const [editSubServicio, setEditSubServicio] = useState<Servicio | null>(null);
+  const [editSubServicio, setEditSubServicio] = useState<Producto | null>(null);
   const [editPrecioSubServicio, setEditPrecioSubServicio] =
-    useState<Servicio | null>(null);
+    useState<Producto | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenPrecios, setIsOpenPrecios] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
-  const handleEditProducto = (producto: Servicio) => {
+  const handleEditProducto = (producto: Producto) => {
     setIsOpen(true);
     setIsEdit(true);
     setEditSubServicio(producto);
   };
 
-  const handleEditPrecios = (producto: Servicio) => {
+  const handleEditPrecios = (producto: Producto) => {
     setIsOpenPrecios(true);
     setEditPrecioSubServicio(producto);
   };
@@ -81,45 +83,67 @@ const TableProducts = ({ productos }: Props) => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="font-bold text-center w-[80px]">
+                    <div className="flex items-center justify-center">
+                      <ImageIcon className="h-4 w-4 mr-1" />
+                      Imagen
+                    </div>
+                  </TableHead>
+
                   <TableHead className="w-[300px] font-bold">
                     <div className="flex items-center">
                       <Box className="h-4 w-4 mr-2" />
                       Producto
                     </div>
                   </TableHead>
+
                   <TableHead className="font-bold text-center">
                     <div className="flex items-center justify-center">
                       <Barcode className="h-4 w-4 mr-2" />
                       Código
                     </div>
                   </TableHead>
+
                   <TableHead className="font-bold text-center">Marca</TableHead>
+
                   <TableHead className="font-bold text-center">
                     Categoría
                   </TableHead>
+
                   <TableHead className="font-bold text-center">
                     <div className="flex items-center justify-center">
                       <DollarSign className="h-4 w-4 mr-2" />
                       Precio
                     </div>
                   </TableHead>
+
                   <TableHead className="font-bold text-center">
                     <div className="flex items-center justify-center">
                       <Percent className="h-4 w-4 mr-2" />
                       Impuesto
                     </div>
                   </TableHead>
+
                   <TableHead className="font-bold text-center">
                     Estado
                   </TableHead>
+
                   <TableHead className="font-bold text-center">
                     Acciones
                   </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {productos.map((producto) => (
                   <TableRow key={producto.id} className="hover:bg-muted/50">
+                    <TableCell className="text-center">
+                      <ProductoImagenes
+                        imagenes={producto.imagenes}
+                        productoId={producto.id}
+                      />
+                    </TableCell>
+
                     <TableCell>
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
@@ -201,14 +225,14 @@ const TableProducts = ({ productos }: Props) => {
                           {producto.preciosPorPais.map((precio, index) => (
                             <div key={index} className="text-sm">
                               <div className="font-semibold text-green-600">
-                                {precio.pais.simbolo_moneda} {precio.precio}
+                                {precio.pais?.simbolo_moneda} {precio.precio}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                Costo: {precio.pais.simbolo_moneda}{" "}
+                                Costo: {precio.pais?.simbolo_moneda}{" "}
                                 {precio.costo}
                               </div>
                               <div className="text-xs text-blue-600">
-                                {precio.pais.nombre}
+                                {precio.pais?.nombre}
                               </div>
                             </div>
                           ))}
@@ -289,6 +313,13 @@ const TableProducts = ({ productos }: Props) => {
                   <CardContent className="p-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-3">
+                        <div className="flex justify-center mb-2">
+                          <ProductoImagenes
+                            imagenes={producto.imagenes}
+                            productoId={producto.id}
+                          />
+                        </div>
+
                         <div>
                           <h3 className="font-semibold text-lg">
                             {producto.nombre}
@@ -336,14 +367,15 @@ const TableProducts = ({ productos }: Props) => {
                               >
                                 <div className="flex justify-between items-center">
                                   <span className="font-semibold text-green-600">
-                                    {precio.pais.simbolo_moneda} {precio.precio}
+                                    {precio.pais?.simbolo_moneda}{" "}
+                                    {precio.precio}
                                   </span>
                                   <Badge variant="outline" className="text-xs">
-                                    {precio.pais.nombre}
+                                    {precio.pais?.nombre}
                                   </Badge>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  Costo: {precio.pais.simbolo_moneda}{" "}
+                                  Costo: {precio.pais?.simbolo_moneda}{" "}
                                   {precio.costo}
                                 </div>
                               </div>
@@ -412,12 +444,19 @@ const TableProducts = ({ productos }: Props) => {
               <Card key={producto.id}>
                 <CardContent className="p-4">
                   <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <ProductoImagenes
+                        imagenes={producto.imagenes}
+                        productoId={producto.id}
+                      />
+                    </div>
+
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">
+                        <h3 className="font-semibold text-lg text-center">
                           {producto.nombre}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 justify-center">
                           <Badge variant="secondary" className="text-xs">
                             {producto.codigo}
                           </Badge>
@@ -472,14 +511,14 @@ const TableProducts = ({ productos }: Props) => {
                             >
                               <div className="flex justify-between items-center">
                                 <span className="font-semibold text-green-600">
-                                  {precio.pais.simbolo_moneda} {precio.precio}
+                                  {precio.pais?.simbolo_moneda} {precio.precio}
                                 </span>
                                 <Badge variant="outline" className="text-xs">
-                                  {precio.pais.nombre}
+                                  {precio.pais?.nombre}
                                 </Badge>
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                Costo: {precio.pais.simbolo_moneda}{" "}
+                                Costo: {precio.pais?.simbolo_moneda}{" "}
                                 {precio.costo}
                               </div>
                             </div>
@@ -518,6 +557,7 @@ const TableProducts = ({ productos }: Props) => {
                         </p>
                       </div>
                     )}
+
                     <div className="flex justify-between gap-2">
                       <Button
                         variant="outline"

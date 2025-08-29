@@ -30,6 +30,7 @@ import {
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FormMarcas = dynamic(() => import("./ui/FormMarcas"), {
   loading: () => <LoaderComponents />,
@@ -40,17 +41,29 @@ const TableMarcas = dynamic(() => import("./ui/TableMarcas"), {
 });
 
 const MarcasAdminPage = () => {
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [sortField, setSortField] = useState("nombre");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [isOpen, setIsOpen] = useState(false);
 
-  const offset = (page - 1) * limit;
-  const { data: marcas, isLoading } = useGetAllMarcas(limit, offset);
+  const offset = (currentPage - 1) * itemsPerPage;
+  const { data: marcas, isLoading } = useGetAllMarcas(itemsPerPage, offset);
 
-  const totalPages = marcas ? Math.ceil(marcas.total / limit) : 0;
+  const totalPages = marcas ? Math.ceil(marcas.total / itemsPerPage) : 0;
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    const newItemsPerPage = parseInt(value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -79,18 +92,6 @@ const MarcasAdminPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center py-4">
-                <div className="relative ml-auto flex-1 md:grow-0">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Buscar marcas..."
-                    className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
               <div className="rounded-md border">
                 <TableMarcas
                   marcas={marcas}
@@ -105,56 +106,16 @@ const MarcasAdminPage = () => {
                 <div className="text-sm text-muted-foreground">
                   Mostrando{" "}
                   <strong>
-                    {offset + 1}-{Math.min(offset + limit, marcas?.total || 0)}
+                    {offset + 1}-
+                    {Math.min(offset + itemsPerPage, marcas?.total || 0)}
                   </strong>{" "}
                   de <strong>{marcas?.total || 0}</strong> marcas
                 </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (page > 1) setPage(page - 1);
-                        }}
-                        className={
-                          page === 1 ? "pointer-events-none opacity-50" : ""
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (pageNumber) => (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPage(pageNumber);
-                            }}
-                            isActive={page === pageNumber}
-                          >
-                            {pageNumber}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    )}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (page < totalPages) setPage(page + 1);
-                        }}
-                        className={
-                          page === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <Paginacion
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             </CardContent>
           </Card>

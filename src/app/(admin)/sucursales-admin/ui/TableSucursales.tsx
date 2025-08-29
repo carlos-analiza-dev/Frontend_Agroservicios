@@ -44,7 +44,7 @@ import { isAxiosError } from "axios";
 
 interface Props {
   isLoading: boolean;
-  filteredSucursales: Sucursal[];
+  filteredSucursales: Sucursal[] | undefined;
   searchTerm: string;
 }
 
@@ -159,7 +159,7 @@ const TableSucursales = ({
                 </TableCell>
               </TableRow>
             ))
-          ) : filteredSucursales.length === 0 ? (
+          ) : filteredSucursales?.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-8">
                 <div className="text-muted-foreground">
@@ -170,7 +170,7 @@ const TableSucursales = ({
               </TableCell>
             </TableRow>
           ) : (
-            filteredSucursales.map((sucursal) => (
+            filteredSucursales?.map((sucursal) => (
               <TableRow key={sucursal.id}>
                 <TableCell className="text-center">
                   <div className="flex items-center gap-2">

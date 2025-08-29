@@ -126,7 +126,7 @@ const FormServicios = ({
     );
   };
 
-  const crearInsumosMutation = useMutation({
+  /*  const crearInsumosMutation = useMutation({
     mutationFn: (data: { subServicioId: string; insumos: InsumoDis[] }) => {
       const promises = data.insumos.map((insumo) =>
         CrearServicioInsumos({
@@ -144,17 +144,17 @@ const FormServicios = ({
     onError: (error) => {
       toast.error("Error al crear los insumos del servicio");
     },
-  });
+  }); */
 
   const mutation = useMutation({
     mutationFn: (data: CrearSubServicio) => AddSubServicio(data),
     onSuccess: (subServicioCreado) => {
-      if (insumosSeleccionados.length > 0) {
+      /*      if (insumosSeleccionados.length > 0) {
         crearInsumosMutation.mutate({
           subServicioId: subServicioCreado.data.id,
           insumos: insumosSeleccionados,
         });
-      }
+      } */
 
       toast.success("Servicio creado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
@@ -185,12 +185,12 @@ const FormServicios = ({
     mutationFn: (data: CrearSubServicio) =>
       UpdateSubServicio(editSubServicio?.id ?? "", data),
     onSuccess: (subServicioActualizado) => {
-      if (insumosSeleccionados.length > 0 && editSubServicio?.id) {
+      /* if (insumosSeleccionados.length > 0 && editSubServicio?.id) {
         crearInsumosMutation.mutate({
           subServicioId: editSubServicio.id,
           insumos: insumosSeleccionados,
         });
-      }
+      } */
 
       toast.success("Servicio actualizado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["servicios-admin"] });
@@ -224,11 +224,6 @@ const FormServicios = ({
       mutation.mutate({ ...data, servicioId });
     }
   };
-
-  const isLoading =
-    mutation.isPending ||
-    mutationUpdate.isPending ||
-    crearInsumosMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -311,7 +306,7 @@ const FormServicios = ({
         )}
       </div>
 
-      {!isEdit && (
+      {/*  {!isEdit && (
         <div className="space-y-4 border rounded-md p-4">
           <Label className="font-bold text-lg">Insumos del Servicio</Label>
 
@@ -384,7 +379,7 @@ const FormServicios = ({
             </div>
           )}
         </div>
-      )}
+      )} */}
       <div className="space-y-2">
         <Label className="font-bold">Estado</Label>
         <div className="flex items-center space-x-2">

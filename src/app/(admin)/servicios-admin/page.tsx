@@ -26,6 +26,7 @@ import {
 import CardSkeleton from "@/components/generics/CardSkeleton";
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
+import useGetAllServiciosAdmin from "@/hooks/servicios/useGetAllServiciosAdmin";
 
 const FormCategorias = dynamic(() => import("./ui/FormCategorias"), {
   loading: () => <LoaderComponents />,
@@ -39,10 +40,18 @@ const ServiciosCategoriasAdminPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedCategoria, setSelectedCategoria] = useState("");
+
+  const categoriaId = selectedCategoria === "all" ? "" : selectedCategoria;
 
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const { data, isLoading } = useGetServiciosAdmin(itemsPerPage, offset);
+  const { data, isLoading } = useGetServiciosAdmin(
+    itemsPerPage,
+    offset,
+    categoriaId
+  );
+  const { data: categorias } = useGetAllServiciosAdmin();
 
   if (isLoading) {
     return <CardSkeleton />;
@@ -52,6 +61,11 @@ const ServiciosCategoriasAdminPage = () => {
   const totalServicios = data?.data.total || 0;
 
   const totalPages = Math.ceil(totalServicios / itemsPerPage);
+
+  const handleServicioChange = (value: string) => {
+    setSelectedCategoria(value);
+    setCurrentPage(1);
+  };
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -105,6 +119,12 @@ const ServiciosCategoriasAdminPage = () => {
     return pages;
   };
 
+  const clearFilters = () => {
+    setSelectedCategoria("");
+
+    setCurrentPage(1);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -134,6 +154,38 @@ const ServiciosCategoriasAdminPage = () => {
             <FormCategorias onSuccess={() => setIsOpen(false)} />
           </AlertDialogContent>
         </AlertDialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Categoría</label>
+          <Select
+            value={selectedCategoria}
+            onValueChange={handleServicioChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categorias?.map((categoria) => (
+                <SelectItem key={categoria.id} value={categoria.id.toString()}>
+                  {categoria.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            disabled={!selectedCategoria}
+          >
+            Limpiar filtros
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
