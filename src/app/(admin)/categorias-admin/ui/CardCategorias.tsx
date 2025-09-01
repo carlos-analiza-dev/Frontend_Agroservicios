@@ -1,4 +1,4 @@
-import { ResponseCategoriasInterface } from "@/apis/categorias/interface/response-categorias.interface";
+import { Categoria } from "@/apis/categorias/interface/response-categorias.interface";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -21,16 +21,15 @@ import React, { useState } from "react";
 import FormCategorias from "./FormCategorias";
 
 interface Props {
-  categoria: ResponseCategoriasInterface;
+  categoria: Categoria;
 }
 
 const CardCategorias = ({ categoria }: Props) => {
-  const [editCategoria, setEditCategoria] =
-    useState<ResponseCategoriasInterface | null>(null);
+  const [editCategoria, setEditCategoria] = useState<Categoria | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleEditCategoria = (categoria: ResponseCategoriasInterface) => {
+  const handleEditCategoria = (categoria: Categoria) => {
     setIsOpen(true);
     setIsEdit(true);
     setEditCategoria(categoria);

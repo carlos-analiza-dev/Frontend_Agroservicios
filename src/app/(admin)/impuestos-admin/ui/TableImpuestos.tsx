@@ -57,7 +57,7 @@ const TableImpuestos = ({ impuestos }: Props) => {
                 <TableCell className="text-center">{impuesto.nombre}</TableCell>
                 <TableCell className="text-center">
                   <Badge variant="secondary" className="text-sm">
-                    {(parseFloat(impuesto.porcentaje) * 100).toFixed(1)}%
+                    {impuesto.porcentaje}%
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center">

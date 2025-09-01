@@ -16,6 +16,7 @@ import useGetDeptosActivesByPais from "@/hooks/departamentos/useGetDeptosActives
 import useGetMunicipiosActivosByDepto from "@/hooks/municipios/useGetMunicipiosActivosByDepto";
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import usePaisesById from "@/hooks/paises/usePaisesById";
+import useGetSucursales from "@/hooks/sucursales/useGetSucursales";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
@@ -31,6 +32,9 @@ const FormRegister = () => {
   const [codigoPais, setCodigoPais] = useState("");
   const [paisId, setPaisId] = useState("");
   const [departamentoId, setDepartamentoId] = useState("");
+
+  const { data: sucursales } = useGetSucursales();
+
   const {
     register,
     handleSubmit,
@@ -48,6 +52,8 @@ const FormRegister = () => {
       pais: "",
       departamento: "",
       municipio: "",
+      sucursal: "",
+      sexo: "",
     },
   });
 
@@ -119,6 +125,7 @@ const FormRegister = () => {
         departamento: "",
         municipio: "",
         sexo: "",
+        sucursal: "",
       });
       setPaisId("");
       setDepartamentoId("");
@@ -311,6 +318,31 @@ const FormRegister = () => {
           {errors.municipio && (
             <p className="text-sm font-medium text-red-500">
               {errors.municipio.message as string}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sucursal">Sucursal</Label>
+          <Select
+            onValueChange={(value) => {
+              setValue("sucursal", value);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona una sucursal" />
+            </SelectTrigger>
+            <SelectContent>
+              {sucursales?.data.map((sucursal) => (
+                <SelectItem key={sucursal.id} value={sucursal.id}>
+                  {sucursal.nombre} - {sucursal.tipo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.sucursal && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.sucursal.message as string}
             </p>
           )}
         </div>

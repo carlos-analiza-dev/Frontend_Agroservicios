@@ -1,4 +1,4 @@
-import { Servicio } from "@/apis/productos/interfaces/response-productos.interface";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import { AddProducto } from "@/apis/sub-servicio/accions/crear-sub-servicio";
 import { UpdateProducto } from "@/apis/sub-servicio/accions/update-sub-servicio";
 import { CrearSubServicio } from "@/apis/sub-servicio/interface/crear-sub-servicio.interface";
@@ -26,7 +26,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 interface Props {
-  editSubServicio?: Servicio | null;
+  editSubServicio?: Producto | null;
   isEdit?: boolean;
   onSuccess: () => void;
 }
@@ -259,7 +259,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
             <SelectValue placeholder="Selecciona una categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categorias?.map((cat) => (
+            {categorias?.data.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.nombre}
               </SelectItem>

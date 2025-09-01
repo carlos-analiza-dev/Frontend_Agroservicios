@@ -121,23 +121,24 @@ const FormImpuestos = ({ onSuccess, editImpuesto, isEdit }: Props) => {
         <Label className="font-bold">Porcentaje*</Label>
         <Input
           type="number"
-          step="0.01"
-          min="0"
-          max="100"
+          step="1"
+          min="1"
+          max="99"
           {...register("porcentaje", {
             required: "El campo porcentaje es requerido",
             min: {
-              value: 0,
-              message: "El porcentaje debe ser mayor o igual a 0",
+              value: 1,
+              message: "El porcentaje debe ser mayor o igual a 1",
             },
             max: {
-              value: 100,
-              message: "El porcentaje debe ser menor o igual a 0.99",
+              value: 99,
+              message: "El porcentaje debe ser menor o igual a 99",
             },
             valueAsNumber: true,
           })}
-          placeholder="Ej: 0.15, 0.05, 0.12, 0.20"
+          placeholder="Ej: 15, 20, 25, 30"
         />
+
         {errors.porcentaje && (
           <p className="text-sm font-medium text-red-500">
             {errors.porcentaje.message as string}

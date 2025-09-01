@@ -20,6 +20,8 @@ import {
   Droplet,
   FlaskConical,
   HousePlus,
+  ShoppingBag,
+  TicketPercent,
 } from "lucide-react";
 
 export const navItems = [
@@ -61,6 +63,21 @@ export const navItems = [
         icon: BriefcaseMedical,
       },
       { name: "Roles", href: "/roles-admin", icon: UserCog },
+    ],
+  },
+  {
+    category: "Compras",
+    items: [
+      {
+        name: "Compras Productos",
+        href: "/compras-productos-admin",
+        icon: ShoppingBag,
+      },
+      {
+        name: "Compras Insumos",
+        href: "/compras-insumos-admin",
+        icon: TicketPercent,
+      },
     ],
   },
   {

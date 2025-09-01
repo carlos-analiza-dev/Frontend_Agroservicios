@@ -8,6 +8,7 @@ export interface CrearUsuario {
   sexo: string;
   role?: string;
   pais: string;
+  sucursal: string;
   departamento: string;
   municipio: string;
   isActive?: boolean;

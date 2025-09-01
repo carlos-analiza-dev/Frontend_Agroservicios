@@ -5,6 +5,7 @@ import {
   Pais,
   ProfileImage,
   Role,
+  Sucursal,
 } from "@/interfaces/auth/user";
 
 export interface AuthResponse {
@@ -23,6 +24,7 @@ export interface AuthResponse {
   departamento: Departamento;
   municipio: Municipio;
   profileImages: ProfileImage[];
+  sucursal: Sucursal;
   token: string;
 }
 

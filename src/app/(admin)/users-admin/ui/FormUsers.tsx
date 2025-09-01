@@ -17,6 +17,7 @@ import useGetMunicipiosByDepto from "@/hooks/municipios/useGetMunicipiosByDepto"
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import usePaisesById from "@/hooks/paises/usePaisesById";
 import useGetRoles from "@/hooks/roles/useGetRoles";
+import useGetSucursales from "@/hooks/sucursales/useGetSucursales";
 import userById from "@/hooks/users/userById";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +38,7 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
   const queryClient = useQueryClient();
   const [codigoPais, setCodigoPais] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { data: sucursales } = useGetSucursales();
 
   const {
     register,
@@ -60,6 +62,7 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
         sexo: user.data.sexo,
         departamento: user.data.departamento.id,
         municipio: user.data.municipio.id,
+        sucursal: user.data.sucursal.id,
       });
 
       setCodigoPais(user.data.pais.code);
@@ -406,6 +409,32 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
           {errors.municipio && (
             <p className="text-sm font-medium text-red-500">
               {errors.municipio.message as string}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sucursal">Sucursal</Label>
+          <Select
+            value={watch("sucursal")}
+            onValueChange={(value) => {
+              setValue("sucursal", value);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona una sucursal" />
+            </SelectTrigger>
+            <SelectContent>
+              {sucursales?.data.map((sucursal) => (
+                <SelectItem key={sucursal.id} value={sucursal.id}>
+                  {sucursal.nombre} - {sucursal.tipo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.sucursal && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.sucursal.message as string}
             </p>
           )}
         </div>

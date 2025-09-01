@@ -39,6 +39,20 @@ export interface ProfileImage {
   updatedAt: Date;
 }
 
+export interface Sucursal {
+  id: string;
+  nombre: string;
+  tipo: string;
+  direccion_complemento: string;
+  paisId: string;
+  departamentoId: string;
+  municipioId: string;
+  gerenteId: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -54,6 +68,7 @@ export interface User {
   pais: Pais;
   departamento: Departamento;
   municipio: Municipio;
+  sucursal: Sucursal;
   profileImages: ProfileImage[];
 }
 

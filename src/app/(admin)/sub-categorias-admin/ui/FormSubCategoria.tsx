@@ -1,7 +1,10 @@
 import { CrearSubCategoria } from "@/apis/subcategorias/accions/crear-subcategoria";
 import { ActualizarSubCategoria } from "@/apis/subcategorias/accions/update-subcategoria";
 import { CrearSubCatInterface } from "@/apis/subcategorias/interface/crear-subcategoria.interface";
-import { ResponseSubcategorias } from "@/apis/subcategorias/interface/get-subcategorias.interface";
+import {
+  ResponseSubcategorias,
+  SubCategoria,
+} from "@/apis/subcategorias/interface/get-subcategorias.interface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +26,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 interface Props {
-  editSubCategoria?: ResponseSubcategorias | null;
+  editSubCategoria?: SubCategoria | null;
   isEdit?: boolean;
   onSucces: () => void;
 }
@@ -153,8 +156,8 @@ const FormSubCategoria = ({ onSucces, editSubCategoria, isEdit }: Props) => {
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Categorias</SelectLabel>
-              {categorias && categorias.length > 0 ? (
-                categorias.map((cat) => (
+              {categorias && categorias.data.length > 0 ? (
+                categorias.data.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.nombre}
                   </SelectItem>

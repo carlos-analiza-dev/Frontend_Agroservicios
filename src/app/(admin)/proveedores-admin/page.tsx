@@ -1,14 +1,6 @@
 "use client";
 import useGetAllProveedores from "@/hooks/proveedores/useGetAllProveedores";
 import React, { useState } from "react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import TitlePages from "@/components/generics/TitlePages";
 import {
@@ -24,6 +16,7 @@ import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 import Paginacion from "@/components/generics/Paginacion";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 const FormProveedor = dynamic(() => import("./ui/FormProveedor"), {
   loading: () => <LoaderComponents />,
@@ -34,12 +27,18 @@ const TableProveedores = dynamic(() => import("./ui/TableProveedores"), {
 });
 
 const ProveedoresAdmin = () => {
+  const { user } = useAuthStore();
+  const paisId = user?.pais.id || "";
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const offset = (currentPage - 1) * itemsPerPage;
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data, isLoading, error } = useGetAllProveedores(itemsPerPage, offset);
+  const { data, isLoading, error } = useGetAllProveedores(
+    paisId,
+    itemsPerPage,
+    offset
+  );
 
   const totalPages = data ? Math.ceil(data.total / itemsPerPage) : 0;
 

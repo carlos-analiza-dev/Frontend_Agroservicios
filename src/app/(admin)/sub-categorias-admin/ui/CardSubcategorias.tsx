@@ -1,4 +1,7 @@
-import { ResponseSubcategorias } from "@/apis/subcategorias/interface/get-subcategorias.interface";
+import {
+  ResponseSubcategorias,
+  SubCategoria,
+} from "@/apis/subcategorias/interface/get-subcategorias.interface";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -22,16 +25,17 @@ import FormSubCategoria from "./FormSubCategoria";
 import { Calendar, Layers, Tag } from "lucide-react";
 
 interface Props {
-  subcategoria: ResponseSubcategorias;
+  subcategoria: SubCategoria;
 }
 
 const CardSubcategorias = ({ subcategoria }: Props) => {
-  const [editSubCategoria, setSubEditCategoria] =
-    useState<ResponseSubcategorias | null>(null);
+  const [editSubCategoria, setSubEditCategoria] = useState<SubCategoria | null>(
+    null
+  );
   const [isEdit, setIsEdit] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleEditSubcategoria = (subcategoria: ResponseSubcategorias) => {
+  const handleEditSubcategoria = (subcategoria: SubCategoria) => {
     setIsOpen(true);
     setIsEdit(true);
     setSubEditCategoria(subcategoria);

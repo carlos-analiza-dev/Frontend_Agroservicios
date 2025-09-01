@@ -58,7 +58,7 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
         telefono: editProveedor.telefono,
         correo: editProveedor.correo,
         nombre_contacto: editProveedor.nombre_contacto,
-        paisId: editProveedor.pais.id,
+        paisId: editProveedor.pais?.id,
         departamentoId: editProveedor.departamento.id,
         municipioId: editProveedor.municipio.id,
       });

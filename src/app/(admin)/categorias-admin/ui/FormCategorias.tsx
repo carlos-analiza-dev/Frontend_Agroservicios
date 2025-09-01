@@ -1,7 +1,10 @@
 import { CrearCategoria } from "@/apis/categorias/accions/crear-categoria";
 import { ActualizarCategoria } from "@/apis/categorias/accions/update-categoria";
 import { CrearCatInterface } from "@/apis/categorias/interface/crear-categoria.interface";
-import { ResponseCategoriasInterface } from "@/apis/categorias/interface/response-categorias.interface";
+import {
+  Categoria,
+  ResponseCategoriasInterface,
+} from "@/apis/categorias/interface/response-categorias.interface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 interface Props {
-  editCategoria?: ResponseCategoriasInterface | null;
+  editCategoria?: Categoria | null;
   isEdit?: boolean;
   onSucces: () => void;
 }

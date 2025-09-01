@@ -47,8 +47,8 @@ const SubCategoriasPageAdmin = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {subcategorias && subcategorias.length > 0 ? (
-          subcategorias.map((subcate) => (
+        {subcategorias && subcategorias.data.length > 0 ? (
+          subcategorias.data.map((subcate) => (
             <CardSubcategorias key={subcate.id} subcategoria={subcate} />
           ))
         ) : (

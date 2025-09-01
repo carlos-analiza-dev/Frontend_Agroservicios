@@ -4,6 +4,6 @@ import { ResponseCategoriasInterface } from "../interface/response-categorias.in
 export const ObtenerCategorias = async () => {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/categorias`;
 
-  const response = await veterinariaAPI.get<ResponseCategoriasInterface[]>(url);
+  const response = await veterinariaAPI.get<ResponseCategoriasInterface>(url);
   return response.data;
 };

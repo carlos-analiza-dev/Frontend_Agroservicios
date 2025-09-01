@@ -135,7 +135,7 @@ const PageProductosAdmin = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las categorías</SelectItem>
-              {categorias?.map((categoria) => (
+              {categorias?.data.map((categoria) => (
                 <SelectItem key={categoria.id} value={categoria.id.toString()}>
                   {categoria.nombre}
                 </SelectItem>

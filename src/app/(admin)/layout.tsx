@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { toast } from "react-toastify";
@@ -13,23 +13,42 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const router = useRouter();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
     try {
       setMobileSidebarOpen(false);
+      setLoading(true);
 
       await logout();
-      <FullScreenLoader />;
       router.push("/");
 
       toast.success("Sesión cerrada correctamente");
     } catch (error) {
       toast.error("Ocurrió un error al cerrar la sesión");
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!user || user.role.name !== "Administrador") {
+        await logout();
+        router.push("/");
+      }
+    };
+
+    checkUser();
+  }, [user, logout, router]);
+
+  if (loading) {
+    return <FullScreenLoader />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <SidebarAdmin handleLogout={handleLogout} />
