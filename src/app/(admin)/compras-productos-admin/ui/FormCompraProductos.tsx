@@ -15,7 +15,6 @@ import {
 import { tiposPagos } from "@/helpers/data/tiposPagos";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
-import useGetSucursales from "@/hooks/sucursales/useGetSucursales";
 import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
@@ -62,6 +61,8 @@ const FormCompraProductos = () => {
           impuesto: 0,
         },
       ],
+      proveedorId: "",
+      tipoPago: "",
     },
   });
 
@@ -71,12 +72,25 @@ const FormCompraProductos = () => {
   });
 
   const { data: proveedores } = useGetProveedoresActivos();
-  const { data: sucursales } = useGetSucursales();
   const { data: productosData } = useGetProductosDisponibles();
   const { data: impuestos } = useGetTaxesPais();
   const productos = productosData?.data.productos || [];
 
   const productosWatch = watch("productos");
+
+  const getProductosDisponibles = (currentIndex: number) => {
+    return productos.filter((producto) => {
+      if (productosWatch?.[currentIndex]?.productoId === producto.id) {
+        return true;
+      }
+
+      const estaSeleccionado = productosWatch?.some(
+        (p, index) => index !== currentIndex && p.productoId === producto.id
+      );
+
+      return !estaSeleccionado;
+    });
+  };
 
   const calcularTotales = () => {
     let subtotal = 0;
@@ -236,6 +250,8 @@ const FormCompraProductos = () => {
             ((productosWatch?.[index]?.impuesto || 0) / 100);
           const totalProducto = subtotalConDescuento + impuestoProducto;
 
+          const productosDisponibles = getProductosDisponibles(index);
+
           return (
             <div key={field.id} className="p-4 border rounded-lg space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -253,7 +269,7 @@ const FormCompraProductos = () => {
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Productos</SelectLabel>
-                        {productos.map((prod) => (
+                        {productosDisponibles.map((prod) => (
                           <SelectItem value={prod.id} key={prod.id}>
                             {prod.nombre} - {prod.codigo}
                           </SelectItem>

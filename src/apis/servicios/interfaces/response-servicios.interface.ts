@@ -16,10 +16,9 @@ export interface Servicio {
 export interface SubServicio {
   id: string;
   nombre: string;
-  codigo: null | string;
-  codigo_barra: null;
-  atributos: null;
-  tax_rate: null;
+  codigo: string;
+  codigo_barra: string;
+  atributos: string;
   tipo: string;
   unidad_venta: string;
   descripcion: string;
@@ -28,21 +27,28 @@ export interface SubServicio {
   disponible: boolean;
   createdAt: Date;
   updatedAt: Date;
-  marcaId: null;
-  proveedorId: null;
   categoriaId: null;
   preciosPorPais: PreciosPorPai[];
-  marca: null;
-  proveedor: null;
-  categoria: null;
-  insumos: Insumo[];
+  insumos: InsumoElement[];
 }
 
-export interface Insumo {
+export interface InsumoElement {
   id: string;
   servicioId: string;
   insumoId: string;
-  cantidad: string;
+  cantidad: number;
+  createdAt: Date;
+  updatedAt: Date;
+  insumo: InsumoInsumo;
+}
+
+export interface InsumoInsumo {
+  id: string;
+  nombre: string;
+  codigo: string;
+  costo: string;
+  unidad_venta: string;
+  disponible: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

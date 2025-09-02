@@ -3,66 +3,99 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import {
-  CrearServicePrecio,
-  PaisOption,
-} from "@/apis/servicios_precios/interfaces/crear-servicio-precio.interface";
+import { CrearServicePrecio } from "@/apis/servicios_precios/interfaces/crear-servicio-precio.interface";
 import { updateServicioPrecio } from "@/apis/servicios_precios/accions/update-servicios-price";
 import { AddServicioPrecio } from "@/apis/servicios_precios/accions/crear-servicio-price";
 import { isAxiosError } from "axios";
-import { PreciosPorPai } from "@/apis/servicios/interfaces/response-servicios.interface";
+import {
+  PreciosPorPai,
+  SubServicio,
+} from "@/apis/servicios/interfaces/response-servicios.interface";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 interface Props {
   subServicioId: string;
-  paises: PaisOption[];
   editPrecio?: PreciosPorPai | null;
   onCancel: () => void;
   onSuccess: () => void;
   isEditing?: boolean;
+  subServicio?: SubServicio | null;
 }
 
 const FormAddPrecios = ({
   subServicioId,
-  paises,
   onCancel,
   onSuccess,
   editPrecio,
   isEditing = false,
+  subServicio,
 }: Props) => {
+  const { user } = useAuthStore();
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
-  const [selectedPais, setSelectedPais] = useState("");
+  const [precioServicio, setPrecioServicio] = useState<number>(0);
 
   const {
     register,
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CrearServicePrecio>();
 
+  const calcularCostoTotalInsumos = (): number => {
+    if (!subServicio?.insumos || subServicio.insumos.length === 0) {
+      return 0;
+    }
+
+    return subServicio.insumos.reduce((total, insumo) => {
+      return total + parseFloat(insumo.insumo.costo) * insumo.cantidad;
+    }, 0);
+  };
+
+  const costoTotalInsumos = calcularCostoTotalInsumos();
+
+  const calcularCostoTotal = (precio: number): number => {
+    return costoTotalInsumos + precio;
+  };
+
+  const precioWatch = watch("precio");
+
+  useEffect(() => {
+    if (precioWatch !== undefined) {
+      const costoTotal = calcularCostoTotal(precioWatch);
+      setValue("costo", costoTotal);
+      setPrecioServicio(precioWatch);
+    }
+  }, [precioWatch, setValue]);
+
   useEffect(() => {
     if (isEditing && editPrecio) {
+      const precio = Number(editPrecio.precio);
+      const costoCalculado = calcularCostoTotal(precio);
+
       setValue("paisId", editPrecio.pais.id);
-      setValue("precio", Number(editPrecio.precio));
+      setValue("precio", precio);
       setValue("tiempo", editPrecio.tiempo);
       setValue("cantidadMin", editPrecio.cantidadMin);
       setValue("cantidadMax", editPrecio.cantidadMax);
+      setValue(
+        "costo",
+        editPrecio.costo ? Number(editPrecio.costo) : costoCalculado
+      );
 
-      setSelectedPais(editPrecio.pais.id);
+      setPrecioServicio(precio);
     } else {
       reset();
-      setSelectedPais("");
+      setPrecioServicio(0);
+
+      setValue("precio", 0);
+      setValue("costo", costoTotalInsumos);
     }
-  }, [isEditing, editPrecio, setValue, reset]);
+  }, [isEditing, editPrecio, setValue, reset, costoTotalInsumos]);
 
   const createMutation = useMutation({
     mutationFn: (data: CrearServicePrecio) => AddServicioPrecio(data),
@@ -140,51 +173,71 @@ const FormAddPrecios = ({
       return;
     }
 
+    if (data.costo && data.costo < 0) {
+      toast.error("El costo no puede ser negativo");
+      return;
+    }
+
+    const costoFinal = data.costo || calcularCostoTotal(data.precio);
+
+    const submitData = {
+      ...data,
+      costo: costoFinal,
+    };
+
     if (isEditing) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(submitData);
     } else {
-      createMutation.mutate({ ...data, sub_servicio_id: subServicioId });
+      createMutation.mutate({
+        ...submitData,
+        sub_servicio_id: subServicioId,
+        paisId: paisId,
+      });
     }
   };
 
-  const handlePaisChange = (value: string) => {
-    setSelectedPais(value);
-    setValue("paisId", value, { shouldValidate: true });
-  };
+  const costoTotal = calcularCostoTotal(precioServicio);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 p-4">
-      <div className="space-y-2">
-        <Label htmlFor="paisId" className="font-bold">
-          País *
-        </Label>
-        <Select
-          value={isEditing ? editPrecio?.pais.id : selectedPais}
-          onValueChange={handlePaisChange}
-          disabled={isEditing || isLoading}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona un país" />
-          </SelectTrigger>
-          <SelectContent>
-            {paises.map((pais) => (
-              <SelectItem key={pais.value} value={pais.value}>
-                {pais.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.paisId && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.paisId.message}
-          </p>
-        )}
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-blue-800">
+              Costo de insumos:
+            </span>
+            <span className="text-sm font-bold text-blue-800">
+              {user?.pais.simbolo_moneda} {costoTotalInsumos.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-blue-800">
+              Precio del servicio:
+            </span>
+            <span className="text-sm font-bold text-blue-800">
+              {user?.pais.simbolo_moneda} {precioServicio.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center border-t border-blue-200 pt-2">
+            <span className="text-sm font-bold text-blue-800">
+              Costo total:
+            </span>
+            <span className="text-sm font-bold text-blue-800">
+              {user?.pais.simbolo_moneda} {costoTotal.toFixed(2)}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">
+          Costo total = Insumos + Precio del servicio
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="precio" className="font-bold">
-            Precio *
+            Precio Servicio*
           </Label>
           <Input
             id="precio"
@@ -285,6 +338,33 @@ const FormAddPrecios = ({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="costo" className="font-bold">
+          Costo total manual (opcional)
+        </Label>
+        <Input
+          id="costo"
+          type="number"
+          step="0.01"
+          min="0"
+          disabled={isLoading}
+          {...register("costo", {
+            min: { value: 0, message: "El costo no puede ser negativo" },
+            valueAsNumber: true,
+          })}
+          placeholder={`${costoTotal.toFixed(2)} (valor calculado)`}
+        />
+        {errors.costo && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.costo.message}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Si dejas este campo en blanco, se usará el cálculo automático: Insumos
+          + Precio servicio
+        </p>
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">

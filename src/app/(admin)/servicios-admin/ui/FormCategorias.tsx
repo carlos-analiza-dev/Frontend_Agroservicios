@@ -10,6 +10,7 @@ import { CrearServicio } from "@/apis/servicios/interfaces/crear-servicio.interf
 import { AddServicio } from "@/apis/servicios/accions/crear-servicio";
 import { EditarServicio } from "@/apis/servicios/accions/editar-servicio";
 import { Servicio } from "@/apis/servicios/interfaces/response-servicios.interface";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 interface Props {
   editServicio?: Servicio | null;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 const FormCategorias = ({ onSuccess, editServicio, isEdit }: Props) => {
+  const { user } = useAuthStore();
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
 
   const {
@@ -100,7 +103,7 @@ const FormCategorias = ({ onSuccess, editServicio, isEdit }: Props) => {
     if (isEdit) {
       mutationUpdate.mutate(data);
     } else {
-      mutation.mutate(data);
+      mutation.mutate({ ...data, paisId: paisId });
     }
   };
 

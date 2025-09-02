@@ -69,12 +69,12 @@ export const navItems = [
     category: "Compras",
     items: [
       {
-        name: "Compras Productos",
+        name: "Productos",
         href: "/compras-productos-admin",
         icon: ShoppingBag,
       },
       {
-        name: "Compras Insumos",
+        name: "Insumos",
         href: "/compras-insumos-admin",
         icon: TicketPercent,
       },

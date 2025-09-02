@@ -1,7 +1,8 @@
 import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
-import { CrearSubServicio } from "../interface/crear-sub-servicio.interface";
+import { CrearSubServicio } from "../interface/crear-producto.interface";
+import { CrearServicioInterface } from "../interface/crear-servicio.interface";
 
-export const AddSubServicio = async (data: CrearSubServicio) => {
+export const AddSubServicio = async (data: CrearServicioInterface) => {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/sub-servicios/servicio`;
 
   const response = await veterinariaAPI.post(url, data);

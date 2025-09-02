@@ -1,7 +1,7 @@
 import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import { AddProducto } from "@/apis/sub-servicio/accions/crear-sub-servicio";
 import { UpdateProducto } from "@/apis/sub-servicio/accions/update-sub-servicio";
-import { CrearSubServicio } from "@/apis/sub-servicio/interface/crear-sub-servicio.interface";
+import { CrearSubServicio } from "@/apis/sub-servicio/interface/crear-producto.interface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -336,7 +336,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           <SelectContent>
             {impuestos?.map((imp) => (
               <SelectItem key={imp.id} value={imp.id}>
-                {imp.nombre} - {(parseFloat(imp.porcentaje) * 100).toFixed(1)}%
+                {imp.nombre} - {imp.porcentaje}%
               </SelectItem>
             ))}
           </SelectContent>

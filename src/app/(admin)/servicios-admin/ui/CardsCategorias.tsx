@@ -27,6 +27,7 @@ import FormAddPrecios from "./FormAddPrecios";
 import usePaises from "@/hooks/paises/usePaises";
 import { PaisOption } from "@/apis/servicios_precios/interfaces/crear-servicio-precio.interface";
 import DetallesPais from "./DetallesPais";
+import InsumosExpandible from "./InsumosExpandible";
 
 interface Props {
   servicios: Servicio[];
@@ -74,7 +75,10 @@ const CardsCategorias = ({ servicios }: Props) => {
     setEditSubServicio(null);
   };
 
-  const handleEditSubServicio = (subServicio: any, servicioId: string) => {
+  const handleEditSubServicio = (
+    subServicio: SubServicio,
+    servicioId: string
+  ) => {
     setIsEditSubServicio(true);
     setIsOpenSubServicio(true);
     setSelectedServicioId(servicioId);
@@ -204,6 +208,10 @@ const CardsCategorias = ({ servicios }: Props) => {
                         </Badge>
                       </div>
 
+                      <div className="mt-4">
+                        <InsumosExpandible insumos={subServicio.insumos} />
+                      </div>
+
                       <div className="mt-3">
                         <h1 className="font-bold text-sm sm:text-base">
                           Paquetes por Pais
@@ -291,10 +299,10 @@ const CardsCategorias = ({ servicios }: Props) => {
           </AlertDialogHeader>
           <FormAddPrecios
             subServicioId={selectedSubServicioId}
-            paises={paises}
             onCancel={() => setIsOpenPrecios(false)}
             isEditing={isEditPrecio}
             onSuccess={() => setIsOpenPrecios(false)}
+            subServicio={servicioSelected}
           />
         </AlertDialogContent>
       </AlertDialog>

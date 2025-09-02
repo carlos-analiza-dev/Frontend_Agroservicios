@@ -10,15 +10,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import useGetDepartamentosByPais from "@/hooks/departamentos/useGetDepartamentosByPais";
-import usePaises from "@/hooks/paises/usePaises";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState } from "react";
@@ -37,8 +29,7 @@ const FormCreateDepto = dynamic(() => import("./ui/FormCreateDepto"), {
 
 const DeptosAdminPage = () => {
   const { user } = useAuthStore();
-  const [paisId, setPaisId] = useState(user?.pais.id ?? "");
-  const { data: paises, isLoading: loadingPaises } = usePaises();
+  const paisId = user?.pais.id || "";
   const {
     data: departamentos,
     isLoading: loadingDeptos,
@@ -46,11 +37,6 @@ const DeptosAdminPage = () => {
   } = useGetDepartamentosByPais(paisId);
   const [open, setOpen] = useState(false);
   const [currentDepto, setCurrentDepto] = useState<Departamento | null>(null);
-
-  const handlePaisChange = (value: string) => {
-    setPaisId(value);
-    refetch();
-  };
 
   const handleEdit = (depto: Departamento) => {
     setCurrentDepto(depto);
@@ -63,7 +49,7 @@ const DeptosAdminPage = () => {
     refetch();
   };
 
-  if (loadingPaises || loadingDeptos) {
+  if (loadingDeptos) {
     return (
       <div className="container mx-auto py-6">
         <Skeleton className="h-10 w-1/4 mb-6" />
@@ -84,18 +70,6 @@ const DeptosAdminPage = () => {
       <div className="flex justify-between items-center mt-5">
         <TitlePages title="Gestión de Departamentos" />
         <div className="flex items-center gap-4">
-          <Select onValueChange={handlePaisChange} value={paisId}>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Selecciona un país" />
-            </SelectTrigger>
-            <SelectContent>
-              {paises?.data.map((pais) => (
-                <SelectItem key={pais.id} value={pais.id}>
-                  {pais.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <AlertDialog
             open={open}
             onOpenChange={(isOpen) => {

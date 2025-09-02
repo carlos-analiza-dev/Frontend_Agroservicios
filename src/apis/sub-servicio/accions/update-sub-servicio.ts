@@ -1,5 +1,5 @@
 import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
-import { CrearSubServicio } from "../interface/crear-sub-servicio.interface";
+import { CrearSubServicio } from "../interface/crear-producto.interface";
 
 export const UpdateSubServicio = async (
   id: string,

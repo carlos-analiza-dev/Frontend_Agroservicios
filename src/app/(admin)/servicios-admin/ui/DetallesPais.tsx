@@ -53,7 +53,7 @@ const DetallesPais = ({ subServicio }: Props) => {
               </Badge>
               <Badge variant="default" className="text-xs">
                 {precio.pais.simbolo_moneda}
-                {precio.precio}
+                {precio.costo}
               </Badge>
             </div>
 
@@ -102,11 +102,11 @@ const DetallesPais = ({ subServicio }: Props) => {
           <div className="px-1 sm:px-4 pb-4">
             <FormAddPrecios
               subServicioId={subServicio.id}
-              paises={paises}
               editPrecio={editPrecio}
               onCancel={() => setIsOpenPrecios(false)}
               isEditing={isEditPrecio}
               onSuccess={() => setIsOpenPrecios(false)}
+              subServicio={subServicio}
             />
           </div>
         </AlertDialogContent>

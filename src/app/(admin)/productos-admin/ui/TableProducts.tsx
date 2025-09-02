@@ -250,7 +250,7 @@ const TableProducts = ({ productos }: Props) => {
                     <TableCell className="text-center">
                       {producto.tax?.porcentaje ? (
                         <Badge variant="outline" className="text-xs">
-                          {Number(producto.tax?.porcentaje) * 100}%
+                          {producto.tax?.porcentaje}%
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">
