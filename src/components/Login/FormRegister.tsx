@@ -16,8 +16,7 @@ import useGetDeptosActivesByPais from "@/hooks/departamentos/useGetDeptosActives
 import useGetMunicipiosActivosByDepto from "@/hooks/municipios/useGetMunicipiosActivosByDepto";
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import usePaisesById from "@/hooks/paises/usePaisesById";
-import useGetSucursales from "@/hooks/sucursales/useGetSucursales";
-import { useAuthStore } from "@/providers/store/useAuthStore";
+import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Link from "next/link";
@@ -33,7 +32,7 @@ const FormRegister = () => {
   const [paisId, setPaisId] = useState("");
   const [departamentoId, setDepartamentoId] = useState("");
 
-  const { data: sucursales } = useGetSucursales();
+  const { data: sucursales } = useGetSucursalesPais(paisId);
 
   const {
     register,
@@ -333,11 +332,15 @@ const FormRegister = () => {
               <SelectValue placeholder="Selecciona una sucursal" />
             </SelectTrigger>
             <SelectContent>
-              {sucursales?.data.map((sucursal) => (
-                <SelectItem key={sucursal.id} value={sucursal.id}>
-                  {sucursal.nombre} - {sucursal.tipo}
-                </SelectItem>
-              ))}
+              {sucursales && sucursales.length > 0 ? (
+                sucursales?.map((sucursal) => (
+                  <SelectItem key={sucursal.id} value={sucursal.id}>
+                    {sucursal.nombre} - {sucursal.tipo}
+                  </SelectItem>
+                ))
+              ) : (
+                <p>No se encontraron sucursales</p>
+              )}
             </SelectContent>
           </Select>
           {errors.sucursal && (

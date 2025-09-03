@@ -77,12 +77,6 @@ const PageProductosAdmin = () => {
     }
   };
 
-  const handleItemsPerPageChange = (value: string) => {
-    const newItemsPerPage = parseInt(value);
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
   const handleCategoriaChange = (value: string) => {
     setSelectedCategoria(value);
     setCurrentPage(1);
@@ -191,27 +185,6 @@ const PageProductosAdmin = () => {
           >
             Limpiar filtros
           </Button>
-        </div>
-      </div>
-
-      <div className="flex sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Mostrar</span>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={handleItemsPerPageChange}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm font-medium">productos por página</span>
         </div>
       </div>
 

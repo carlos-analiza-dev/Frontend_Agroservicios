@@ -23,12 +23,9 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { EliminarImagenProducto } from "@/apis/upload-images-products/accions/eliminar-imagen-producto";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   imagenes?: ImageneProductos[];
@@ -38,6 +35,11 @@ interface Props {
 
 type FormValues = {
   file: FileList;
+};
+
+const CONTAINER_SIZE = {
+  width: 70,
+  height: 50,
 };
 
 const ProductoImagenes = ({ imagenes, productoId, onUploadSuccess }: Props) => {
@@ -151,40 +153,58 @@ const ProductoImagenes = ({ imagenes, productoId, onUploadSuccess }: Props) => {
   };
 
   return (
-    <div className="relative flex justify-center">
+    <div
+      className="relative flex justify-center"
+      style={{ width: CONTAINER_SIZE.width, height: CONTAINER_SIZE.height }}
+    >
       {imagenes && imagenes.length > 0 ? (
-        <Carousel className="w-full max-w-xs">
-          <CarouselContent>
+        <Carousel className="w-full h-full">
+          <CarouselContent className="ml-0">
             {imagenes.map((imagen, index) => (
-              <CarouselItem key={imagen.id || index}>
-                <div className="p-1 relative">
-                  <Card>
-                    <CardContent className="flex aspect-square items-center justify-center p-2 relative group">
-                      <Image
-                        src={imagen.url || "/placeholder.png"}
-                        alt={`Imagen del producto ${index + 1}`}
-                        width={150}
-                        height={150}
-                        className="w-full h-full object-cover rounded-md"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement!.innerHTML =
-                            '<div class="w-full h-full flex items-center justify-center bg-muted">' +
-                            '<ImageIcon class="h-10 w-10 text-muted-foreground" />' +
-                            "</div>";
+              <CarouselItem key={imagen.id || index} className="pl-0">
+                <div className="p-0 relative w-full h-full">
+                  <Card className="w-full h-full border-0 shadow-none">
+                    <CardContent className="flex items-center justify-center p-0 relative group w-full h-full">
+                      <div
+                        className="relative w-full h-full flex items-center justify-center bg-muted rounded-md overflow-hidden"
+                        style={{
+                          width: CONTAINER_SIZE.width,
+                          height: CONTAINER_SIZE.height,
                         }}
-                      />
+                      >
+                        <Image
+                          src={imagen.url || "/placeholder.png"}
+                          alt={`Imagen del producto ${index + 1}`}
+                          width={CONTAINER_SIZE.width}
+                          height={CONTAINER_SIZE.height}
+                          className="object-cover rounded-md"
+                          style={{ width: "100%", height: "100%" }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML =
+                                '<div class="w-full h-full flex items-center justify-center bg-muted">' +
+                                '<ImageIcon class="h-5 w-5 text-muted-foreground" />' +
+                                "</div>";
+                            }
+                          }}
+                        />
+                      </div>
                       <button
                         onClick={() => handleDeleteClick(imagen.id!)}
                         disabled={deleteMutation.isPending}
-                        className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-bl-md rounded-tr-md p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        style={{ width: "16px", height: "16px" }}
                         title="Eliminar imagen"
                       >
                         {deleteMutation.isPending &&
                         imageToDelete === imagen.id ? (
-                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <div className="h-2 w-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         ) : (
-                          <Trash2 size={10} />
+                          <Trash2 size={8} />
                         )}
                       </button>
                     </CardContent>
@@ -195,17 +215,21 @@ const ProductoImagenes = ({ imagenes, productoId, onUploadSuccess }: Props) => {
           </CarouselContent>
         </Carousel>
       ) : (
-        <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
-          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+        <div
+          className="w-full h-full bg-muted rounded-md flex items-center justify-center"
+          style={{ width: CONTAINER_SIZE.width, height: CONTAINER_SIZE.height }}
+        >
+          <ImageIcon className="h-5 w-5 text-muted-foreground" />
         </div>
       )}
 
-      <div
+      <button
         className="absolute -top-2 -right-2 bg-primary rounded-full p-1 cursor-pointer shadow z-10"
         onClick={() => setIsOpen(true)}
+        style={{ width: "20px", height: "20px" }}
       >
-        <Plus size={14} className="text-white" />
-      </div>
+        <Plus size={12} className="text-white" />
+      </button>
 
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
         <AlertDialogContent>

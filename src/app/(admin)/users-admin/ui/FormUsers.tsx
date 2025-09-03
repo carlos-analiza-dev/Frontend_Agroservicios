@@ -18,6 +18,7 @@ import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import usePaisesById from "@/hooks/paises/usePaisesById";
 import useGetRoles from "@/hooks/roles/useGetRoles";
 import useGetSucursales from "@/hooks/sucursales/useGetSucursales";
+import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import userById from "@/hooks/users/userById";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,7 +39,6 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
   const queryClient = useQueryClient();
   const [codigoPais, setCodigoPais] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { data: sucursales } = useGetSucursales();
 
   const {
     register,
@@ -103,6 +103,7 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
   const { data: departamentos } = useGetDepartamentosByPais(paisId);
   const departamentoId = watch("departamento");
   const { data: municipios } = useGetMunicipiosByDepto(departamentoId);
+  const { data: sucursales } = useGetSucursalesPais(paisId);
 
   const { data: pais } = usePaisesById(paisId);
 
@@ -425,11 +426,15 @@ const FormUsers = ({ userId, onSuccess }: Props) => {
               <SelectValue placeholder="Selecciona una sucursal" />
             </SelectTrigger>
             <SelectContent>
-              {sucursales?.data.map((sucursal) => (
-                <SelectItem key={sucursal.id} value={sucursal.id}>
-                  {sucursal.nombre} - {sucursal.tipo}
-                </SelectItem>
-              ))}
+              {sucursales && sucursales.length > 0 ? (
+                sucursales?.map((sucursal) => (
+                  <SelectItem key={sucursal.id} value={sucursal.id}>
+                    {sucursal.nombre} - {sucursal.tipo}
+                  </SelectItem>
+                ))
+              ) : (
+                <p>No se encontraron sucursales</p>
+              )}
             </SelectContent>
           </Select>
           {errors.sucursal && (

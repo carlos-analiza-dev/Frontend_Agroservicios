@@ -1,4 +1,3 @@
-import { Servicio } from "@/apis/productos/interfaces/response-productos.interface";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +22,10 @@ import {
   Calendar,
 } from "lucide-react";
 import React from "react";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 
 interface Props {
-  productos: Servicio[];
+  productos: Producto[];
 }
 
 const CardProducts = ({ productos }: Props) => {
@@ -51,7 +51,6 @@ const CardProducts = ({ productos }: Props) => {
               className="hover:shadow-md transition-shadow"
             >
               <CardContent className="p-4">
-                {/* Header con nombre y acciones */}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg leading-tight">

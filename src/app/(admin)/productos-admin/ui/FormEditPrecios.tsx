@@ -1,4 +1,4 @@
-import { Servicio } from "@/apis/productos/interfaces/response-productos.interface";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import { updateServicioPrecio } from "@/apis/servicios_precios/accions/update-servicios-price";
 import { CrearServicePrecio } from "@/apis/servicios_precios/interfaces/crear-servicio-precio.interface";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import React, { useEffect } from "react";
@@ -19,22 +20,22 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 interface Props {
-  editSubServicio?: Servicio | null;
+  editSubServicio?: Producto | null;
   isEdit?: boolean;
   onSuccess: () => void;
 }
 
 const FormEditPrecios = ({ onSuccess, editSubServicio, isEdit }: Props) => {
+  const { user } = useAuthStore();
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
-
-  const { data: paisesActivos } = useGetPaisesActivos();
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
-    watch,
+
     formState: { errors },
   } = useForm<CrearServicePrecio>();
 
@@ -43,13 +44,11 @@ const FormEditPrecios = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       reset({
         precio: Number(editSubServicio.preciosPorPais?.[0]?.precio),
         costo: Number(editSubServicio.preciosPorPais?.[0]?.costo),
-        paisId: editSubServicio.preciosPorPais?.[0]?.pais.id,
       });
     } else {
       reset({
         precio: undefined,
         costo: undefined,
-        paisId: undefined,
       });
     }
   }, [isEdit, editSubServicio, reset, setValue]);
@@ -87,6 +86,7 @@ const FormEditPrecios = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       ...data,
       precio: Number(data.precio),
       costo: Number(data.costo),
+      paisId: paisId,
     };
     if (isEdit) {
       mutationUpdate.mutate(payload);
@@ -143,34 +143,6 @@ const FormEditPrecios = ({ onSuccess, editSubServicio, isEdit }: Props) => {
               </p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="paisId" className="font-bold">
-            País*
-          </Label>
-          <Select
-            defaultValue={
-              isEdit ? editSubServicio?.preciosPorPais?.[0]?.pais?.id : ""
-            }
-            onValueChange={(value) => setValue("paisId", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona un país" />
-            </SelectTrigger>
-            <SelectContent>
-              {paisesActivos?.data.map((pais) => (
-                <SelectItem key={pais.id} value={pais.id}>
-                  {pais.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.paisId && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.paisId?.message as string}
-            </p>
-          )}
         </div>
       </>
 

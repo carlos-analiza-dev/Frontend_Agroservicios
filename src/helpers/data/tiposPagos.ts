@@ -2,11 +2,11 @@ export const tiposPagos = [
   {
     id: 1,
     label: "Contado",
-    value: "contado",
+    value: "CONTADO",
   },
   {
     id: 2,
     label: "Credito",
-    value: "credito",
+    value: "CREDITO",
   },
 ];

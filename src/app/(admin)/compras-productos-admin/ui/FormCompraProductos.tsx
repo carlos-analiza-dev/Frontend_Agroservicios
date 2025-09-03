@@ -20,6 +20,10 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
+import { CrearCompra } from "@/apis/compras_productos/accions/crear-compra";
+import { toast } from "react-toastify";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 
 interface ProductoCompra {
   productoId: string;
@@ -35,11 +39,40 @@ interface FormCompra {
   proveedorId: string;
   tipoPago: string;
   productos: ProductoCompra[];
-  observaciones?: string;
 }
 
 const FormCompraProductos = () => {
   const { user } = useAuthStore();
+  const sucursalId = user?.sucursal.id || "";
+  const queryClient = useQueryClient();
+
+  const crearCompraMutation = useMutation({
+    mutationFn: CrearCompra,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["compras"] });
+      queryClient.invalidateQueries({ queryKey: ["productos"] });
+      queryClient.invalidateQueries({ queryKey: ["inventario"] });
+
+      toast.success("Compra creada exitosamente");
+      reset();
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al ejecutar la compra";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de ejecutar la compra. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
 
   const {
     register,
@@ -77,17 +110,28 @@ const FormCompraProductos = () => {
   const productos = productosData?.data.productos || [];
 
   const productosWatch = watch("productos");
+  const proveedorId = watch("proveedorId");
+  const tipoPago = watch("tipoPago");
+
+  const isFormValid = () => {
+    if (!proveedorId || !tipoPago || !sucursalId) return false;
+
+    return productosWatch.every(
+      (producto) =>
+        producto.productoId &&
+        producto.cantidad > 0 &&
+        producto.costoUnitario > 0
+    );
+  };
 
   const getProductosDisponibles = (currentIndex: number) => {
     return productos.filter((producto) => {
       if (productosWatch?.[currentIndex]?.productoId === producto.id) {
         return true;
       }
-
       const estaSeleccionado = productosWatch?.some(
         (p, index) => index !== currentIndex && p.productoId === producto.id
       );
-
       return !estaSeleccionado;
     });
   };
@@ -113,19 +157,51 @@ const FormCompraProductos = () => {
       total += subtotalConDescuento + impuestoProducto;
     });
 
-    return { subtotal, totalImpuestos, totalDescuentos, total };
+    return {
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      totalImpuestos: parseFloat(totalImpuestos.toFixed(2)),
+      totalDescuentos: parseFloat(totalDescuentos.toFixed(2)),
+      total: parseFloat(total.toFixed(2)),
+    };
   };
 
   const { subtotal, totalImpuestos, totalDescuentos, total } =
     calcularTotales();
 
-  const onSubmit = (data: FormCompra) => {
-    console.log("Totales:", {
-      subtotal,
-      totalImpuestos,
-      totalDescuentos,
-      total,
+  const onSubmit = async (data: FormCompra) => {
+    if (!isFormValid()) {
+      toast.error("Por favor, complete todos los campos requeridos");
+      return;
+    }
+
+    const detalles = data.productos.map((producto) => {
+      const subtotalProducto = producto.cantidad * producto.costoUnitario;
+      const descuentoProducto = subtotalProducto * (producto.descuento / 100);
+      const subtotalConDescuento = subtotalProducto - descuentoProducto;
+      const impuestoProducto = subtotalConDescuento * (producto.impuesto / 100);
+
+      return {
+        productoId: producto.productoId,
+        costo_por_unidad: producto.costoUnitario,
+        cantidad: producto.cantidad,
+        bonificacion: producto.bonificacion || 0,
+        descuentos: parseFloat(descuentoProducto.toFixed(2)),
+        impuestos: parseFloat(impuestoProducto.toFixed(2)),
+      };
     });
+
+    const compraData = {
+      proveedorId: data.proveedorId,
+      sucursalId: sucursalId,
+      tipo_pago: data.tipoPago,
+      subtotal: subtotal,
+      descuentos: totalDescuentos,
+      impuestos: totalImpuestos,
+      total: total,
+      detalles: detalles,
+    };
+
+    crearCompraMutation.mutate(compraData);
   };
 
   const handleProductoChange = (index: number, productoId: string) => {
@@ -143,9 +219,11 @@ const FormCompraProductos = () => {
 
       setValue(`productos.${index}.costoUnitario`, costo);
       setValue(`productos.${index}.impuesto`, impuestoPorcentaje);
+      setValue(`productos.${index}.cantidad`, 1);
     } else {
       setValue(`productos.${index}.costoUnitario`, 0);
       setValue(`productos.${index}.impuesto`, 0);
+      setValue(`productos.${index}.cantidad`, 0);
     }
   };
 
@@ -159,9 +237,8 @@ const FormCompraProductos = () => {
         <div className="space-y-1">
           <Label className="font-bold">Proveedor*</Label>
           <Select
-            {...register("proveedorId", {
-              required: "El proveedor es requerido",
-            })}
+            value={proveedorId}
+            onValueChange={(value) => setValue("proveedorId", value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona el proveedor" />
@@ -185,9 +262,8 @@ const FormCompraProductos = () => {
         <div className="space-y-1">
           <Label className="font-bold">Tipo de Pago*</Label>
           <Select
-            {...register("tipoPago", {
-              required: "El tipo de pago es requerido",
-            })}
+            value={tipoPago}
+            onValueChange={(value) => setValue("tipoPago", value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona el tipo" />
@@ -459,8 +535,12 @@ const FormCompraProductos = () => {
         <Button type="button" variant="outline" onClick={() => reset()}>
           Cancelar
         </Button>
-        <Button type="submit" size="lg">
-          Ingresar Compra
+        <Button
+          type="submit"
+          size="lg"
+          disabled={crearCompraMutation.isPending}
+        >
+          {crearCompraMutation.isPending ? "Procesando..." : "Ingresar Compra"}
         </Button>
       </div>
     </form>
