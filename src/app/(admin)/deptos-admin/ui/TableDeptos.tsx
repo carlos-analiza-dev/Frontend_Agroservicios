@@ -28,6 +28,7 @@ import useGetMunicipiosByDepto from "@/hooks/municipios/useGetMunicipiosByDepto"
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import { StatusMessage } from "@/components/generics/StatusMessage";
 
 interface Props {
   departamentos: ResponseDeptos | undefined;
@@ -101,8 +102,10 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
-                No se encontraron departamentos para este país
+              <TableCell colSpan={10} className="text-center">
+                <div className="flex justify-center py-4">
+                  <StatusMessage type="empty" />
+                </div>
               </TableCell>
             </TableRow>
           )}

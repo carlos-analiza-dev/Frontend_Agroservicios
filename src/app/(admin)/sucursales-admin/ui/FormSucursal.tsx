@@ -83,6 +83,7 @@ const FormSucursal = ({ onSucces, editSucursal, isEdit }: Props) => {
     onSuccess: () => {
       toast.success("Sucursal creada exitosamente");
       queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+      queryClient.invalidateQueries({ queryKey: ["sucursales-pais"] });
       reset();
       onSucces();
     },

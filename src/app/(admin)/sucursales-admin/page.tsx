@@ -48,7 +48,6 @@ const SucursalesAdminPage = () => {
   const paisId = user?.pais.id;
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
   const [departamentoId, setDepartamentoId] = useState<string>("all");
   const [municipioId, setMunicipioId] = useState<string>("all");
   const [isOpen, setIsOpen] = useState(false);
@@ -86,11 +85,6 @@ const SucursalesAdminPage = () => {
     setPage(1);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPage(1);
-  };
-
   const getVisiblePages = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -112,7 +106,6 @@ const SucursalesAdminPage = () => {
   const clearFilters = () => {
     setDepartamentoId("all");
     setMunicipioId("all");
-    setSearchTerm("");
     setPage(1);
   };
 
@@ -139,7 +132,7 @@ const SucursalesAdminPage = () => {
               </CardDescription>
             </div>
 
-            {(departamentoId || municipioId || searchTerm) && (
+            {(departamentoId || municipioId) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -200,46 +193,11 @@ const SucursalesAdminPage = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Buscar</label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar sucursal..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Items por página</label>
-              <Select
-                value={limit.toString()}
-                onValueChange={(value) => {
-                  setLimit(Number(value));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="10" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <TableSucursales
             isLoading={isLoading}
             filteredSucursales={sucursales?.data}
-            searchTerm={searchTerm}
           />
 
           {(sucursales?.total || 0) > 0 && (

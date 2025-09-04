@@ -41,18 +41,14 @@ import { CrearSucursaleInterface } from "@/apis/sucursales/interfaces/crear-sucu
 import { EditarSucursal } from "@/apis/sucursales/accions/editar-sucursal";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
+import { StatusMessage } from "@/components/generics/StatusMessage";
 
 interface Props {
   isLoading: boolean;
   filteredSucursales: Sucursal[] | undefined;
-  searchTerm: string;
 }
 
-const TableSucursales = ({
-  filteredSucursales,
-  isLoading,
-  searchTerm,
-}: Props) => {
+const TableSucursales = ({ filteredSucursales, isLoading }: Props) => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -161,11 +157,9 @@ const TableSucursales = ({
             ))
           ) : filteredSucursales?.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
-                <div className="text-muted-foreground">
-                  {searchTerm
-                    ? "No se encontraron sucursales que coincidan con la búsqueda"
-                    : "No hay sucursales registradas"}
+              <TableCell colSpan={10} className="text-center">
+                <div className="flex justify-center py-4">
+                  <StatusMessage type="empty" />
                 </div>
               </TableCell>
             </TableRow>

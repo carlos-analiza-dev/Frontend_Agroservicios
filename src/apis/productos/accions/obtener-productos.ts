@@ -2,8 +2,8 @@ import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
 import { ResponseProductos } from "../interfaces/response-productos.interface";
 
 export const ObtenerProductos = async (
-  limit: number,
-  offset: number,
+  limit: number = 10,
+  offset: number = 0,
   pais: string = "",
   categoria: string = "",
   marca: string = "",

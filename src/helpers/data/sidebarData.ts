@@ -80,7 +80,7 @@ export const navItems = [
       },
     ],
   },
-  {
+  /*  {
     category: "Inventarios",
     items: [
       {
@@ -104,7 +104,7 @@ export const navItems = [
         icon: PackageOpen,
       },
     ],
-  },
+  }, */
   {
     category: "Impuestos",
     items: [{ name: "Impuestos", href: "/impuestos-admin", icon: FileText }],

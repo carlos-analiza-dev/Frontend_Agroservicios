@@ -11,18 +11,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -32,13 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CheckCircle,
-  Edit,
-  MoreHorizontal,
-  Pencil,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle, Edit, XCircle } from "lucide-react";
 import React, { useState } from "react";
 import FormProveedor from "./FormProveedor";
 import {
@@ -48,10 +33,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CrearProveedorInterface } from "@/apis/proveedores/interfaces/crear-proveedor.interface";
 import { ActualizarProveedor } from "@/apis/proveedores/accions/actualizar-proveedores";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
+import { StatusMessage } from "@/components/generics/StatusMessage";
 
 interface Props {
   isLoading: boolean;
@@ -243,8 +228,10 @@ const TableProveedores = ({ data, isLoading }: Props) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="text-center h-24">
-                No se encontraron proveedores
+              <TableCell colSpan={10} className="text-center">
+                <div className="flex justify-center py-4">
+                  <StatusMessage type="empty" />
+                </div>
               </TableCell>
             </TableRow>
           )}
