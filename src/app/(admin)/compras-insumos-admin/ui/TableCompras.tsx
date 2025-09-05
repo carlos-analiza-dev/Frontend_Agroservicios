@@ -1,7 +1,3 @@
-import {
-  Compra,
-  ResponseComprasInterface,
-} from "@/apis/compras_productos/interface/response-compras.interface";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 import {
   AlertDialog,
@@ -24,13 +20,17 @@ import {
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { Edit, Eye } from "lucide-react";
 import React, { useState } from "react";
-import InfoCompra from "./InfoCompra";
 import TableDetailsProductos from "./TableDetailsProductos";
 import TableDetailsLotes from "./TableDetailsLotes";
 import { StatusMessage } from "@/components/generics/StatusMessage";
+import InfoCompra from "./InfoCompra";
+import {
+  Compra,
+  ResponseInsumosinteface,
+} from "@/apis/compras_insumos/interfaces/response-compras-insumos.interface";
 
 interface Props {
-  comprasData: ResponseComprasInterface | undefined;
+  comprasData: ResponseInsumosinteface | undefined;
   isLoading: boolean;
 }
 

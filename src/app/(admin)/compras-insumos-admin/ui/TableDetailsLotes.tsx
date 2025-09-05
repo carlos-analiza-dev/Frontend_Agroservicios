@@ -1,7 +1,7 @@
 import {
   Compra,
   Lote,
-} from "@/apis/compras_productos/interface/response-compras.interface";
+} from "@/apis/compras_insumos/interfaces/response-compras-insumos.interface";
 import {
   Table,
   TableBody,
@@ -22,7 +22,6 @@ const TableDetailsLotes = ({ selectedCompra, formatCurrency }: Props) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Producto ID</TableHead>
           <TableHead>Cantidad</TableHead>
           <TableHead>Costo Unitario</TableHead>
           <TableHead>Valor Total</TableHead>
@@ -31,7 +30,6 @@ const TableDetailsLotes = ({ selectedCompra, formatCurrency }: Props) => {
       <TableBody>
         {selectedCompra.lotes.map((lote: Lote) => (
           <TableRow key={lote.id}>
-            <TableCell>{lote.id_producto}</TableCell>
             <TableCell>{lote.cantidad}</TableCell>
             <TableCell>{formatCurrency(lote.costo)}</TableCell>
             <TableCell>

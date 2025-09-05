@@ -19,7 +19,6 @@ const TableDetailsProductos = ({ selectedCompra, formatCurrency }: Props) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Producto</TableHead>
           <TableHead>Costo Unitario</TableHead>
           <TableHead>Cantidad</TableHead>
           <TableHead>Bonificación</TableHead>
@@ -32,7 +31,6 @@ const TableDetailsProductos = ({ selectedCompra, formatCurrency }: Props) => {
       <TableBody>
         {selectedCompra.detalles.map((detalle) => (
           <TableRow key={detalle.id}>
-            <TableCell>{detalle.productoId}</TableCell>
             <TableCell>{formatCurrency(detalle.costo_por_unidad)}</TableCell>
             <TableCell>{detalle.cantidad}</TableCell>
             <TableCell>{detalle.bonificacion}</TableCell>

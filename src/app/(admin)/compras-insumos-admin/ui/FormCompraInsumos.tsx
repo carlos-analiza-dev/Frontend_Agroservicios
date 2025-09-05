@@ -1,5 +1,18 @@
-"use client";
-
+import { CrearCompraInsumo } from "@/apis/compras_insumos/accions/crear-compra-insumo";
+import { InsumoCompra } from "@/apis/compras_insumos/interfaces/insumos_compra.interface";
+import DetailsCompra from "@/components/generics/DetailsCompra";
+import DetailsConfirmCompra from "@/components/generics/DetailsConfirmCompra";
+import ResumenCompra from "@/components/generics/ResumenCompra";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,44 +26,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { tiposPagos } from "@/helpers/data/tiposPagos";
-import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
-import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
-import React, { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
+import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import { CrearCompra } from "@/apis/compras_productos/accions/crear-compra";
-import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ProductoCompra } from "@/apis/compras_productos/interface/productos_compra.interface";
-import ResumenCompra from "@/components/generics/ResumenCompra";
-import DetailsCompra from "@/components/generics/DetailsCompra";
-import DetailsConfirmCompra from "@/components/generics/DetailsConfirmCompra";
+import { Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import DetailsConfirmCompraInsumos from "./DetailsConfirmCompraInsumos";
 
 interface FormCompra {
   sucursalId: string;
   proveedorId: string;
   tipoPago: string;
-  productos: ProductoCompra[];
+  insumos: InsumoCompra[];
 }
 
 interface Props {
   onSuccess: () => void;
 }
 
-const FormCompraProductos = ({ onSuccess }: Props) => {
+const FormCompraInsumos = ({ onSuccess }: Props) => {
   const { user } = useAuthStore();
   const [isConfirmCompra, setIsConfirmCompra] = useState(false);
   const [compraDataToSubmit, setCompraDataToSubmit] = useState<any>(null);
@@ -59,9 +58,9 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   const queryClient = useQueryClient();
 
   const crearCompraMutation = useMutation({
-    mutationFn: CrearCompra,
+    mutationFn: CrearCompraInsumo,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["compras-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["compras-insumos-admin"] });
       toast.success("Compra creada exitosamente");
       onSuccess();
       reset();
@@ -96,9 +95,9 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     formState: { errors },
   } = useForm<FormCompra>({
     defaultValues: {
-      productos: [
+      insumos: [
         {
-          productoId: "",
+          insumoId: "",
           cantidad: 0,
           bonificacion: 0,
           costoUnitario: 0,
@@ -113,36 +112,34 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "productos",
+    name: "insumos",
   });
 
   const { data: proveedores } = useGetProveedoresActivos();
-  const { data: productosData } = useGetProductosDisponibles();
+  const { data: insumosData } = useGetInsumosDisponibles();
   const { data: impuestos } = useGetTaxesPais();
-  const productos = productosData?.data.productos || [];
+  const insumos = insumosData?.insumos || [];
 
-  const productosWatch = watch("productos");
+  const insumosWatch = watch("insumos");
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
 
   const isFormValid = () => {
     if (!proveedorId || !tipoPago || !sucursalId) return false;
 
-    return productosWatch.every(
-      (producto) =>
-        producto.productoId &&
-        producto.cantidad > 0 &&
-        producto.costoUnitario > 0
+    return insumosWatch.every(
+      (insumo) =>
+        insumo.insumoId && insumo.cantidad > 0 && insumo.costoUnitario > 0
     );
   };
 
-  const getProductosDisponibles = (currentIndex: number) => {
-    return productos.filter((producto) => {
-      if (productosWatch?.[currentIndex]?.productoId === producto.id) {
+  const getInsumosDisponibles = (currentIndex: number) => {
+    return insumos.filter((insumo) => {
+      if (insumosWatch?.[currentIndex]?.insumoId === insumo.id) {
         return true;
       }
-      const estaSeleccionado = productosWatch?.some(
-        (p, index) => index !== currentIndex && p.productoId === producto.id
+      const estaSeleccionado = insumosWatch?.some(
+        (p, index) => index !== currentIndex && p.insumoId === insumo.id
       );
       return !estaSeleccionado;
     });
@@ -154,17 +151,16 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     let totalDescuentos = 0;
     let total = 0;
 
-    productosWatch?.forEach((producto) => {
-      const cantidadTotal = producto.cantidad;
-      const subtotalProducto = cantidadTotal * (producto.costoUnitario || 0);
-      const descuentoProducto =
-        subtotalProducto * ((producto.descuento || 0) / 100);
-      const subtotalConDescuento = subtotalProducto - descuentoProducto;
+    insumosWatch?.forEach((insumo) => {
+      const cantidadTotal = insumo.cantidad;
+      const subtotalInsumo = cantidadTotal * (insumo.costoUnitario || 0);
+      const descuentoInsumo = subtotalInsumo * ((insumo.descuento || 0) / 100);
+      const subtotalConDescuento = subtotalInsumo - descuentoInsumo;
       const impuestoProducto =
-        subtotalConDescuento * ((producto.impuesto || 0) / 100);
+        subtotalConDescuento * ((insumo.impuesto || 0) / 100);
 
-      subtotal += subtotalProducto;
-      totalDescuentos += descuentoProducto;
+      subtotal += subtotalInsumo;
+      totalDescuentos += descuentoInsumo;
       totalImpuestos += impuestoProducto;
       total += subtotalConDescuento + impuestoProducto;
     });
@@ -181,19 +177,19 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     calcularTotales();
 
   const prepareCompraData = (data: FormCompra) => {
-    const detalles = data.productos.map((producto) => {
-      const subtotalProducto = producto.cantidad * producto.costoUnitario;
-      const descuentoProducto = subtotalProducto * (producto.descuento / 100);
-      const subtotalConDescuento = subtotalProducto - descuentoProducto;
-      const impuestoProducto = subtotalConDescuento * (producto.impuesto / 100);
+    const detalles = data.insumos.map((insumo) => {
+      const subtotalInsumo = insumo.cantidad * insumo.costoUnitario;
+      const descuentoInsumo = subtotalInsumo * (insumo.descuento / 100);
+      const subtotalConDescuento = subtotalInsumo - descuentoInsumo;
+      const impuestoInsumo = subtotalConDescuento * (insumo.impuesto / 100);
 
       return {
-        productoId: producto.productoId,
-        costo_por_unidad: producto.costoUnitario,
-        cantidad: producto.cantidad,
-        bonificacion: producto.bonificacion || 0,
-        descuentos: parseFloat(descuentoProducto.toFixed(2)),
-        impuestos: parseFloat(impuestoProducto.toFixed(2)),
+        insumoId: insumo.insumoId,
+        costo_por_unidad: insumo.costoUnitario,
+        cantidad: insumo.cantidad,
+        bonificacion: insumo.bonificacion || 0,
+        descuentos: parseFloat(descuentoInsumo.toFixed(2)),
+        impuestos: parseFloat(impuestoInsumo.toFixed(2)),
       };
     });
 
@@ -227,32 +223,26 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     }
   };
 
-  const handleProductoChange = (index: number, productoId: string) => {
-    setValue(`productos.${index}.productoId`, productoId);
+  const handleInsumoChange = (index: number, insumoId: string) => {
+    setValue(`insumos.${index}.insumoId`, insumoId);
 
-    const productoSeleccionado = productos.find((p) => p.id === productoId);
-    if (productoSeleccionado) {
-      const impuestoPorcentaje = productoSeleccionado.tax?.porcentaje
-        ? parseFloat(productoSeleccionado.tax.porcentaje)
-        : 0;
-
-      setValue(`productos.${index}.costoUnitario`, 0);
-      setValue(`productos.${index}.impuesto`, impuestoPorcentaje);
-      setValue(`productos.${index}.cantidad`, 1);
+    const insumoSeleccionado = insumos.find((p) => p.id === insumoId);
+    if (insumoSeleccionado) {
+      setValue(`insumos.${index}.costoUnitario`, 0);
+      setValue(`insumos.${index}.cantidad`, 1);
     } else {
-      setValue(`productos.${index}.costoUnitario`, 0);
-      setValue(`productos.${index}.impuesto`, 0);
-      setValue(`productos.${index}.cantidad`, 0);
+      setValue(`insumos.${index}.costoUnitario`, 0);
+      setValue(`insumos.${index}.impuesto`, 0);
+      setValue(`insumos.${index}.cantidad`, 0);
     }
   };
 
   const handleImpuestoChange = (index: number, value: string) => {
-    setValue(`productos.${index}.impuesto`, Number(value));
+    setValue(`insumos.${index}.impuesto`, Number(value));
   };
 
   const proveedorSeleccionado = proveedores?.find((p) => p.id === proveedorId);
   const tipoPagoSeleccionado = tiposPagos?.find((t) => t.value === tipoPago);
-
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -312,12 +302,12 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <Label className="font-bold text-lg">Productos de la Compra</Label>
+            <Label className="font-bold text-lg">Insumos de la Compra</Label>
             <Button
               type="button"
               onClick={() =>
                 append({
-                  productoId: "",
+                  insumoId: "",
                   cantidad: 0,
                   bonificacion: 0,
                   costoUnitario: 0,
@@ -329,30 +319,30 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
               className="flex items-center gap-2"
             >
               <Plus size={16} />
-              Agregar Producto
+              Agregar Insumo
             </Button>
           </div>
 
           {fields.map((field, index) => {
-            const productoSeleccionado = productos.find(
-              (p) => p.id === productosWatch?.[index]?.productoId
+            const insumosSeleccionado = insumos.find(
+              (p) => p.id === insumosWatch?.[index]?.insumoId
             );
 
-            const cantidadPagada = productosWatch?.[index]?.cantidad || 0;
-            const bonificacion = productosWatch?.[index]?.bonificacion || 0;
+            const cantidadPagada = insumosWatch?.[index]?.cantidad || 0;
+            const bonificacion = insumosWatch?.[index]?.bonificacion || 0;
 
             const subtotalProducto =
-              cantidadPagada * (productosWatch?.[index]?.costoUnitario || 0);
+              cantidadPagada * (insumosWatch?.[index]?.costoUnitario || 0);
             const descuentoProducto =
               subtotalProducto *
-              ((productosWatch?.[index]?.descuento || 0) / 100);
+              ((insumosWatch?.[index]?.descuento || 0) / 100);
             const subtotalConDescuento = subtotalProducto - descuentoProducto;
             const impuestoProducto =
               subtotalConDescuento *
-              ((productosWatch?.[index]?.impuesto || 0) / 100);
+              ((insumosWatch?.[index]?.impuesto || 0) / 100);
             const totalProducto = subtotalConDescuento + impuestoProducto;
 
-            const productosDisponibles = getProductosDisponibles(index);
+            const insumosDisponibles = getInsumosDisponibles(index);
 
             return (
               <div key={field.id} className="p-4 border rounded-lg space-y-4">
@@ -360,9 +350,9 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                   <div className="space-y-1">
                     <Label>Producto*</Label>
                     <Select
-                      value={productosWatch?.[index]?.productoId || ""}
+                      value={insumosWatch?.[index]?.insumoId || ""}
                       onValueChange={(value) =>
-                        handleProductoChange(index, value)
+                        handleInsumoChange(index, value)
                       }
                     >
                       <SelectTrigger>
@@ -370,18 +360,18 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectLabel>Productos</SelectLabel>
-                          {productosDisponibles.map((prod) => (
-                            <SelectItem value={prod.id} key={prod.id}>
-                              {prod.nombre} - {prod.codigo}
+                          <SelectLabel>Insumos</SelectLabel>
+                          {insumosDisponibles.map((ins) => (
+                            <SelectItem value={ins.id} key={ins.id}>
+                              {ins.nombre} - {ins.codigo}
                             </SelectItem>
                           ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
-                    {errors.productos?.[index]?.productoId && (
+                    {errors.insumos?.[index]?.insumoId && (
                       <p className="text-sm text-red-500">
-                        {errors.productos[index]?.productoId?.message}
+                        {errors.insumos[index]?.insumoId?.message}
                       </p>
                     )}
                   </div>
@@ -391,15 +381,15 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                     <Input
                       type="number"
                       min="0"
-                      {...register(`productos.${index}.cantidad` as const, {
+                      {...register(`insumos.${index}.cantidad` as const, {
                         required: "Cantidad requerida",
                         valueAsNumber: true,
                         min: { value: 1, message: "Mínimo 1" },
                       })}
                     />
-                    {errors.productos?.[index]?.cantidad && (
+                    {errors.insumos?.[index]?.cantidad && (
                       <p className="text-sm text-red-500">
-                        {errors.productos[index]?.cantidad?.message}
+                        {errors.insumos[index]?.cantidad?.message}
                       </p>
                     )}
                   </div>
@@ -409,7 +399,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                     <Input
                       type="number"
                       min="0"
-                      {...register(`productos.${index}.bonificacion` as const, {
+                      {...register(`insumos.${index}.bonificacion` as const, {
                         valueAsNumber: true,
                         min: { value: 0, message: "Mínimo 0" },
                       })}
@@ -422,13 +412,10 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                       type="number"
                       step="0.01"
                       min="0"
-                      {...register(
-                        `productos.${index}.costoUnitario` as const,
-                        {
-                          valueAsNumber: true,
-                          min: { value: 0, message: "Mínimo 0" },
-                        }
-                      )}
+                      {...register(`insumos.${index}.costoUnitario` as const, {
+                        valueAsNumber: true,
+                        min: { value: 0, message: "Mínimo 0" },
+                      })}
                     />
                   </div>
 
@@ -439,7 +426,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                       step="0.01"
                       min="0"
                       max="100"
-                      {...register(`productos.${index}.descuento` as const, {
+                      {...register(`insumos.${index}.descuento` as const, {
                         valueAsNumber: true,
                         min: { value: 0, message: "Mínimo 0%" },
                         max: { value: 100, message: "Máximo 100%" },
@@ -450,7 +437,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                   <div className="space-y-1">
                     <Label>Impuesto %</Label>
                     <Select
-                      value={productosWatch?.[index]?.impuesto?.toString()}
+                      value={insumosWatch?.[index]?.impuesto?.toString()}
                       onValueChange={(value) =>
                         handleImpuestoChange(index, value)
                       }
@@ -475,11 +462,11 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                   </div>
                 </div>
 
-                {productoSeleccionado && (
+                {insumosSeleccionado && (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-blue-50 rounded-lg text-sm">
                     <div>
                       <span className="font-semibold">Código: </span>
-                      {productoSeleccionado.codigo}
+                      {insumosSeleccionado.codigo}
                     </div>
                   </div>
                 )}
@@ -544,11 +531,11 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
               Confirmación de Compra
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <DetailsConfirmCompra
+              <DetailsConfirmCompraInsumos
                 proveedorSeleccionado={proveedorSeleccionado}
                 tipoPagoSeleccionado={tipoPagoSeleccionado}
-                productosWatch={productosWatch}
-                productos={productos}
+                insumosWatch={insumosWatch}
+                insumos={insumos}
                 user={user}
                 subtotal={subtotal}
                 totalDescuentos={totalDescuentos}
@@ -580,4 +567,4 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   );
 };
 
-export default FormCompraProductos;
+export default FormCompraInsumos;

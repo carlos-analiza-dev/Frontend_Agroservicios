@@ -9,13 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { tiposPagos } from "@/helpers/data/tiposPagos";
-import useGetCompras from "@/hooks/compras/useGetCompras";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { Filter, Plus } from "lucide-react";
 import React, { useState } from "react";
-import TableCompras from "../compras-productos-admin/ui/TableCompras";
 import {
   Pagination,
   PaginationContent,
@@ -32,7 +30,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import FormCompraProductos from "../compras-productos-admin/ui/FormCompraProductos";
+import useGetComprasInsumos from "@/hooks/compras-insumos/useGetComprasInsumos";
+import TableCompras from "./ui/TableCompras";
+import FormCompraInsumos from "./ui/FormCompraInsumos";
 
 const ComprasInsumosPage = () => {
   const { user } = useAuthStore();
@@ -50,7 +50,7 @@ const ComprasInsumosPage = () => {
   const sucursalId = sucursal === "all" ? "" : sucursal;
   const todosPagos = tipoPago === "all" ? "" : tipoPago;
 
-  const { data: comprasData, isLoading } = useGetCompras(
+  const { data: comprasData, isLoading } = useGetComprasInsumos(
     limit,
     offset,
     proveedorId,
@@ -201,7 +201,7 @@ const ComprasInsumosPage = () => {
               En esta sección ingresarás las compras de productos
             </AlertDialogDescription>
             <div>
-              <FormCompraProductos onSuccess={() => setIsOpen(false)} />
+              <FormCompraInsumos onSuccess={() => setIsOpen(false)} />
             </div>
           </AlertDialogHeader>
         </AlertDialogContent>

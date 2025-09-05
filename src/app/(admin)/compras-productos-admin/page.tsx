@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Filter } from "lucide-react";
 import React, { useState } from "react";
-import FormCompraProductos from "./ui/FormCompraProductos";
 import useGetCompras from "@/hooks/compras/useGetCompras";
 import {
   Select,
@@ -28,11 +27,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import TableCompras from "./ui/TableCompras";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { tiposPagos } from "@/helpers/data/tiposPagos";
+import FormCompraProductos from "@/app/(admin)/compras-productos-admin/ui/FormCompraProductos";
+import TableCompras from "@/components/generics/TableCompras";
 
 const ComprasProductosPage = () => {
   const { user } = useAuthStore();
