@@ -66,6 +66,7 @@ const TableCompras = ({ comprasData, isLoading }: Props) => {
         <TableHeader>
           <TableRow>
             <TableHead>Proveedor</TableHead>
+            <TableHead># Factura</TableHead>
             <TableHead>Sucursal</TableHead>
             <TableHead>Fecha</TableHead>
             <TableHead>Tipo de Pago</TableHead>
@@ -81,6 +82,7 @@ const TableCompras = ({ comprasData, isLoading }: Props) => {
             comprasData.compras.map((compra) => (
               <TableRow key={compra.id}>
                 <TableCell>{compra.proveedor.nombre_legal}</TableCell>
+                <TableCell>{compra.numero_factura}</TableCell>
                 <TableCell>{compra.sucursal.nombre}</TableCell>
                 <TableCell>{formatDate(compra.fecha)}</TableCell>
                 <TableCell>

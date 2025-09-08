@@ -43,6 +43,7 @@ interface FormCompra {
   sucursalId: string;
   proveedorId: string;
   tipoPago: string;
+  numero_factura: string;
   productos: ProductoCompra[];
 }
 
@@ -62,6 +63,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     mutationFn: CrearCompra,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["compras-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["existencia-productos"] });
       toast.success("Compra creada exitosamente");
       onSuccess();
       reset();
@@ -108,6 +110,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
       ],
       proveedorId: "",
       tipoPago: "",
+      numero_factura: "",
     },
   });
 
@@ -124,9 +127,11 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   const productosWatch = watch("productos");
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
+  const numero_factura = watch("numero_factura");
 
   const isFormValid = () => {
-    if (!proveedorId || !tipoPago || !sucursalId) return false;
+    if (!proveedorId || !tipoPago || !sucursalId || !numero_factura)
+      return false;
 
     return productosWatch.every(
       (producto) =>
@@ -202,6 +207,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
       sucursalId: sucursalId,
       paisId: paisId,
       tipo_pago: data.tipoPago,
+      numero_factura: data.numero_factura,
       subtotal: subtotal,
       descuentos: totalDescuentos,
       impuestos: totalImpuestos,
@@ -256,7 +262,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="space-y-1">
             <Label className="font-bold">Proveedor*</Label>
             <Select
@@ -280,6 +286,23 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
             {errors.proveedorId && (
               <p className="text-sm text-red-500">
                 {errors.proveedorId.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="font-bold">Número de Factura*</Label>
+            <Input
+              type="text"
+              placeholder="Ej: FAC-00123"
+              {...register("numero_factura", {
+                required: "El número de factura es obligatorio",
+                minLength: { value: 3, message: "Mínimo 3 caracteres" },
+              })}
+            />
+            {errors.numero_factura && (
+              <p className="text-sm text-red-500">
+                {errors.numero_factura.message}
               </p>
             )}
           </div>

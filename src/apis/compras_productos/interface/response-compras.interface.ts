@@ -11,6 +11,7 @@ export interface Compra {
   subtotal: string;
   impuestos: string;
   descuentos: string;
+  numero_factura: string;
   total: string;
   fecha: Date;
   created_at: Date;

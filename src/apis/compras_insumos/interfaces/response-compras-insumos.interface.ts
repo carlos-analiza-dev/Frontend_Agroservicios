@@ -12,6 +12,7 @@ export interface Compra {
   impuestos: string;
   descuentos: string;
   total: string;
+  numero_factura: string;
   fecha: Date;
   created_at: Date;
   updated_at: Date;

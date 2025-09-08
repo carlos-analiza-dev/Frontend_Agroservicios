@@ -6,7 +6,7 @@ export interface CrearCompraInterface {
   descuentos: number;
   impuestos: number;
   total: number;
-  observaciones?: string;
+  numero_factura?: string;
   detalles: Detalle[];
 }
 

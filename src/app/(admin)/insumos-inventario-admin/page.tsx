@@ -22,14 +22,7 @@ import {
 } from "@/components/ui/pagination";
 import { Search, Filter, Package } from "lucide-react";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 
@@ -53,27 +46,6 @@ const PageInventarioInsumosAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const offset = (currentPage - 1) * itemsPerPage;
-
-  const { data: response, isLoading } = useGetInventariosInsumos(
-    itemsPerPage,
-    offset,
-    paisId
-  );
-
-  const filteredInventario = useMemo(() => {
-    if (!response?.data) return [];
-
-    return response.data.inventario.filter(
-      (item) =>
-        item.insumo?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.insumo?.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.insumo?.marca.nombre
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    );
-  }, [response, searchTerm]);
-
-  const totalPages = Math.ceil((response?.data.total || 0) / itemsPerPage);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -124,7 +96,7 @@ const PageInventarioInsumosAdmin = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        {/*  <CardContent>
           {isLoading ? (
             <div className="space-y-4">
               <TableUsersSkeleton />
@@ -197,25 +169,8 @@ const PageInventarioInsumosAdmin = () => {
               )}
             </>
           )}
-        </CardContent>
+        </CardContent> */}
       </Card>
-
-      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent>
-          <div className="flex justify-end">
-            {" "}
-            <AlertDialogCancel>X</AlertDialogCancel>
-          </div>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Agregar Inventario de Insumos</AlertDialogTitle>
-            <AlertDialogDescription>
-              En esta seccion podras agregar inventario a tus insumos
-              disponibles
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <FormInventario onSuccess={() => setIsOpen(false)} />
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

@@ -42,6 +42,7 @@ interface FormCompra {
   sucursalId: string;
   proveedorId: string;
   tipoPago: string;
+  numero_factura: string;
   insumos: InsumoCompra[];
 }
 
@@ -61,6 +62,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
     mutationFn: CrearCompraInsumo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["compras-insumos-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["existencia-insumos"] });
       toast.success("Compra creada exitosamente");
       onSuccess();
       reset();
@@ -107,6 +109,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
       ],
       proveedorId: "",
       tipoPago: "",
+      numero_factura: "",
     },
   });
 
@@ -123,9 +126,11 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
   const insumosWatch = watch("insumos");
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
+  const numero_factura = watch("numero_factura");
 
   const isFormValid = () => {
-    if (!proveedorId || !tipoPago || !sucursalId) return false;
+    if (!proveedorId || !tipoPago || !sucursalId || !numero_factura)
+      return false;
 
     return insumosWatch.every(
       (insumo) =>
@@ -196,6 +201,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
     return {
       proveedorId: data.proveedorId,
       sucursalId: sucursalId,
+      numero_factura: data.numero_factura,
       paisId: paisId,
       tipo_pago: data.tipoPago,
       subtotal: subtotal,
@@ -214,6 +220,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
 
     const compraData = prepareCompraData(data);
     setCompraDataToSubmit(compraData);
+
     setIsConfirmCompra(true);
   };
 
@@ -246,7 +253,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="space-y-1">
             <Label className="font-bold">Proveedor*</Label>
             <Select
@@ -270,6 +277,23 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
             {errors.proveedorId && (
               <p className="text-sm text-red-500">
                 {errors.proveedorId.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="font-bold">Número de Factura*</Label>
+            <Input
+              type="text"
+              placeholder="Ej: FAC-00123"
+              {...register("numero_factura", {
+                required: "El número de factura es obligatorio",
+                minLength: { value: 3, message: "Mínimo 3 caracteres" },
+              })}
+            />
+            {errors.numero_factura && (
+              <p className="text-sm text-red-500">
+                {errors.numero_factura.message}
               </p>
             )}
           </div>
@@ -348,7 +372,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
               <div key={field.id} className="p-4 border rounded-lg space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div className="space-y-1">
-                    <Label>Producto*</Label>
+                    <Label>Insumo*</Label>
                     <Select
                       value={insumosWatch?.[index]?.insumoId || ""}
                       onValueChange={(value) =>

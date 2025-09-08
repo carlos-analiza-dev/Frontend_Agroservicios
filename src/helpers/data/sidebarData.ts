@@ -80,10 +80,10 @@ export const navItems = [
       },
     ],
   },
-  /*  {
+  {
     category: "Inventarios",
     items: [
-      {
+      /*  {
         name: "Insumos",
         href: "/insumos-inventario-admin",
         icon: ClipboardList,
@@ -92,10 +92,15 @@ export const navItems = [
         name: "Productos",
         href: "/productos-inventario-admin",
         icon: Package,
+      }, */
+      {
+        name: "Existencias Productos",
+        href: "/existencias-inventario-admin",
+        icon: Warehouse,
       },
       {
-        name: "Existencias",
-        href: "/existencias-inventario-admin",
+        name: "Existencias Insumos",
+        href: "/existencias-inventario-insumos-admin",
         icon: Warehouse,
       },
       {
@@ -104,7 +109,7 @@ export const navItems = [
         icon: PackageOpen,
       },
     ],
-  }, */
+  },
   {
     category: "Impuestos",
     items: [{ name: "Impuestos", href: "/impuestos-admin", icon: FileText }],
