@@ -21,6 +21,7 @@ import {
   Building,
   Package2,
   ImageIcon,
+  Settings,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -34,18 +35,25 @@ import {
 import FormProductos from "./FormProductos";
 import FormEditPrecios from "./FormEditPrecios";
 import ProductoImagenes from "./ProductoImagenes";
+import OptionsProducto from "./OptionsProducto";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 interface Props {
   productos: Producto[];
 }
 
 const TableProducts = ({ productos }: Props) => {
+  const { user } = useAuthStore();
   const [editSubServicio, setEditSubServicio] = useState<Producto | null>(null);
   const [editPrecioSubServicio, setEditPrecioSubServicio] =
     useState<Producto | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenPrecios, setIsOpenPrecios] = useState(false);
+  const [isOpenSettings, setIsOpenSettings] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [selectedProducto, setSelectedProducto] = useState<Producto | null>(
+    null
+  );
 
   const handleEditProducto = (producto: Producto) => {
     setIsOpen(true);
@@ -61,6 +69,11 @@ const TableProducts = ({ productos }: Props) => {
   const handleClosePrecios = () => {
     setIsOpenPrecios(false);
     setEditPrecioSubServicio(null);
+  };
+
+  const handleOpenSettings = (producto: Producto) => {
+    setIsOpenSettings(true);
+    setSelectedProducto(producto);
   };
 
   return (
@@ -231,9 +244,6 @@ const TableProducts = ({ productos }: Props) => {
                                 Costo: {precio.pais?.simbolo_moneda}{" "}
                                 {precio.costo}
                               </div>
-                              <div className="text-xs text-blue-600">
-                                {precio.pais?.nombre}
-                              </div>
                             </div>
                           ))}
                         </div>
@@ -288,6 +298,15 @@ const TableProducts = ({ productos }: Props) => {
                           onClick={() => handleEditProducto(producto)}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Mas opciones"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleOpenSettings(producto)}
+                        >
+                          <Settings className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
@@ -623,6 +642,25 @@ const TableProducts = ({ productos }: Props) => {
               isEdit={true}
             />
           )}
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpenSettings} onOpenChange={setIsOpenSettings}>
+        <AlertDialogContent className="max-w-5xl h-[600px] overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Gestionar Datos del Producto - {selectedProducto?.nombre}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras gestionar diferentes datos de los productos
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex-1">
+            <OptionsProducto user={user} />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

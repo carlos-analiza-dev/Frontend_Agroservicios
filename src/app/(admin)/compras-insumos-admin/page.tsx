@@ -191,7 +191,7 @@ const ComprasInsumosPage = () => {
       </div>
 
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent className="p-4 md:max-w-5xl max-h-[600px] overflow-y-auto">
+        <AlertDialogContent className="p-4 md:max-w-5xl h-full overflow-y-auto">
           <div className="flex justify-end">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
