@@ -10,107 +10,246 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Save, X, Trash2 } from "lucide-react";
+import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
 import { User } from "@/interfaces/auth/user";
+import useGetEscalasProducto from "@/hooks/escalas-producto/useGetEscalasProducto";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Escala } from "@/apis/escala-producto/interfaces/response-escala-producto.interface";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import { StatusMessage } from "@/components/generics/StatusMessage";
+import { useForm } from "react-hook-form";
+import { CrearEscalaProductoInterface } from "@/apis/escala-producto/interfaces/crear-escala-producto.interface";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CrearEscalaProducto } from "@/apis/escala-producto/accions/crear-escala-producto";
+import { ActualizarEscalaProducto } from "@/apis/escala-producto/accions/actualizar-escala-producto";
+import { toast } from "react-toastify";
+import { isAxiosError } from "axios";
 
 interface Props {
   user: User | undefined;
+  selectedProducto: Producto | null;
 }
 
-const TableEscalasProducto = ({ user }: Props) => {
-  const [escalas, setEscalas] = useState([
-    {
-      id: 1,
-      producto: "Laptop HP Pavilion",
-      compraMinima: 1,
-      bonificacion: 0,
-      costo: 1200,
-      editing: false,
-    },
-    {
-      id: 2,
-      producto: "Laptop HP Pavilion",
-      compraMinima: 5,
-      bonificacion: 1,
-      costo: 1150,
-      editing: false,
-    },
-    {
-      id: 3,
-      producto: "Laptop HP Pavilion",
-      compraMinima: 10,
-      bonificacion: 2,
-      costo: 1100,
-      editing: false,
-    },
-    {
-      id: 4,
-      producto: "Mouse Inalámbrico",
-      compraMinima: 1,
-      bonificacion: 0,
-      costo: 25,
-      editing: false,
-    },
-    {
-      id: 5,
-      producto: "Mouse Inalámbrico",
-      compraMinima: 10,
-      bonificacion: 1,
-      costo: 22,
-      editing: false,
-    },
-  ]);
+interface EscalaLocal extends Escala {
+  editing?: boolean;
+}
 
-  const [nuevaEscala, setNuevaEscala] = useState({
-    producto: "",
-    compraMinima: 1,
-    bonificacion: 0,
-    costo: 0,
+interface ActualizarEscalaInterface {
+  cantidad_comprada: number;
+  bonificacion: number;
+  costo: number;
+}
+
+const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
+  const limit = 10;
+  const offset = page * limit;
+
+  const {
+    data: escalasData,
+    isLoading,
+    error,
+  } = useGetEscalasProducto(limit, offset, selectedProducto?.id ?? "");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CrearEscalaProductoInterface>();
+
+  const [escalas, setEscalas] = useState<EscalaLocal[]>([]);
+
+  const createMutation = useMutation({
+    mutationFn: CrearEscalaProducto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["escalas-producto", limit, offset, selectedProducto?.id],
+      });
+      toast.success("Escala creada exitosamente");
+      reset();
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al crear la escala";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de crear la escala. Inténtalo de nuevo."
+        );
+      }
+    },
   });
 
-  const toggleEdit = (id: number) => {
-    setEscalas(
-      escalas.map((e) => (e.id === id ? { ...e, editing: !e.editing } : e))
-    );
-  };
-
-  const handleSave = (id: number) => {
-    setEscalas(
-      escalas.map((e) => (e.id === id ? { ...e, editing: false } : e))
-    );
-  };
-
-  const handleDelete = (id: number) => {
-    setEscalas(escalas.filter((e) => e.id !== id));
-  };
-
-  const handleAddEscala = () => {
-    if (nuevaEscala.producto && nuevaEscala.costo > 0) {
-      const nueva = {
-        id: Math.max(...escalas.map((e) => e.id), 0) + 1,
-        producto: nuevaEscala.producto,
-        compraMinima: nuevaEscala.compraMinima,
-        bonificacion: nuevaEscala.bonificacion,
-        costo: nuevaEscala.costo,
-        editing: false,
+  const updateMutation = useMutation({
+    mutationFn: async (data: {
+      id: string;
+      cantidad_comprada: number;
+      bonificacion: number;
+      costo: number;
+    }) => {
+      const updateData: ActualizarEscalaInterface = {
+        cantidad_comprada: data.cantidad_comprada,
+        bonificacion: data.bonificacion,
+        costo: data.costo,
       };
-      setEscalas([...escalas, nueva]);
-      setNuevaEscala({
-        producto: "",
-        compraMinima: 1,
-        bonificacion: 0,
-        costo: 0,
+      return ActualizarEscalaProducto(data.id, updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["escalas-producto", limit, offset, selectedProducto?.id],
       });
+      toast.success("Escala actualizada exitosamente");
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al actualizar la escala";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de actualizar la escala. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
+
+  React.useEffect(() => {
+    if (escalasData?.data) {
+      setEscalas(
+        escalasData.data.map((escala) => ({
+          ...escala,
+          editing: false,
+        }))
+      );
+    }
+  }, [escalasData]);
+
+  const totalPages = Math.ceil((escalasData?.total || 0) / limit);
+
+  const onSubmit = (data: CrearEscalaProductoInterface) => {
+    if (!selectedProducto) {
+      toast.error("Debe seleccionar un producto");
+      return;
+    }
+
+    createMutation.mutate({
+      ...data,
+      productoId: selectedProducto.id,
+    });
+  };
+
+  const toggleEdit = (id: string) => {
+    setEscalas(
+      escalas.map((escala) =>
+        escala.id === id
+          ? { ...escala, editing: !escala.editing }
+          : { ...escala, editing: false }
+      )
+    );
+  };
+
+  const handleSave = (id: string) => {
+    const escalaEditada = escalas.find((e) => e.id === id);
+    if (!escalaEditada) return;
+
+    updateMutation.mutate({
+      id: escalaEditada.id,
+      cantidad_comprada: escalaEditada.cantidad_comprada,
+      bonificacion: escalaEditada.bonificacion,
+      costo: escalaEditada.costo,
+    });
+
+    toggleEdit(id);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setPage(newPage);
     }
   };
 
-  const productosUnicos = Array.from(new Set(escalas.map((e) => e.producto)));
+  const handleCantidadChange = (id: string, value: string) => {
+    const numericValue = parseInt(value) || 1;
+    setEscalas(
+      escalas.map((e) =>
+        e.id === id ? { ...e, cantidad_comprada: numericValue } : e
+      )
+    );
+  };
+
+  const handleBonificacionChange = (id: string, value: string) => {
+    const numericValue = parseInt(value) || 0;
+    setEscalas(
+      escalas.map((e) =>
+        e.id === id ? { ...e, bonificacion: numericValue } : e
+      )
+    );
+  };
+
+  const handleCostoChange = (id: string, value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    setEscalas(
+      escalas.map((e) => (e.id === id ? { ...e, costo: numericValue } : e))
+    );
+  };
+
+  if (isLoading) {
+    return <TableUsersSkeleton />;
+  }
 
   return (
     <div className="w-full space-y-4">
       <div className="bg-muted p-4 rounded-lg">
         <h3 className="font-semibold mb-3">Agregar Nueva Escala</h3>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+        >
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              Compra Mínima
+            </label>
+            <Input
+              type="number"
+              min="1"
+              {...register("cantidad_comprada", {
+                required: "La compra mínima es requerida",
+                min: {
+                  value: 1,
+                  message: "La compra mínima debe ser al menos 1",
+                },
+                valueAsNumber: true,
+              })}
+              placeholder="Cantidad mínima"
+              className={errors.cantidad_comprada ? "border-destructive" : ""}
+            />
+            {errors.cantidad_comprada && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.cantidad_comprada.message}
+              </p>
+            )}
+          </div>
           <div>
             <label className="text-sm font-medium mb-1 block">
               Bonificación
@@ -118,15 +257,22 @@ const TableEscalasProducto = ({ user }: Props) => {
             <Input
               type="number"
               min="0"
-              value={nuevaEscala.bonificacion}
-              onChange={(e) =>
-                setNuevaEscala({
-                  ...nuevaEscala,
-                  bonificacion: parseInt(e.target.value) || 0,
-                })
-              }
+              {...register("bonificacion", {
+                required: "La bonificación es requerida",
+                min: {
+                  value: 0,
+                  message: "La bonificación no puede ser negativa",
+                },
+                valueAsNumber: true,
+              })}
               placeholder="Unidades bonus"
+              className={errors.bonificacion ? "border-destructive" : ""}
             />
+            {errors.bonificacion && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.bonificacion.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="text-sm font-medium mb-1 block">
@@ -136,127 +282,188 @@ const TableEscalasProducto = ({ user }: Props) => {
               type="number"
               min="0"
               step="0.01"
-              value={nuevaEscala.costo}
-              onChange={(e) =>
-                setNuevaEscala({
-                  ...nuevaEscala,
-                  costo: parseFloat(e.target.value) || 0,
-                })
-              }
+              {...register("costo", {
+                required: "El costo es requerido",
+                min: { value: 0, message: "El costo no puede ser negativo" },
+                valueAsNumber: true,
+              })}
               placeholder="0.00"
+              className={errors.costo ? "border-destructive" : ""}
             />
+            {errors.costo && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.costo.message}
+              </p>
+            )}
           </div>
-          <Button onClick={handleAddEscala} className="w-full">
-            <Plus className="h-4 w-4 mr-1" />
-            Agregar
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={createMutation.isPending || !selectedProducto}
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4 mr-1" />
+            )}
+            {createMutation.isPending ? "Creando..." : "Agregar"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <Table>
         <TableCaption>Escalas de precios por volumen de compra</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Producto</TableHead>
-            <TableHead className="text-right">Compra Mínima</TableHead>
-            <TableHead className="text-right">Bonificación</TableHead>
-            <TableHead className="text-right">Costo Unitario</TableHead>
+            <TableHead className="text-center">Producto</TableHead>
+            <TableHead className="text-center">Compra Mínima</TableHead>
+            <TableHead className="text-center">Bonificación</TableHead>
+            <TableHead className="text-center">Costo Unitario</TableHead>
             <TableHead className="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {escalas.map((escala) => (
-            <TableRow key={escala.id}>
-              <TableCell className="font-medium">
-                {escala.editing ? (
-                  <select
-                    value={escala.producto}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    {productosUnicos.map((producto) => (
-                      <option key={producto} value={producto}>
-                        {producto}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  escala.producto
-                )}
+          {escalas.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-4">
+                <StatusMessage type="empty" />
               </TableCell>
-              <TableCell className="text-right">
-                <Input
-                  type="number"
-                  min="1"
-                  value={escala.compraMinima}
-                  className="w-20 text-right"
-                  disabled={!escala.editing}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <Input
-                  type="number"
-                  min="0"
-                  value={escala.bonificacion}
-                  className="w-20 text-right"
-                  disabled={!escala.editing}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-sm">$</span>
+            </TableRow>
+          ) : (
+            escalas.map((escala) => (
+              <TableRow key={escala.id}>
+                <TableCell className="font-medium text-center">
+                  {escala.producto.nombre}
+                </TableCell>
+                <TableCell className="text-center">
+                  <Input
+                    type="number"
+                    min="1"
+                    value={escala.cantidad_comprada}
+                    onChange={(e) =>
+                      handleCantidadChange(escala.id, e.target.value)
+                    }
+                    className="w-20 text-right"
+                    disabled={!escala.editing || updateMutation.isPending}
+                  />
+                </TableCell>
+                <TableCell className="flex justify-center">
                   <Input
                     type="number"
                     min="0"
-                    step="0.01"
-                    value={escala.costo}
-                    className="w-24 text-right"
-                    disabled={!escala.editing}
+                    value={escala.bonificacion}
+                    onChange={(e) =>
+                      handleBonificacionChange(escala.id, e.target.value)
+                    }
+                    className="w-20 text-right"
+                    disabled={!escala.editing || updateMutation.isPending}
                   />
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex justify-center gap-2">
-                  {!escala.editing ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleEdit(escala.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(escala.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleEdit(escala.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleSave(escala.id)}
-                      >
-                        <Save className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-sm">{user?.pais.simbolo_moneda}</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={escala.costo}
+                      onChange={(e) =>
+                        handleCostoChange(escala.id, e.target.value)
+                      }
+                      className="w-24 text-right"
+                      disabled={!escala.editing || updateMutation.isPending}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center gap-2">
+                    {!escala.editing ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEdit(escala.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEdit(escala.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleSave(escala.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          {updateMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(page - 1)}
+                className={page === 0 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNumber =
+                Math.max(0, Math.min(page - 2, totalPages - 5)) + i;
+              if (pageNumber >= totalPages) return null;
+
+              return (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    isActive={page === pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                  >
+                    {pageNumber + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(page + 1)}
+                className={
+                  page >= totalPages - 1 ? "pointer-events-none opacity-50" : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+
+      {escalasData && escalasData.total > 0 && (
+        <div className="text-sm text-muted-foreground text-center">
+          Mostrando {escalas.length} de {escalasData.total} escalas
+        </div>
+      )}
     </div>
   );
 };

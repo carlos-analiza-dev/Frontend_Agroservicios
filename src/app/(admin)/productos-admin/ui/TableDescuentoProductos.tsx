@@ -10,99 +10,165 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Save, X, Trash2, Percent } from "lucide-react";
+import { Plus, Edit, Save, X, Trash2, Percent, Loader2 } from "lucide-react";
+import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
+import useGetDescuentoProducto from "@/hooks/descuento-productos/useGetDescuentoProducto";
+import { useForm } from "react-hook-form";
+import { CrearDescuentoInterface } from "@/apis/descuentos_producto/interface/crear-descuento-producto.interface";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const TableDescuentoProductos = () => {
-  const [descuentos, setDescuentos] = useState([
-    {
-      id: 1,
-      producto: "Laptop HP Pavilion",
-      cantidadMinima: 1,
-      descuento: 0,
-      editing: false,
-    },
-    {
-      id: 2,
-      producto: "Laptop HP Pavilion",
-      cantidadMinima: 5,
-      descuento: 5,
-      editing: false,
-    },
-    {
-      id: 3,
-      producto: "Laptop HP Pavilion",
-      cantidadMinima: 10,
-      descuento: 10,
-      editing: false,
-    },
-    {
-      id: 4,
-      producto: "Mouse Inalámbrico",
-      cantidadMinima: 1,
-      descuento: 0,
-      editing: false,
-    },
-    {
-      id: 5,
-      producto: "Mouse Inalámbrico",
-      cantidadMinima: 20,
-      descuento: 15,
-      editing: false,
-    },
-  ]);
+import { ResponseDescuentoInterface } from "@/apis/descuentos_producto/interface/response-descuento-producto.interface";
+import { CrearDescuentoProducto } from "@/apis/descuentos_producto/accions/crear-descuento-producto";
+import { toast } from "react-toastify";
+import { isAxiosError } from "axios";
+import { ActualizarDescuentoProducto } from "@/apis/descuentos_producto/accions/actualizar-descuentos";
+import { StatusMessage } from "@/components/generics/StatusMessage";
+import TableUsersSkeleton from "@/components/generics/SkeletonTable";
 
-  const [nuevoDescuento, setNuevoDescuento] = useState({
-    producto: "",
-    cantidadMinima: 1,
-    descuento: 0,
-    activo: true,
+interface Props {
+  selectedProducto: Producto | null;
+}
+
+interface DescuentoLocal extends ResponseDescuentoInterface {
+  editing?: boolean;
+}
+
+interface ActualizarDescuentoInterface {
+  cantidad_comprada: number;
+  descuentos: number;
+}
+
+const TableDescuentoProductos = ({ selectedProducto }: Props) => {
+  const queryClient = useQueryClient();
+  const { data: descuentosData, isLoading } = useGetDescuentoProducto(
+    selectedProducto?.id ?? ""
+  );
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CrearDescuentoInterface>();
+  const [descuentos, setDescuentos] = useState<DescuentoLocal[]>([]);
+
+  const createMutation = useMutation({
+    mutationFn: CrearDescuentoProducto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["descuento-producto", selectedProducto?.id],
+      });
+      toast.success("Descuento creado exitosamente");
+      reset();
+    },
+    onError: (error: any) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al crear los descuentos";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de crear los descuentos. Inténtalo de nuevo."
+        );
+      }
+    },
   });
 
-  const toggleEdit = (id: number) => {
-    setDescuentos(
-      descuentos.map((d) => (d.id === id ? { ...d, editing: !d.editing } : d))
-    );
-  };
-
-  const handleSave = (id: number) => {
-    setDescuentos(
-      descuentos.map((d) => (d.id === id ? { ...d, editing: false } : d))
-    );
-  };
-
-  const handleDelete = (id: number) => {
-    setDescuentos(descuentos.filter((d) => d.id !== id));
-  };
-
-  const handleAddDescuento = () => {
-    if (nuevoDescuento.producto && nuevoDescuento.cantidadMinima > 0) {
-      const nuevo = {
-        id: Math.max(...descuentos.map((d) => d.id), 0) + 1,
-        producto: nuevoDescuento.producto,
-        cantidadMinima: nuevoDescuento.cantidadMinima,
-        descuento: nuevoDescuento.descuento,
-        editing: false,
-        activo: nuevoDescuento.activo,
+  const updateMutation = useMutation({
+    mutationFn: async (data: {
+      id: string;
+      cantidad_comprada: number;
+      descuentos: number;
+    }) => {
+      const updateData: ActualizarDescuentoInterface = {
+        cantidad_comprada: data.cantidad_comprada,
+        descuentos: data.descuentos,
       };
-      setDescuentos([...descuentos, nuevo]);
-      setNuevoDescuento({
-        producto: "",
-        cantidadMinima: 1,
-        descuento: 0,
-        activo: true,
+      return ActualizarDescuentoProducto(data.id, updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["descuento-producto", selectedProducto?.id],
       });
+      toast.success("Descuento actualizado exitosamente");
+    },
+    onError: (error: any) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al editar los descuentos";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de editar los descuentos. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
+
+  React.useEffect(() => {
+    if (descuentosData) {
+      setDescuentos(
+        descuentosData.map((descuento) => ({
+          ...descuento,
+          editing: false,
+        }))
+      );
     }
+  }, [descuentosData]);
+
+  const toggleEdit = (id: string) => {
+    setDescuentos(
+      descuentos.map((descuento) =>
+        descuento.id === id
+          ? { ...descuento, editing: !descuento.editing }
+          : { ...descuento, editing: false }
+      )
+    );
   };
 
-  const productosUnicos = Array.from(
-    new Set(descuentos.map((d) => d.producto))
-  );
+  const handleSave = (id: string) => {
+    const descuentoEditado = descuentos.find((d) => d.id === id);
+    if (!descuentoEditado) return;
+
+    updateMutation.mutate({
+      id: descuentoEditado.id,
+      cantidad_comprada: descuentoEditado.cantidad_comprada,
+      descuentos: descuentoEditado.descuentos,
+    });
+
+    toggleEdit(id);
+  };
+
+  const onSubmit = (data: CrearDescuentoInterface) => {
+    if (!selectedProducto) return;
+
+    createMutation.mutate({
+      ...data,
+      productoId: selectedProducto.id,
+    });
+  };
+
+  if (isLoading) {
+    return <TableUsersSkeleton />;
+  }
 
   return (
     <div className="w-full space-y-4">
       <div className="bg-muted p-4 rounded-lg">
         <h3 className="font-semibold mb-3">Agregar Nuevo Descuento</h3>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+        >
           <div>
             <label className="text-sm font-medium mb-1 block">
               Cantidad Mínima
@@ -110,15 +176,19 @@ const TableDescuentoProductos = () => {
             <Input
               type="number"
               min="1"
-              value={nuevoDescuento.cantidadMinima}
-              onChange={(e) =>
-                setNuevoDescuento({
-                  ...nuevoDescuento,
-                  cantidadMinima: parseInt(e.target.value) || 1,
-                })
-              }
+              {...register("cantidad_comprada", {
+                required: "La cantidad es requerida",
+                min: { value: 1, message: "La cantidad mínima es 1" },
+                valueAsNumber: true,
+              })}
               placeholder="Cantidad"
+              className={errors.cantidad_comprada ? "border-destructive" : ""}
             />
+            {errors.cantidad_comprada && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.cantidad_comprada.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="text-sm font-medium mb-1 block">
@@ -129,101 +199,69 @@ const TableDescuentoProductos = () => {
                 type="number"
                 min="0"
                 max="100"
-                value={nuevoDescuento.descuento}
-                onChange={(e) =>
-                  setNuevoDescuento({
-                    ...nuevoDescuento,
-                    descuento: parseInt(e.target.value) || 0,
-                  })
-                }
+                {...register("descuentos", {
+                  required: "El descuento es requerido",
+                  min: { value: 0, message: "El descuento mínimo es 0%" },
+                  max: { value: 100, message: "El descuento máximo es 100%" },
+                  valueAsNumber: true,
+                })}
                 placeholder="0"
-                className="pr-8"
+                className={`pr-8 ${errors.descuentos ? "border-destructive" : ""}`}
               />
               <Percent className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
             </div>
+            {errors.descuentos && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.descuentos.message}
+              </p>
+            )}
           </div>
 
-          <Button onClick={handleAddDescuento} className="w-full">
-            <Plus className="h-4 w-4 mr-1" />
-            Agregar
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!selectedProducto || createMutation.isPending}
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4 mr-1" />
+            )}
+            {createMutation.isPending ? "Creando..." : "Agregar"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <Table>
         <TableCaption>Descuentos por volumen de compra</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Producto</TableHead>
-            <TableHead className="text-right">Cantidad Mínima</TableHead>
-            <TableHead className="text-right">Descuento</TableHead>
-
+            <TableHead className="text-center">Producto</TableHead>
+            <TableHead className="text-center">Cantidad Mínima</TableHead>
+            <TableHead className="text-center">Descuento</TableHead>
             <TableHead className="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {descuentos.map((descuento) => (
-            <TableRow key={descuento.id}>
-              <TableCell className="font-medium">
-                {descuento.editing ? (
-                  <select
-                    value={descuento.producto}
-                    onChange={(e) =>
-                      setDescuentos(
-                        descuentos.map((d) =>
-                          d.id === descuento.id
-                            ? { ...d, producto: e.target.value }
-                            : d
-                        )
-                      )
-                    }
-                    className="w-full p-2 border rounded-md"
-                  >
-                    {productosUnicos.map((producto) => (
-                      <option key={producto} value={producto}>
-                        {producto}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  descuento.producto
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <Input
-                  type="number"
-                  min="1"
-                  value={descuento.cantidadMinima}
-                  onChange={(e) =>
-                    setDescuentos(
-                      descuentos.map((d) =>
-                        d.id === descuento.id
-                          ? {
-                              ...d,
-                              cantidadMinima: parseInt(e.target.value) || 1,
-                            }
-                          : d
-                      )
-                    )
-                  }
-                  className="w-20 text-right"
-                  disabled={!descuento.editing}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
+          {descuentos && descuentos.length > 0 ? (
+            descuentos.map((descuento) => (
+              <TableRow key={descuento.id}>
+                <TableCell className="text-center">
+                  {descuento.producto?.nombre || "N/A"}
+                </TableCell>
+                <TableCell className="flex justify-center">
                   <Input
                     type="number"
-                    min="0"
-                    max="100"
-                    value={descuento.descuento}
+                    min="1"
+                    value={descuento.cantidad_comprada}
                     onChange={(e) =>
                       setDescuentos(
                         descuentos.map((d) =>
                           d.id === descuento.id
                             ? {
                                 ...d,
-                                descuento: parseInt(e.target.value) || 0,
+                                cantidad_comprada:
+                                  parseInt(e.target.value) || 1,
                               }
                             : d
                         )
@@ -232,51 +270,81 @@ const TableDescuentoProductos = () => {
                     className="w-20 text-right"
                     disabled={!descuento.editing}
                   />
-                  <Percent className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </TableCell>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={descuento.descuentos}
+                      onChange={(e) =>
+                        setDescuentos(
+                          descuentos.map((d) =>
+                            d.id === descuento.id
+                              ? {
+                                  ...d,
+                                  descuentos: parseInt(e.target.value) || 0,
+                                }
+                              : d
+                          )
+                        )
+                      }
+                      className="w-20 text-right"
+                      disabled={!descuento.editing}
+                    />
+                    <Percent className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </TableCell>
 
-              <TableCell className="text-center">
-                <div className="flex justify-center gap-2">
-                  {!descuento.editing ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleEdit(descuento.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(descuento.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleEdit(descuento.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleSave(descuento.id)}
-                      >
-                        <Save className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <TableCell className="text-center">
+                  <div className="flex justify-center gap-2">
+                    {!descuento.editing ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEdit(descuento.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEdit(descuento.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleSave(descuento.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          {updateMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-4">
+                <StatusMessage type="empty" />
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

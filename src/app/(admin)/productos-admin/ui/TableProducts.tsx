@@ -646,7 +646,7 @@ const TableProducts = ({ productos }: Props) => {
       </AlertDialog>
 
       <AlertDialog open={isOpenSettings} onOpenChange={setIsOpenSettings}>
-        <AlertDialogContent className="max-w-5xl h-[600px] overflow-y-auto">
+        <AlertDialogContent className="max-w-6xl h-full overflow-y-auto">
           <div className="flex justify-end">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
@@ -659,7 +659,7 @@ const TableProducts = ({ productos }: Props) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex-1">
-            <OptionsProducto user={user} />
+            <OptionsProducto user={user} selectedProducto={selectedProducto} />
           </div>
         </AlertDialogContent>
       </AlertDialog>
