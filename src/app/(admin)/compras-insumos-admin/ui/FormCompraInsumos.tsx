@@ -33,7 +33,7 @@ import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { Plus, Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import DetailsConfirmCompraInsumos from "./DetailsConfirmCompraInsumos";
@@ -128,6 +128,39 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
   const tipoPago = watch("tipoPago");
   const numero_factura = watch("numero_factura");
 
+  const handleProveedorChange = (value: string) => {
+    setValue("proveedorId", value);
+    const proveedorSeleccionado = proveedores?.find((p) => p.id === value);
+
+    if (proveedorSeleccionado && proveedorSeleccionado.tipo_pago_default) {
+      const tipoPagoFromAPI = proveedorSeleccionado.tipo_pago_default
+        .toUpperCase()
+        .trim();
+
+      const tipoPagoMatch = tiposPagos.find(
+        (tipo) => tipo.value.toUpperCase() === tipoPagoFromAPI
+      );
+
+      if (tipoPagoMatch) {
+        setValue("tipoPago", tipoPagoMatch.value);
+      } else {
+        console.warn(
+          `Tipo de pago "${proveedorSeleccionado.tipo_pago_default}" no coincide con los valores disponibles`
+        );
+        setValue("tipoPago", "");
+      }
+    } else {
+      setValue("tipoPago", "");
+    }
+  };
+
+  const getTipoPagoLabel = (value: string) => {
+    const tipo = tiposPagos.find((t) => t.value === value);
+    return tipo ? tipo.label : "";
+  };
+
+  useEffect(() => {}, [tipoPago]);
+
   const isFormValid = () => {
     if (!proveedorId || !tipoPago || !sucursalId || !numero_factura)
       return false;
@@ -194,7 +227,12 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
         cantidad: insumo.cantidad,
         bonificacion: insumo.bonificacion || 0,
         descuentos: parseFloat(descuentoInsumo.toFixed(2)),
+        porcentaje_impuesto: insumo.impuesto || 0,
         impuestos: parseFloat(impuestoInsumo.toFixed(2)),
+        cantidad_total: insumo.cantidad + (insumo.bonificacion || 0),
+        monto_total: parseFloat(
+          (subtotalConDescuento + impuestoInsumo).toFixed(2)
+        ),
       };
     });
 
@@ -203,7 +241,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
       sucursalId: sucursalId,
       numero_factura: data.numero_factura,
       paisId: paisId,
-      tipo_pago: data.tipoPago,
+      tipo_pago: data.tipoPago.toUpperCase(),
       subtotal: subtotal,
       descuentos: totalDescuentos,
       impuestos: totalImpuestos,
@@ -256,10 +294,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="space-y-1">
             <Label className="font-bold">Proveedor*</Label>
-            <Select
-              value={proveedorId}
-              onValueChange={(value) => setValue("proveedorId", value)}
-            >
+            <Select value={proveedorId} onValueChange={handleProveedorChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona el proveedor" />
               </SelectTrigger>
@@ -300,26 +335,23 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
 
           <div className="space-y-1">
             <Label className="font-bold">Tipo de Pago*</Label>
-            <Select
-              value={tipoPago}
-              onValueChange={(value) => setValue("tipoPago", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona el tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Tipo Pago</SelectLabel>
-                  {tiposPagos?.map((tipo) => (
-                    <SelectItem value={tipo.value} key={tipo.id}>
-                      {tipo.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <Input
+              type="text"
+              readOnly
+              value={getTipoPagoLabel(tipoPago) || "Seleccione un proveedor"}
+              className="bg-gray-100 cursor-not-allowed"
+              {...register("tipoPago", {
+                required: "El tipo de pago es obligatorio",
+              })}
+            />
             {errors.tipoPago && (
               <p className="text-sm text-red-500">{errors.tipoPago.message}</p>
+            )}
+
+            {proveedorSeleccionado?.tipo_pago_default && tipoPago && (
+              <p className="text-sm text-green-600 mt-1">
+                Tipo de pago por defecto del proveedor
+              </p>
             )}
           </div>
         </div>

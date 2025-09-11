@@ -32,6 +32,15 @@ import { CrearDatosProducto } from "@/apis/datos_producto/accions/crear-datos-pr
 import { Dato } from "@/apis/datos_producto/interface/response-datos-producto";
 import { ActualizarDatosProducto } from "@/apis/datos_producto/accions/actualizar-datos-producto";
 import { isAxiosError } from "axios";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Props {
   user: User | undefined;
@@ -46,14 +55,22 @@ const TableDatosProducto = ({ user, selectedProducto }: Props) => {
   const paisId = user?.pais.id || "";
   const { data: sucursales } = useGetSucursalesPais(paisId);
   const queryClient = useQueryClient();
-  const limit = 10;
-  const offset = 0;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     data: productosData,
     isLoading,
     refetch,
-  } = useGetDatosProducto(limit, offset, selectedProducto?.id ?? "");
+  } = useGetDatosProducto(
+    pageSize,
+    (currentPage - 1) * pageSize,
+    selectedProducto?.id ?? ""
+  );
+
+  const total_pages = productosData?.total
+    ? Math.ceil(productosData.total / pageSize)
+    : 0;
 
   const [datosProductos, setDatosProductos] = useState<DatoProducto[]>([]);
 
@@ -409,20 +426,22 @@ const TableDatosProducto = ({ user, selectedProducto }: Props) => {
                   )}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Input
-                    type="number"
-                    min="0"
-                    value={producto.punto_reorden}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        producto.id,
-                        "punto_reorden",
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    className="w-20 text-center"
-                    disabled={!producto.editing}
-                  />
+                  <div className="flex justify-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={producto.punto_reorden}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          producto.id,
+                          "punto_reorden",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-20 text-center"
+                      disabled={!producto.editing}
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">
@@ -512,6 +531,60 @@ const TableDatosProducto = ({ user, selectedProducto }: Props) => {
           )}
         </TableBody>
       </Table>
+      {total_pages > 0 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    currentPage > 1 && setCurrentPage(currentPage - 1)
+                  }
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              {Array.from({ length: Math.min(5, total_pages) }, (_, i) => {
+                const pageNumber = i + 1;
+                return (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      isActive={currentPage === pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className="cursor-pointer"
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+
+              {total_pages > 5 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    currentPage < total_pages && setCurrentPage(currentPage + 1)
+                  }
+                  className={
+                    currentPage === total_pages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };

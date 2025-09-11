@@ -36,7 +36,10 @@ const OptionsProducto = ({ user, selectedProducto }: Props) => {
           />
         </TabsContent>
         <TabsContent value="descuento" className="flex-1 overflow-auto">
-          <TableDescuentoProductos selectedProducto={selectedProducto} />{" "}
+          <TableDescuentoProductos
+            selectedProducto={selectedProducto}
+            user={user}
+          />{" "}
         </TabsContent>
       </Tabs>
     </div>

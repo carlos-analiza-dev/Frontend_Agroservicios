@@ -10,7 +10,16 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Save, X, Trash2, Percent, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Save,
+  X,
+  Trash2,
+  Percent,
+  Loader2,
+  MoreVertical,
+} from "lucide-react";
 import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import useGetDescuentoProducto from "@/hooks/descuento-productos/useGetDescuentoProducto";
 import { useForm } from "react-hook-form";
@@ -24,9 +33,36 @@ import { isAxiosError } from "axios";
 import { ActualizarDescuentoProducto } from "@/apis/descuentos_producto/accions/actualizar-descuentos";
 import { StatusMessage } from "@/components/generics/StatusMessage";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import { User } from "@/interfaces/auth/user";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   selectedProducto: Producto | null;
+  user: User | undefined;
 }
 
 interface DescuentoLocal extends ResponseDescuentoInterface {
@@ -36,17 +72,29 @@ interface DescuentoLocal extends ResponseDescuentoInterface {
 interface ActualizarDescuentoInterface {
   cantidad_comprada: number;
   descuentos: number;
+  isActive?: boolean;
 }
 
-const TableDescuentoProductos = ({ selectedProducto }: Props) => {
+interface StatusUpdate {
+  isActive?: boolean;
+}
+
+const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
   const { data: descuentosData, isLoading } = useGetDescuentoProducto(
     selectedProducto?.id ?? ""
   );
+  const { data: proveedores } = useGetProveedoresActivos();
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedDescuento, setSelectedDescuento] =
+    useState<DescuentoLocal | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CrearDescuentoInterface>();
   const [descuentos, setDescuentos] = useState<DescuentoLocal[]>([]);
@@ -114,6 +162,41 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
     },
   });
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (data: { id: string; isActive: boolean }) => {
+      const updateData: StatusUpdate = {
+        isActive: data.isActive,
+      };
+      return ActualizarDescuentoProducto(data.id, updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["descuento-producto", selectedProducto?.id],
+      });
+      toast.success("Estado del descuento actualizado exitosamente");
+      setIsStatusModalOpen(false);
+      setSelectedDescuento(null);
+    },
+    onError: (error: any) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al actualizar el estado del descuento";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de actualizar el estado del descuento. Inténtalo de nuevo."
+        );
+      }
+      setIsStatusModalOpen(false);
+      setSelectedDescuento(null);
+    },
+  });
+
   React.useEffect(() => {
     if (descuentosData) {
       setDescuentos(
@@ -148,12 +231,27 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
     toggleEdit(id);
   };
 
+  const openStatusModal = (descuento: DescuentoLocal) => {
+    setSelectedDescuento(descuento);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleStatusChange = (newStatus: boolean) => {
+    if (!selectedDescuento) return;
+
+    toggleStatusMutation.mutate({
+      id: selectedDescuento.id,
+      isActive: newStatus,
+    });
+  };
+
   const onSubmit = (data: CrearDescuentoInterface) => {
     if (!selectedProducto) return;
 
     createMutation.mutate({
       ...data,
       productoId: selectedProducto.id,
+      paisId: paisId,
     });
   };
 
@@ -169,6 +267,28 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
         >
+          <div className="space-y-2">
+            <Label htmlFor="proveedorId" className="font-bold">
+              Proveedor
+            </Label>
+            <Select onValueChange={(value) => setValue("proveedorId", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {proveedores?.map((proveedor) => (
+                  <SelectItem key={proveedor.id} value={proveedor.id}>
+                    {proveedor.nombre_legal} - {proveedor.nit_rtn}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.proveedorId && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.proveedorId.message}
+              </p>
+            )}
+          </div>
           <div>
             <label className="text-sm font-medium mb-1 block">
               Cantidad Mínima
@@ -237,8 +357,10 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
         <TableHeader>
           <TableRow>
             <TableHead className="text-center">Producto</TableHead>
+            <TableHead className="text-center">Proveedor</TableHead>
             <TableHead className="text-center">Cantidad Mínima</TableHead>
             <TableHead className="text-center">Descuento</TableHead>
+            <TableHead className="text-center">Activa</TableHead>
             <TableHead className="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -248,6 +370,9 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
               <TableRow key={descuento.id}>
                 <TableCell className="text-center">
                   {descuento.producto?.nombre || "N/A"}
+                </TableCell>
+                <TableCell className="text-center">
+                  {descuento.proveedor.nombre_legal || "N/A"}
                 </TableCell>
                 <TableCell className="flex justify-center">
                   <Input
@@ -296,7 +421,17 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
                     <Percent className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </TableCell>
-
+                <TableCell className="text-center">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      descuento.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {descuento.isActive ? "Sí" : "No"}
+                  </span>
+                </TableCell>
                 <TableCell className="text-center">
                   <div className="flex justify-center gap-2">
                     {!descuento.editing ? (
@@ -309,6 +444,20 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => openStatusModal(descuento)}
+                            >
+                              Cambiar Estado
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </>
                     ) : (
                       <>
@@ -347,6 +496,50 @@ const TableDescuentoProductos = ({ selectedProducto }: Props) => {
           )}
         </TableBody>
       </Table>
+
+      {/* Modal para cambiar estado */}
+      <AlertDialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cambiar Estado del Descuento</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que quieres{" "}
+              {selectedDescuento?.isActive ? "desactivar" : "activar"} este
+              descuento?
+              <br />
+              <br />
+              <strong>Producto:</strong> {selectedDescuento?.producto?.nombre}
+              <br />
+              <strong>Proveedor:</strong>{" "}
+              {selectedDescuento?.proveedor?.nombre_legal}
+              <br />
+              <strong>Cantidad Mínima:</strong>{" "}
+              {selectedDescuento?.cantidad_comprada} unidades
+              <br />
+              <strong>Descuento:</strong> {selectedDescuento?.descuentos}%
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggleStatusMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleStatusChange(!selectedDescuento?.isActive)}
+              disabled={toggleStatusMutation.isPending}
+              className={
+                selectedDescuento?.isActive
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
+              }
+            >
+              {toggleStatusMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {selectedDescuento?.isActive ? "Desactivar" : "Activar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

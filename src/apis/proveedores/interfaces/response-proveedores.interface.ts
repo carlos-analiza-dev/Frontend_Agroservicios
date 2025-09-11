@@ -11,6 +11,9 @@ export interface Proveedor {
   nrc: string;
   nombre_legal: string;
   complemento_direccion: string;
+  tipo_pago_default: string;
+  tipo_escala: string;
+  plazo: number;
   telefono: string;
   correo: string;
   nombre_contacto: string;

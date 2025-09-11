@@ -23,6 +23,7 @@ import { useAuthStore } from "@/providers/store/useAuthStore";
 import { AlertCircle, Download, Filter, Search } from "lucide-react";
 import React, { useState } from "react";
 import TableExistenciaInsumos from "./ui/TableExistenciaInsumos";
+import { exportToExcelInvInsumos } from "@/helpers/funciones/downLoadInvInsumos";
 
 const ExistenciaInsumosInv = () => {
   const { user } = useAuthStore();
@@ -68,7 +69,11 @@ const ExistenciaInsumosInv = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button
+                onClick={() => exportToExcelInvInsumos(filteredData)}
+                variant="outline"
+                size="sm"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar
               </Button>

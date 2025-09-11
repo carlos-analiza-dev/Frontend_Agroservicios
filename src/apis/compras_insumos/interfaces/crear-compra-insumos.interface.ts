@@ -3,7 +3,7 @@ export interface CrearCompraInsumoInterface {
   sucursalId: string;
   paisId: string;
   tipo_pago: string;
-  numero_factura?: string;
+  impuestos: number;
   detalles: Detalle[];
 }
 

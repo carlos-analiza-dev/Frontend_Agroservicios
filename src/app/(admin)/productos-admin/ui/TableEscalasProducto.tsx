@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
+import { Plus, Edit, Save, X, Loader2, MoreVertical } from "lucide-react";
 import { User } from "@/interfaces/auth/user";
 import useGetEscalasProducto from "@/hooks/escalas-producto/useGetEscalasProducto";
 import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
@@ -32,6 +32,31 @@ import { CrearEscalaProducto } from "@/apis/escala-producto/accions/crear-escala
 import { ActualizarEscalaProducto } from "@/apis/escala-producto/accions/actualizar-escala-producto";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   user: User | undefined;
@@ -46,24 +71,37 @@ interface ActualizarEscalaInterface {
   cantidad_comprada: number;
   bonificacion: number;
   costo: number;
+  isActive?: boolean;
+}
+
+interface StatusUpdate {
+  isActive?: boolean;
 }
 
 const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const limit = 10;
   const offset = page * limit;
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedEscala, setSelectedEscala] = useState<EscalaLocal | null>(
+    null
+  );
 
-  const {
-    data: escalasData,
-    isLoading,
-    error,
-  } = useGetEscalasProducto(limit, offset, selectedProducto?.id ?? "");
+  const { data: escalasData, isLoading } = useGetEscalasProducto(
+    limit,
+    offset,
+    selectedProducto?.id ?? ""
+  );
+
+  const { data: proveedores } = useGetProveedoresActivos();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CrearEscalaProductoInterface>();
 
@@ -134,6 +172,41 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
     },
   });
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (data: { id: string; isActive: boolean }) => {
+      const updateData: StatusUpdate = {
+        isActive: data.isActive,
+      };
+      return ActualizarEscalaProducto(data.id, updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["escalas-producto", limit, offset, selectedProducto?.id],
+      });
+      toast.success("Estado de la escala actualizado exitosamente");
+      setIsStatusModalOpen(false);
+      setSelectedEscala(null);
+    },
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al actualizar el estado de la escala";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de actualizar el estado de la escala. Inténtalo de nuevo."
+        );
+      }
+      setIsStatusModalOpen(false);
+      setSelectedEscala(null);
+    },
+  });
+
   React.useEffect(() => {
     if (escalasData?.data) {
       setEscalas(
@@ -156,6 +229,7 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
     createMutation.mutate({
       ...data,
       productoId: selectedProducto.id,
+      paisId: paisId,
     });
   };
 
@@ -181,6 +255,20 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
     });
 
     toggleEdit(id);
+  };
+
+  const openStatusModal = (escala: EscalaLocal) => {
+    setSelectedEscala(escala);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleStatusChange = (newStatus: boolean) => {
+    if (!selectedEscala) return;
+
+    toggleStatusMutation.mutate({
+      id: selectedEscala.id,
+      isActive: newStatus,
+    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -224,8 +312,31 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
         <h3 className="font-semibold mb-3">Agregar Nueva Escala</h3>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+          className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
         >
+          <div className="space-y-2">
+            <Label htmlFor="proveedorId" className="font-bold">
+              Proveedor
+            </Label>
+            <Select onValueChange={(value) => setValue("proveedorId", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {proveedores?.map((proveedor) => (
+                  <SelectItem key={proveedor.id} value={proveedor.id}>
+                    {proveedor.nombre_legal} - {proveedor.nit_rtn}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.proveedorId && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.proveedorId.message}
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium mb-1 block">
               Compra Mínima
@@ -316,9 +427,11 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
         <TableHeader>
           <TableRow>
             <TableHead className="text-center">Producto</TableHead>
+            <TableHead className="text-center">Proveedor</TableHead>
             <TableHead className="text-center">Compra Mínima</TableHead>
             <TableHead className="text-center">Bonificación</TableHead>
             <TableHead className="text-center">Costo Unitario</TableHead>
+            <TableHead className="text-center">Activa</TableHead>
             <TableHead className="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -336,16 +449,21 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
                   {escala.producto.nombre}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Input
-                    type="number"
-                    min="1"
-                    value={escala.cantidad_comprada}
-                    onChange={(e) =>
-                      handleCantidadChange(escala.id, e.target.value)
-                    }
-                    className="w-20 text-right"
-                    disabled={!escala.editing || updateMutation.isPending}
-                  />
+                  {escala.proveedor?.nombre_legal || "N/A"}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={escala.cantidad_comprada}
+                      onChange={(e) =>
+                        handleCantidadChange(escala.id, e.target.value)
+                      }
+                      className="w-20"
+                      disabled={!escala.editing || updateMutation.isPending}
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="flex justify-center">
                   <Input
@@ -376,6 +494,17 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      escala.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {escala.isActive ? "Sí" : "No"}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">
                   <div className="flex justify-center gap-2">
                     {!escala.editing ? (
                       <>
@@ -387,6 +516,20 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => openStatusModal(escala)}
+                            >
+                              Cambiar Estado
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </>
                     ) : (
                       <>
@@ -420,7 +563,53 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
+      <AlertDialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cambiar Estado de la Escala</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que quieres{" "}
+              {selectedEscala?.isActive ? "desactivar" : "activar"} esta escala?
+              <br />
+              <br />
+              <strong>Producto:</strong> {selectedEscala?.producto.nombre}
+              <br />
+              <strong>Proveedor:</strong>{" "}
+              {selectedEscala?.proveedor?.nombre_legal}
+              <br />
+              <strong>Compra Mínima:</strong>{" "}
+              {selectedEscala?.cantidad_comprada} unidades
+              <br />
+              <strong>Bonificación:</strong> {selectedEscala?.bonificacion}{" "}
+              unidades
+              <br />
+              <strong>Costo:</strong> {user?.pais.simbolo_moneda}{" "}
+              {selectedEscala?.costo}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggleStatusMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleStatusChange(!selectedEscala?.isActive)}
+              disabled={toggleStatusMutation.isPending}
+              className={
+                selectedEscala?.isActive
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
+              }
+            >
+              {toggleStatusMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {selectedEscala?.isActive ? "Desactivar" : "Activar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {totalPages > 0 && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>

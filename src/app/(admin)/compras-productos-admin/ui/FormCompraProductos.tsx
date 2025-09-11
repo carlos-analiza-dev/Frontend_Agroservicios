@@ -15,7 +15,7 @@ import {
 import { tiposPagos } from "@/helpers/data/tiposPagos";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
@@ -38,6 +38,8 @@ import { ProductoCompra } from "@/apis/compras_productos/interface/productos_com
 import ResumenCompra from "@/components/generics/ResumenCompra";
 import DetailsCompra from "@/components/generics/DetailsCompra";
 import DetailsConfirmCompra from "@/components/generics/DetailsConfirmCompra";
+import useGetAllEscalasProductos from "@/hooks/escalas-producto/useGetAllEscalasProductos";
+import useGetDescuentoProducto from "@/hooks/descuento-productos/useGetDescuentoProducto";
 
 interface FormCompra {
   sucursalId: string;
@@ -120,6 +122,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   });
 
   const { data: proveedores } = useGetProveedoresActivos();
+
   const { data: productosData } = useGetProductosDisponibles();
   const { data: impuestos } = useGetTaxesPais();
   const productos = productosData?.data.productos || [];
@@ -128,6 +131,42 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
   const numero_factura = watch("numero_factura");
+
+  const handleProveedorChange = (value: string) => {
+    setValue("proveedorId", value);
+    const proveedorSeleccionado = proveedores?.find((p) => p.id === value);
+
+    if (proveedorSeleccionado && proveedorSeleccionado.tipo_pago_default) {
+      const tipoPagoFromAPI = proveedorSeleccionado.tipo_pago_default
+        .toUpperCase()
+        .trim();
+
+      const tipoPagoMatch = tiposPagos.find(
+        (tipo) => tipo.value.toUpperCase() === tipoPagoFromAPI
+      );
+
+      if (tipoPagoMatch) {
+        setValue("tipoPago", tipoPagoMatch.value);
+      } else {
+        console.warn(
+          `Tipo de pago "${proveedorSeleccionado.tipo_pago_default}" no coincide con los valores disponibles`
+        );
+        setValue("tipoPago", "");
+      }
+    } else {
+      setValue("tipoPago", "");
+    }
+  };
+
+  const getTipoPagoLabel = (value: string) => {
+    const tipo = tiposPagos.find((t) => t.value === value);
+    return tipo ? tipo.label : "";
+  };
+
+  useEffect(() => {}, [tipoPago]);
+
+  const proveedorSeleccionado = proveedores?.find((p) => p.id === proveedorId);
+  const tipoPagoSeleccionado = tiposPagos?.find((t) => t.value === tipoPago);
 
   const isFormValid = () => {
     if (!proveedorId || !tipoPago || !sucursalId || !numero_factura)
@@ -206,7 +245,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
       proveedorId: data.proveedorId,
       sucursalId: sucursalId,
       paisId: paisId,
-      tipo_pago: data.tipoPago,
+      tipo_pago: data.tipoPago.toUpperCase(),
       numero_factura: data.numero_factura,
       subtotal: subtotal,
       descuentos: totalDescuentos,
@@ -256,19 +295,13 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
     setValue(`productos.${index}.impuesto`, Number(value));
   };
 
-  const proveedorSeleccionado = proveedores?.find((p) => p.id === proveedorId);
-  const tipoPagoSeleccionado = tiposPagos?.find((t) => t.value === tipoPago);
-
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="space-y-1">
             <Label className="font-bold">Proveedor*</Label>
-            <Select
-              value={proveedorId}
-              onValueChange={(value) => setValue("proveedorId", value)}
-            >
+            <Select value={proveedorId} onValueChange={handleProveedorChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona el proveedor" />
               </SelectTrigger>
@@ -309,26 +342,23 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
           <div className="space-y-1">
             <Label className="font-bold">Tipo de Pago*</Label>
-            <Select
-              value={tipoPago}
-              onValueChange={(value) => setValue("tipoPago", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona el tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Tipo Pago</SelectLabel>
-                  {tiposPagos?.map((tipo) => (
-                    <SelectItem value={tipo.value} key={tipo.id}>
-                      {tipo.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <Input
+              type="text"
+              readOnly
+              value={getTipoPagoLabel(tipoPago) || "Seleccione un proveedor"}
+              className="bg-gray-100 cursor-not-allowed"
+              {...register("tipoPago", {
+                required: "El tipo de pago es obligatorio",
+              })}
+            />
             {errors.tipoPago && (
               <p className="text-sm text-red-500">{errors.tipoPago.message}</p>
+            )}
+
+            {proveedorSeleccionado?.tipo_pago_default && tipoPago && (
+              <p className="text-sm text-green-600 mt-1">
+                Tipo de pago por defecto del proveedor
+              </p>
             )}
           </div>
         </div>
@@ -379,124 +409,253 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
             return (
               <div key={field.id} className="p-4 border rounded-lg space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                  <div className="space-y-1">
-                    <Label>Producto*</Label>
-                    <Select
-                      value={productosWatch?.[index]?.productoId || ""}
-                      onValueChange={(value) =>
-                        handleProductoChange(index, value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Productos</SelectLabel>
-                          {productosDisponibles.map((prod) => (
-                            <SelectItem value={prod.id} key={prod.id}>
-                              {prod.nombre} - {prod.codigo}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    {errors.productos?.[index]?.productoId && (
-                      <p className="text-sm text-red-500">
-                        {errors.productos[index]?.productoId?.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label>Cantidad*</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      {...register(`productos.${index}.cantidad` as const, {
-                        required: "Cantidad requerida",
-                        valueAsNumber: true,
-                        min: { value: 1, message: "Mínimo 1" },
-                      })}
-                    />
-                    {errors.productos?.[index]?.cantidad && (
-                      <p className="text-sm text-red-500">
-                        {errors.productos[index]?.cantidad?.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label>Bonificación</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      {...register(`productos.${index}.bonificacion` as const, {
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Mínimo 0" },
-                      })}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label>Costo Unitario</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      {...register(
-                        `productos.${index}.costoUnitario` as const,
-                        {
-                          valueAsNumber: true,
-                          min: { value: 0, message: "Mínimo 0" },
+                {proveedorSeleccionado?.tipo_escala === "ESCALA" && (
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div className="space-y-1">
+                      <Label>Producto Escala*</Label>
+                      <Select
+                        value={productosWatch?.[index]?.productoId || ""}
+                        onValueChange={(value) =>
+                          handleProductoChange(index, value)
                         }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Productos</SelectLabel>
+                            {productosDisponibles.map((prod) => (
+                              <SelectItem value={prod.id} key={prod.id}>
+                                {prod.nombre} - {prod.codigo}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.productos?.[index]?.productoId && (
+                        <p className="text-sm text-red-500">
+                          {errors.productos[index]?.productoId?.message}
+                        </p>
                       )}
-                    />
-                  </div>
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label>Descuento %</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      {...register(`productos.${index}.descuento` as const, {
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Mínimo 0%" },
-                        max: { value: 100, message: "Máximo 100%" },
-                      })}
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <Label>Cantidad*</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(`productos.${index}.cantidad` as const, {
+                          required: "Cantidad requerida",
+                          valueAsNumber: true,
+                          min: { value: 1, message: "Mínimo 1" },
+                        })}
+                      />
+                      {errors.productos?.[index]?.cantidad && (
+                        <p className="text-sm text-red-500">
+                          {errors.productos[index]?.cantidad?.message}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label>Impuesto %</Label>
-                    <Select
-                      value={productosWatch?.[index]?.impuesto?.toString()}
-                      onValueChange={(value) =>
-                        handleImpuestoChange(index, value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Impuesto</SelectLabel>
-                          {impuestos?.map((imp) => (
-                            <SelectItem
-                              value={String(parseFloat(imp.porcentaje))}
-                              key={imp.id}
-                            >
-                              {imp.nombre} - {parseFloat(imp.porcentaje)}%
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-1">
+                      <Label>Bonificación</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(
+                          `productos.${index}.bonificacion` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Costo Unitario</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(
+                          `productos.${index}.costoUnitario` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Descuento %</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        {...register(`productos.${index}.descuento` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0%" },
+                          max: { value: 100, message: "Máximo 100%" },
+                        })}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Impuesto %</Label>
+                      <Select
+                        value={productosWatch?.[index]?.impuesto?.toString()}
+                        onValueChange={(value) =>
+                          handleImpuestoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Impuesto</SelectLabel>
+                            {impuestos?.map((imp) => (
+                              <SelectItem
+                                value={String(parseFloat(imp.porcentaje))}
+                                key={imp.id}
+                              >
+                                {imp.nombre} - {parseFloat(imp.porcentaje)}%
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {proveedorSeleccionado?.tipo_escala === "DESCUENTO" && (
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div className="space-y-1">
+                      <Label>Producto Descuento*</Label>
+                      <Select
+                        value={productosWatch?.[index]?.productoId || ""}
+                        onValueChange={(value) =>
+                          handleProductoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Productos</SelectLabel>
+                            {productosDisponibles.map((prod) => (
+                              <SelectItem value={prod.id} key={prod.id}>
+                                {prod.nombre} - {prod.codigo}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.productos?.[index]?.productoId && (
+                        <p className="text-sm text-red-500">
+                          {errors.productos[index]?.productoId?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Cantidad*</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(`productos.${index}.cantidad` as const, {
+                          required: "Cantidad requerida",
+                          valueAsNumber: true,
+                          min: { value: 1, message: "Mínimo 1" },
+                        })}
+                      />
+                      {errors.productos?.[index]?.cantidad && (
+                        <p className="text-sm text-red-500">
+                          {errors.productos[index]?.cantidad?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Bonificación</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(
+                          `productos.${index}.bonificacion` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Costo Unitario</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(
+                          `productos.${index}.costoUnitario` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Descuento %</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        {...register(`productos.${index}.descuento` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0%" },
+                          max: { value: 100, message: "Máximo 100%" },
+                        })}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Impuesto %</Label>
+                      <Select
+                        value={productosWatch?.[index]?.impuesto?.toString()}
+                        onValueChange={(value) =>
+                          handleImpuestoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Impuesto</SelectLabel>
+                            {impuestos?.map((imp) => (
+                              <SelectItem
+                                value={String(parseFloat(imp.porcentaje))}
+                                key={imp.id}
+                              >
+                                {imp.nombre} - {parseFloat(imp.porcentaje)}%
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 {productoSeleccionado && (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-blue-50 rounded-lg text-sm">

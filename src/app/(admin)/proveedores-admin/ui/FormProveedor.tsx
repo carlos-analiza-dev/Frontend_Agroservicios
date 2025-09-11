@@ -30,6 +30,7 @@ interface Props {
 
 const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
   const { user } = useAuthStore();
+  const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
   const {
     register,
@@ -40,13 +41,12 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
     formState: { errors },
   } = useForm<CrearProveedorInterface>();
 
-  const { data: departamentos } = useGetDeptosActivesByPais(
-    user?.pais.id ?? ""
-  );
+  const { data: departamentos } = useGetDeptosActivesByPais(paisId);
   const deptoId = watch("departamentoId");
   const { data: municipios } = useGetMunicipiosActivosByDepto(deptoId);
 
   const departamentoId = watch("departamentoId");
+  const tipoPago = watch("tipo_pago_default");
 
   useEffect(() => {
     if (editProveedor && isEdit) {
@@ -55,6 +55,9 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
         nrc: editProveedor.nrc,
         nombre_legal: editProveedor.nombre_legal,
         complemento_direccion: editProveedor.complemento_direccion,
+        tipo_escala: editProveedor.tipo_escala,
+        plazo: editProveedor.plazo,
+        tipo_pago_default: editProveedor.tipo_pago_default,
         telefono: editProveedor.telefono,
         correo: editProveedor.correo,
         nombre_contacto: editProveedor.nombre_contacto,
@@ -122,7 +125,7 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
     if (isEdit) {
       mutationUpdate.mutate(data);
     } else {
-      mutation.mutate(data);
+      mutation.mutate({ ...data, paisId: paisId });
     }
   };
 
@@ -193,6 +196,69 @@ const FormProveedor = ({ onSucces, editProveedor, isEdit }: Props) => {
         {errors.nombre_contacto && (
           <p className="text-sm font-medium text-red-500">
             {errors.nombre_contacto.message as string}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label className="font-bold">Tipo de Pago*</Label>
+        <Select
+          onValueChange={(value) => setValue("tipo_pago_default", value as any)}
+          defaultValue={editProveedor?.tipo_pago_default}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un tipo de pago" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CONTADO">Contado</SelectItem>
+            <SelectItem value="CREDITO">Crédito</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.tipo_pago_default && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.tipo_pago_default.message as string}
+          </p>
+        )}
+      </div>
+
+      {tipoPago === "CREDITO" && (
+        <div className="space-y-1">
+          <Label className="font-bold">Plazo (días)</Label>
+          <Input
+            type="number"
+            {...register("plazo", {
+              valueAsNumber: true,
+              min: { value: 1, message: "El plazo debe ser mayor a 0" },
+              required:
+                "El plazo es requerido cuando el tipo de pago es crédito",
+            })}
+            placeholder="Ej: 30"
+          />
+          {errors.plazo && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.plazo.message as string}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-1">
+        <Label className="font-bold">Tipo de Escala*</Label>
+        <Select
+          onValueChange={(value) => setValue("tipo_escala", value as any)}
+          defaultValue={editProveedor?.tipo_escala}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un tipo de escala" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ESCALA">Escala</SelectItem>
+            <SelectItem value="DESCUENTO">Descuento</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.tipo_escala && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.tipo_escala.message as string}
           </p>
         )}
       </div>

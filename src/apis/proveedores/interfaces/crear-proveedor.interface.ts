@@ -9,5 +9,8 @@ export interface CrearProveedorInterface {
   departamentoId: string;
   municipioId: string;
   paisId: string;
+  plazo?: number;
+  tipo_escala?: string;
   is_active?: boolean;
+  tipo_pago_default?: string;
 }
