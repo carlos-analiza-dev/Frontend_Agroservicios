@@ -113,6 +113,9 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
       queryClient.invalidateQueries({
         queryKey: ["escalas-producto", limit, offset, selectedProducto?.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["escalas-proveedor-producto"],
+      });
       toast.success("Escala creada exitosamente");
       reset();
     },
@@ -151,6 +154,9 @@ const TableEscalasProducto = ({ user, selectedProducto }: Props) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["escalas-producto", limit, offset, selectedProducto?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["escalas-proveedor-producto"],
       });
       toast.success("Escala actualizada exitosamente");
     },

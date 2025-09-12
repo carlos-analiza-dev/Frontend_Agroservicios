@@ -41,7 +41,6 @@ const CardsCategorias = ({ servicios }: Props) => {
   const [editSubServicio, setEditSubServicio] = useState<SubServicio | null>(
     null
   );
-  const [editPrecio, setEditPrecio] = useState<any | null>(null);
   const [isEditCategoria, setIsEditCategoria] = useState(false);
   const [isEditSubServicio, setIsEditSubServicio] = useState(false);
   const [isEditPrecio, setIsEditPrecio] = useState(false);
@@ -90,7 +89,6 @@ const CardsCategorias = ({ servicios }: Props) => {
     setIsOpenPrecios(true);
     setSelectedSubServicioId(subServicio.id);
     setServicioSelected(subServicio);
-    setEditPrecio(null);
   };
 
   return (

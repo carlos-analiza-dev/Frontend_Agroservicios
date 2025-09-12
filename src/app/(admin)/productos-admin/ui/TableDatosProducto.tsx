@@ -105,7 +105,7 @@ const TableDatosProducto = ({ user, selectedProducto }: Props) => {
       refetch();
       queryClient.invalidateQueries({ queryKey: ["datos-producto"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       if (isAxiosError(error)) {
         const messages = error.response?.data?.message;
         const errorMessage = Array.isArray(messages)

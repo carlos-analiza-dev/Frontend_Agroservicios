@@ -1,4 +1,12 @@
+import { CrearDescuentoInsumoInterface } from "@/apis/descuentos-insumos/interfaces/crear-descuento-insumo.interface";
+import { ResponseDescuentosInsumosInterface } from "@/apis/descuentos-insumos/interfaces/response-descuentos-insumo.interface";
+import { Insumo } from "@/apis/insumos/interfaces/response-insumos.interface";
+import useGetDescuentosInsumos from "@/hooks/descuentos-insumo/useGetDescuentosInsumos";
+import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
+import { User } from "@/interfaces/auth/user";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import {
   Table,
   TableBody,
@@ -15,26 +23,14 @@ import {
   Edit,
   Save,
   X,
-  Trash2,
   Percent,
   Loader2,
   MoreVertical,
 } from "lucide-react";
-import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
-import useGetDescuentoProducto from "@/hooks/descuento-productos/useGetDescuentoProducto";
-import { useForm } from "react-hook-form";
-import { CrearDescuentoInterface } from "@/apis/descuentos_producto/interface/crear-descuento-producto.interface";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { ResponseDescuentoInterface } from "@/apis/descuentos_producto/interface/response-descuento-producto.interface";
-import { CrearDescuentoProducto } from "@/apis/descuentos_producto/accions/crear-descuento-producto";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
-import { ActualizarDescuentoProducto } from "@/apis/descuentos_producto/accions/actualizar-descuentos";
 import { StatusMessage } from "@/components/generics/StatusMessage";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import { User } from "@/interfaces/auth/user";
-import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -59,13 +55,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CrearDescuentoInsumo } from "@/apis/descuentos-insumos/accions/crear-descuento-insumo";
+import { ActualizarDescuentoInsumo } from "@/apis/descuentos-insumos/accions/actualizar-descuento-insumo";
 
 interface Props {
-  selectedProducto: Producto | null;
   user: User | undefined;
+  selectedInsumo: Insumo | null;
 }
 
-interface DescuentoLocal extends ResponseDescuentoInterface {
+interface DescuentoLocal extends ResponseDescuentosInsumosInterface {
   editing?: boolean;
 }
 
@@ -79,11 +77,11 @@ interface StatusUpdate {
   isActive?: boolean;
 }
 
-const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
+const TableDescuentosInsumo = ({ selectedInsumo, user }: Props) => {
   const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
-  const { data: descuentosData, isLoading } = useGetDescuentoProducto(
-    selectedProducto?.id ?? ""
+  const { data: descuentosData, isLoading } = useGetDescuentosInsumos(
+    selectedInsumo?.id ?? ""
   );
   const { data: proveedores } = useGetProveedoresActivos();
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -96,14 +94,14 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<CrearDescuentoInterface>();
+  } = useForm<CrearDescuentoInsumoInterface>();
   const [descuentos, setDescuentos] = useState<DescuentoLocal[]>([]);
 
   const createMutation = useMutation({
-    mutationFn: CrearDescuentoProducto,
+    mutationFn: CrearDescuentoInsumo,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["descuento-producto", selectedProducto?.id],
+        queryKey: ["descuento-insumo", selectedInsumo?.id],
       });
       toast.success("Descuento creado exitosamente");
       reset();
@@ -136,14 +134,14 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
         cantidad_comprada: data.cantidad_comprada,
         descuentos: data.descuentos,
       };
-      return ActualizarDescuentoProducto(data.id, updateData);
+      return ActualizarDescuentoInsumo(data.id, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["descuento-producto", selectedProducto?.id],
+        queryKey: ["descuento-insumo", selectedInsumo?.id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["descuento-proveedor-producto", selectedProducto?.id],
+        queryKey: ["descuento-proveedor-insumo", selectedInsumo?.id],
       });
       toast.success("Descuento actualizado exitosamente");
     },
@@ -170,14 +168,14 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
       const updateData: StatusUpdate = {
         isActive: data.isActive,
       };
-      return ActualizarDescuentoProducto(data.id, updateData);
+      return ActualizarDescuentoInsumo(data.id, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["descuento-producto", selectedProducto?.id],
+        queryKey: ["descuento-insumo", selectedInsumo?.id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["descuento-proveedor-producto", selectedProducto?.id],
+        queryKey: ["descuento-proveedor-insumo", selectedInsumo?.id],
       });
       toast.success("Estado del descuento actualizado exitosamente");
       setIsStatusModalOpen(false);
@@ -251,12 +249,12 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
     });
   };
 
-  const onSubmit = (data: CrearDescuentoInterface) => {
-    if (!selectedProducto) return;
+  const onSubmit = (data: CrearDescuentoInsumoInterface) => {
+    if (!selectedInsumo) return;
 
     createMutation.mutate({
       ...data,
-      productoId: selectedProducto.id,
+      insumoId: selectedInsumo.id,
       paisId: paisId,
     });
   };
@@ -346,7 +344,7 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
           <Button
             type="submit"
             className="w-full"
-            disabled={!selectedProducto || createMutation.isPending}
+            disabled={!selectedInsumo || createMutation.isPending}
           >
             {createMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -362,7 +360,7 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
         <TableCaption>Descuentos por volumen de compra</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-center">Producto</TableHead>
+            <TableHead className="text-center">Insumo</TableHead>
             <TableHead className="text-center">Proveedor</TableHead>
             <TableHead className="text-center">Cantidad Mínima</TableHead>
             <TableHead className="text-center">Descuento</TableHead>
@@ -375,7 +373,7 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
             descuentos.map((descuento) => (
               <TableRow key={descuento.id}>
                 <TableCell className="text-center">
-                  {descuento.producto?.nombre || "N/A"}
+                  {descuento.insumo?.nombre || "N/A"}
                 </TableCell>
                 <TableCell className="text-center">
                   {descuento.proveedor.nombre_legal || "N/A"}
@@ -495,7 +493,7 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 <StatusMessage type="empty" />
               </TableCell>
             </TableRow>
@@ -514,7 +512,7 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
               descuento?
               <br />
               <br />
-              <strong>Producto:</strong> {selectedDescuento?.producto?.nombre}
+              <strong>Insumo:</strong> {selectedDescuento?.insumo?.nombre}
               <br />
               <strong>Proveedor:</strong>{" "}
               {selectedDescuento?.proveedor?.nombre_legal}
@@ -550,4 +548,4 @@ const TableDescuentoProductos = ({ selectedProducto, user }: Props) => {
   );
 };
 
-export default TableDescuentoProductos;
+export default TableDescuentosInsumo;

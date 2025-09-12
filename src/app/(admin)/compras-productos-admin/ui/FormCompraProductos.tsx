@@ -22,7 +22,7 @@ import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { CrearCompra } from "@/apis/compras_productos/accions/crear-compra";
 import { toast } from "react-toastify";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import {
   AlertDialog,
@@ -38,8 +38,8 @@ import { ProductoCompra } from "@/apis/compras_productos/interface/productos_com
 import ResumenCompra from "@/components/generics/ResumenCompra";
 import DetailsCompra from "@/components/generics/DetailsCompra";
 import DetailsConfirmCompra from "@/components/generics/DetailsConfirmCompra";
-import useGetAllEscalasProductos from "@/hooks/escalas-producto/useGetAllEscalasProductos";
-import useGetDescuentoProducto from "@/hooks/descuento-productos/useGetDescuentoProducto";
+import { ObtenerDescuentoProveedorAndProducto } from "@/apis/descuentos_producto/accions/descuentos-proveedor-producto";
+import { ObtenerEscalasProveedorAndProducto } from "@/apis/escala-producto/accions/escalas-proveedor-producto";
 
 interface FormCompra {
   sucursalId: string;
@@ -128,9 +128,36 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
   const productos = productosData?.data.productos || [];
 
   const productosWatch = watch("productos");
+
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
   const numero_factura = watch("numero_factura");
+
+  const descuentosQueries = useQueries({
+    queries: productosWatch.map((producto) => ({
+      queryKey: [
+        "descuento-proveedor-producto",
+        proveedorId,
+        producto.productoId,
+      ],
+      queryFn: () =>
+        ObtenerDescuentoProveedorAndProducto(proveedorId, producto.productoId),
+      enabled: !!proveedorId && !!producto.productoId,
+    })),
+  });
+
+  const escalasQueries = useQueries({
+    queries: productosWatch.map((producto) => ({
+      queryKey: [
+        "escalas-proveedor-producto",
+        proveedorId,
+        producto.productoId,
+      ],
+      queryFn: () =>
+        ObtenerEscalasProveedorAndProducto(proveedorId, producto.productoId),
+      enabled: !!proveedorId && !!producto.productoId,
+    })),
+  });
 
   const handleProveedorChange = (value: string) => {
     setValue("proveedorId", value);
@@ -364,29 +391,66 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Label className="font-bold text-lg">Productos de la Compra</Label>
-            <Button
-              type="button"
-              onClick={() =>
-                append({
-                  productoId: "",
-                  cantidad: 0,
-                  bonificacion: 0,
-                  costoUnitario: 0,
-                  descuento: 0,
-                  impuesto: 0,
-                  paisId: "",
-                })
-              }
-              className="flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Agregar Producto
-            </Button>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Productos de la Compra
+                </h2>
+
+                {proveedorSeleccionado && proveedorSeleccionado.tipo_escala && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-blue-700">
+                      Proveedor trabaja por{" "}
+                      <span className="font-bold uppercase">
+                        {proveedorSeleccionado.tipo_escala}
+                      </span>{" "}
+                      de productos
+                    </span>
+                  </div>
+                )}
+
+                {proveedorSeleccionado &&
+                  proveedorSeleccionado?.tipo_pago_default === "CREDITO" && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-green-700">
+                        Plazo de pago:{" "}
+                        <span className="font-bold">
+                          {proveedorSeleccionado.plazo || 30}
+                        </span>{" "}
+                        días
+                      </span>
+                    </div>
+                  )}
+              </div>
+
+              <Button
+                type="button"
+                onClick={() =>
+                  append({
+                    productoId: "",
+                    cantidad: 0,
+                    bonificacion: 0,
+                    costoUnitario: 0,
+                    descuento: 0,
+                    impuesto: 0,
+                    paisId: "",
+                  })
+                }
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                <Plus size={18} />
+                Agregar Producto
+              </Button>
+            </div>
           </div>
 
           {fields.map((field, index) => {
+            const descuentos = descuentosQueries[index]?.data;
+            const escalas = escalasQueries[index]?.data;
+
             const productoSeleccionado = productos.find(
               (p) => p.id === productosWatch?.[index]?.productoId
             );
@@ -412,7 +476,7 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
                 {proveedorSeleccionado?.tipo_escala === "ESCALA" && (
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div className="space-y-1">
-                      <Label>Producto Escala*</Label>
+                      <Label>Producto*</Label>
                       <Select
                         value={productosWatch?.[index]?.productoId || ""}
                         onValueChange={(value) =>
@@ -442,15 +506,50 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
                     <div className="space-y-1">
                       <Label>Cantidad*</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        {...register(`productos.${index}.cantidad` as const, {
-                          required: "Cantidad requerida",
-                          valueAsNumber: true,
-                          min: { value: 1, message: "Mínimo 1" },
-                        })}
-                      />
+                      <Select
+                        value={
+                          productosWatch?.[index]?.cantidad?.toString() || ""
+                        }
+                        onValueChange={(value) => {
+                          const cantidad = Number(value);
+                          const escala = escalas?.find(
+                            (d) => d.cantidad_comprada === cantidad
+                          );
+
+                          setValue(`productos.${index}.cantidad`, cantidad);
+
+                          setValue(
+                            `productos.${index}.bonificacion`,
+                            escala?.bonificacion ?? 0
+                          );
+                          setValue(
+                            `productos.${index}.costoUnitario`,
+                            escala?.costo ?? 0
+                          );
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar Cantidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Cantidad</SelectLabel>
+                            {escalas && escalas.length > 0 ? (
+                              escalas?.map((escala) => (
+                                <SelectItem
+                                  value={escala.cantidad_comprada.toString()}
+                                  key={escala.id}
+                                >
+                                  {escala.cantidad_comprada} →{" "}
+                                  {escala.bonificacion} Bonus
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <p>No se encontraron cantidades</p>
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                       {errors.productos?.[index]?.cantidad && (
                         <p className="text-sm text-red-500">
                           {errors.productos[index]?.cantidad?.message}
@@ -566,15 +665,45 @@ const FormCompraProductos = ({ onSuccess }: Props) => {
 
                     <div className="space-y-1">
                       <Label>Cantidad*</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        {...register(`productos.${index}.cantidad` as const, {
-                          required: "Cantidad requerida",
-                          valueAsNumber: true,
-                          min: { value: 1, message: "Mínimo 1" },
-                        })}
-                      />
+                      <Select
+                        value={
+                          productosWatch?.[index]?.cantidad?.toString() || ""
+                        }
+                        onValueChange={(value) => {
+                          const cantidad = Number(value);
+                          const descuento = descuentos?.find(
+                            (d) => d.cantidad_comprada === cantidad
+                          );
+
+                          setValue(`productos.${index}.cantidad`, cantidad);
+
+                          setValue(
+                            `productos.${index}.descuento`,
+                            descuento?.descuentos ?? 0
+                          );
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar Cantidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Cantidad</SelectLabel>
+                            {descuentos && descuentos.length > 0 ? (
+                              descuentos?.map((desc) => (
+                                <SelectItem
+                                  value={desc.cantidad_comprada.toString()}
+                                  key={desc.id}
+                                >
+                                  {desc.cantidad_comprada} → {desc.descuentos}%
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <p>No se encontraron cantidades</p>
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                       {errors.productos?.[index]?.cantidad && (
                         <p className="text-sm text-red-500">
                           {errors.productos[index]?.cantidad?.message}

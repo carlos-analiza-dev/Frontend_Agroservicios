@@ -17,23 +17,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Barcode, Edit, Package } from "lucide-react";
+import { Barcode, Edit, Package, Settings } from "lucide-react";
 import React, { useState } from "react";
 import FormInsumos from "./FormInsumos";
+import OptionsInsumos from "./OptionsInsumos";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 interface Props {
   filteredInsumos: Insumo[];
 }
 
 const TableInsumos = ({ filteredInsumos }: Props) => {
+  const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editInsumo, setEditInsumo] = useState<Insumo | null>(null);
+  const [isOpenSettings, setIsOpenSettings] = useState(false);
+  const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
 
   const handleEditInsumo = (insumo: Insumo) => {
     setIsEdit(true);
     setIsOpen(true);
     setEditInsumo(insumo);
+  };
+
+  const handleOpenSettings = (insumo: Insumo) => {
+    setIsOpenSettings(true);
+    setSelectedInsumo(insumo);
   };
 
   return (
@@ -133,6 +143,15 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
                 >
                   <Edit className="h-4 w-4 text-blue-500" />
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title="Mas opciones"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handleOpenSettings(insumo)}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
@@ -154,6 +173,25 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
             editInsumo={editInsumo}
             isEdit={isEdit}
           />
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpenSettings} onOpenChange={setIsOpenSettings}>
+        <AlertDialogContent className="max-w-6xl h-full overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Gestionar Datos del Insumo - {selectedInsumo?.nombre}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras gestionar diferentes datos de los insumos
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex-1">
+            <OptionsInsumos user={user} selectedInsumo={selectedInsumo} />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>
