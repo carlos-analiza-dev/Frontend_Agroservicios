@@ -30,13 +30,15 @@ import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import DetailsConfirmCompraInsumos from "./DetailsConfirmCompraInsumos";
+import { ObtenerDescuentoProveedorAndInsumo } from "@/apis/descuentos-insumos/accions/descuentos-proveedor-insumo";
+import { ObtenerEscalasProveedorAndInsumo } from "@/apis/escalas-insumos/accions/escalas-proveedor-insumo";
 
 interface FormCompra {
   sucursalId: string;
@@ -127,6 +129,24 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
   const proveedorId = watch("proveedorId");
   const tipoPago = watch("tipoPago");
   const numero_factura = watch("numero_factura");
+
+  const descuentosQueries = useQueries({
+    queries: insumosWatch.map((insumo) => ({
+      queryKey: ["descuento-proveedor-insumo", proveedorId, insumo.insumoId],
+      queryFn: () =>
+        ObtenerDescuentoProveedorAndInsumo(proveedorId, insumo.insumoId),
+      enabled: !!proveedorId && !!insumo.insumoId,
+    })),
+  });
+
+  const escalasQueries = useQueries({
+    queries: insumosWatch.map((insumo) => ({
+      queryKey: ["escalas-proveedor-insumo", proveedorId, insumo.insumoId],
+      queryFn: () =>
+        ObtenerEscalasProveedorAndInsumo(proveedorId, insumo.insumoId),
+      enabled: !!proveedorId && !!insumo.insumoId,
+    })),
+  });
 
   const handleProveedorChange = (value: string) => {
     setValue("proveedorId", value);
@@ -357,29 +377,65 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Label className="font-bold text-lg">Insumos de la Compra</Label>
-            <Button
-              type="button"
-              onClick={() =>
-                append({
-                  insumoId: "",
-                  cantidad: 0,
-                  bonificacion: 0,
-                  costoUnitario: 0,
-                  descuento: 0,
-                  impuesto: 0,
-                  paisId: "",
-                })
-              }
-              className="flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Agregar Insumo
-            </Button>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Productos de la Compra
+                </h2>
+
+                {proveedorSeleccionado && proveedorSeleccionado.tipo_escala && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-blue-700">
+                      Proveedor trabaja por{" "}
+                      <span className="font-bold uppercase">
+                        {proveedorSeleccionado.tipo_escala}
+                      </span>{" "}
+                      de productos
+                    </span>
+                  </div>
+                )}
+
+                {proveedorSeleccionado &&
+                  proveedorSeleccionado?.tipo_pago_default === "CREDITO" && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-green-700">
+                        Plazo de pago:{" "}
+                        <span className="font-bold">
+                          {proveedorSeleccionado.plazo || 30}
+                        </span>{" "}
+                        días
+                      </span>
+                    </div>
+                  )}
+              </div>
+
+              <Button
+                type="button"
+                onClick={() =>
+                  append({
+                    insumoId: "",
+                    cantidad: 0,
+                    bonificacion: 0,
+                    costoUnitario: 0,
+                    descuento: 0,
+                    impuesto: 0,
+                    paisId: "",
+                  })
+                }
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                <Plus size={18} />
+                Agregar Insumo
+              </Button>
+            </div>
           </div>
 
           {fields.map((field, index) => {
+            const descuentos = descuentosQueries[index]?.data;
+            const escalas = escalasQueries[index]?.data;
             const insumosSeleccionado = insumos.find(
               (p) => p.id === insumosWatch?.[index]?.insumoId
             );
@@ -402,121 +458,312 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
 
             return (
               <div key={field.id} className="p-4 border rounded-lg space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                  <div className="space-y-1">
-                    <Label>Insumo*</Label>
-                    <Select
-                      value={insumosWatch?.[index]?.insumoId || ""}
-                      onValueChange={(value) =>
-                        handleInsumoChange(index, value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Insumos</SelectLabel>
-                          {insumosDisponibles.map((ins) => (
-                            <SelectItem value={ins.id} key={ins.id}>
-                              {ins.nombre} - {ins.codigo}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    {errors.insumos?.[index]?.insumoId && (
-                      <p className="text-sm text-red-500">
-                        {errors.insumos[index]?.insumoId?.message}
-                      </p>
-                    )}
-                  </div>
+                {proveedorSeleccionado?.tipo_escala === "ESCALA" && (
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div className="space-y-1">
+                      <Label>Insumo*</Label>
+                      <Select
+                        value={insumosWatch?.[index]?.insumoId || ""}
+                        onValueChange={(value) =>
+                          handleInsumoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Insumos</SelectLabel>
+                            {insumosDisponibles.map((ins) => (
+                              <SelectItem value={ins.id} key={ins.id}>
+                                {ins.nombre} - {ins.codigo}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.insumos?.[index]?.insumoId && (
+                        <p className="text-sm text-red-500">
+                          {errors.insumos[index]?.insumoId?.message}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label>Cantidad*</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      {...register(`insumos.${index}.cantidad` as const, {
-                        required: "Cantidad requerida",
-                        valueAsNumber: true,
-                        min: { value: 1, message: "Mínimo 1" },
-                      })}
-                    />
-                    {errors.insumos?.[index]?.cantidad && (
-                      <p className="text-sm text-red-500">
-                        {errors.insumos[index]?.cantidad?.message}
-                      </p>
-                    )}
-                  </div>
+                    <div className="space-y-1">
+                      <Label>Cantidad*</Label>
+                      <Select
+                        value={
+                          insumosWatch?.[index]?.cantidad?.toString() || ""
+                        }
+                        onValueChange={(value) => {
+                          const cantidad = Number(value);
+                          const escala = escalas?.find(
+                            (d) => d.cantidad_comprada === cantidad
+                          );
 
-                  <div className="space-y-1">
-                    <Label>Bonificación</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      {...register(`insumos.${index}.bonificacion` as const, {
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Mínimo 0" },
-                      })}
-                    />
-                  </div>
+                          setValue(`insumos.${index}.cantidad`, cantidad);
 
-                  <div className="space-y-1">
-                    <Label>Costo Unitario</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      {...register(`insumos.${index}.costoUnitario` as const, {
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Mínimo 0" },
-                      })}
-                    />
-                  </div>
+                          setValue(
+                            `insumos.${index}.bonificacion`,
+                            escala?.bonificacion ?? 0
+                          );
+                          setValue(
+                            `insumos.${index}.costoUnitario`,
+                            escala?.costo ?? 0
+                          );
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar Cantidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Cantidad</SelectLabel>
+                            {escalas && escalas.length > 0 ? (
+                              escalas?.map((escala) => (
+                                <SelectItem
+                                  value={escala.cantidad_comprada.toString()}
+                                  key={escala.id}
+                                >
+                                  {escala.cantidad_comprada} →{" "}
+                                  {escala.bonificacion} Bonus
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <p>No se encontraron cantidades</p>
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.insumos?.[index]?.cantidad && (
+                        <p className="text-sm text-red-500">
+                          {errors.insumos[index]?.cantidad?.message}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label>Descuento %</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      {...register(`insumos.${index}.descuento` as const, {
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Mínimo 0%" },
-                        max: { value: 100, message: "Máximo 100%" },
-                      })}
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <Label>Bonificación</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(`insumos.${index}.bonificacion` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0" },
+                        })}
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label>Impuesto %</Label>
-                    <Select
-                      value={insumosWatch?.[index]?.impuesto?.toString()}
-                      onValueChange={(value) =>
-                        handleImpuestoChange(index, value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Impuesto</SelectLabel>
-                          {impuestos?.map((imp) => (
-                            <SelectItem
-                              value={String(parseFloat(imp.porcentaje))}
-                              key={imp.id}
-                            >
-                              {imp.nombre} - {parseFloat(imp.porcentaje)}%
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-1">
+                      <Label>Costo Unitario</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(
+                          `insumos.${index}.costoUnitario` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Descuento %</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        {...register(`insumos.${index}.descuento` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0%" },
+                          max: { value: 100, message: "Máximo 100%" },
+                        })}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Impuesto %</Label>
+                      <Select
+                        value={insumosWatch?.[index]?.impuesto?.toString()}
+                        onValueChange={(value) =>
+                          handleImpuestoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Impuesto</SelectLabel>
+                            {impuestos?.map((imp) => (
+                              <SelectItem
+                                value={String(parseFloat(imp.porcentaje))}
+                                key={imp.id}
+                              >
+                                {imp.nombre} - {parseFloat(imp.porcentaje)}%
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {proveedorSeleccionado?.tipo_escala === "DESCUENTO" && (
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div className="space-y-1">
+                      <Label>Insumo*</Label>
+                      <Select
+                        value={insumosWatch?.[index]?.insumoId || ""}
+                        onValueChange={(value) =>
+                          handleInsumoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Insumos</SelectLabel>
+                            {insumosDisponibles.map((ins) => (
+                              <SelectItem value={ins.id} key={ins.id}>
+                                {ins.nombre} - {ins.codigo}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.insumos?.[index]?.insumoId && (
+                        <p className="text-sm text-red-500">
+                          {errors.insumos[index]?.insumoId?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Cantidad*</Label>
+                      <Select
+                        value={
+                          insumosWatch?.[index]?.cantidad?.toString() || ""
+                        }
+                        onValueChange={(value) => {
+                          const cantidad = Number(value);
+                          const descuento = descuentos?.find(
+                            (d) => d.cantidad_comprada === cantidad
+                          );
+
+                          setValue(`insumos.${index}.cantidad`, cantidad);
+
+                          setValue(
+                            `insumos.${index}.descuento`,
+                            descuento?.descuentos ?? 0
+                          );
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar Cantidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Cantidad</SelectLabel>
+                            {descuentos && descuentos.length > 0 ? (
+                              descuentos?.map((desc) => (
+                                <SelectItem
+                                  value={desc.cantidad_comprada.toString()}
+                                  key={desc.id}
+                                >
+                                  {desc.cantidad_comprada} → {desc.descuentos}%
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <p>No se encontraron cantidades</p>
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      {errors.insumos?.[index]?.cantidad && (
+                        <p className="text-sm text-red-500">
+                          {errors.insumos[index]?.cantidad?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Bonificación</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...register(`insumos.${index}.bonificacion` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0" },
+                        })}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Costo Unitario</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(
+                          `insumos.${index}.costoUnitario` as const,
+                          {
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Mínimo 0" },
+                          }
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Descuento %</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        {...register(`insumos.${index}.descuento` as const, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Mínimo 0%" },
+                          max: { value: 100, message: "Máximo 100%" },
+                        })}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Impuesto %</Label>
+                      <Select
+                        value={insumosWatch?.[index]?.impuesto?.toString()}
+                        onValueChange={(value) =>
+                          handleImpuestoChange(index, value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Impuesto</SelectLabel>
+                            {impuestos?.map((imp) => (
+                              <SelectItem
+                                value={String(parseFloat(imp.porcentaje))}
+                                key={imp.id}
+                              >
+                                {imp.nombre} - {parseFloat(imp.porcentaje)}%
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 {insumosSeleccionado && (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-blue-50 rounded-lg text-sm">

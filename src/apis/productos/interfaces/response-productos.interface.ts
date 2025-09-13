@@ -18,6 +18,10 @@ export interface Producto {
   createdAt: Date;
   updatedAt: Date;
   categoriaId: string;
+  es_fraccionable?: boolean;
+  cantidad_producto?: number;
+  cantidad_fraccionada?: number;
+  precio_fraccionado?: number;
   servicio: null;
   preciosPorPais: PreciosPorPai[];
   marca: Categoria;

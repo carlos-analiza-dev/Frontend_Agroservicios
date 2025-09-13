@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "@/interfaces/auth/user";
 import React from "react";
 import TableDescuentosInsumo from "./TableDescuentosInsumo";
+import TableEscalaInsumo from "./TableEscalaInsumo";
 
 interface Props {
   user: User | undefined;
@@ -23,7 +24,7 @@ const OptionsInsumos = ({ user, selectedInsumo }: Props) => {
         </TabsList>
 
         <TabsContent value="escala" className="flex-1 overflow-auto">
-          Tabla Escalas Insumos
+          <TableEscalaInsumo user={user} selectedInsumo={selectedInsumo} />
         </TabsContent>
         <TabsContent value="descuento" className="flex-1 overflow-auto">
           <TableDescuentosInsumo user={user} selectedInsumo={selectedInsumo} />

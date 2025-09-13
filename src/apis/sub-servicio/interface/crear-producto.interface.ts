@@ -16,4 +16,8 @@ export interface CrearSubServicio {
   proveedorId?: string;
   categoriaId?: string;
   paisId?: string;
+  es_fraccionable?: boolean;
+  cantidad_producto?: number;
+  cantidad_fraccionada?: number;
+  precio_fraccionado?: number;
 }

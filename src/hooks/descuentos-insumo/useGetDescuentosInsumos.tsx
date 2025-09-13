@@ -1,4 +1,4 @@
-import { ObtenerDescuentosInsumo } from "@/apis/descuentos-insumos/accions/obtener-descuento-producto";
+import { ObtenerDescuentosInsumo } from "@/apis/descuentos-insumos/accions/obtener-descuento-insumo";
 import { useQuery } from "@tanstack/react-query";
 
 const useGetDescuentosInsumos = (insumoId: string) => {

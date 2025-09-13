@@ -268,33 +268,35 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         </Select>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="unidad_venta" className="font-bold">
+          Unidad de Venta*
+        </Label>
+        <Select
+          defaultValue={isEdit ? editSubServicio?.unidad_venta : "unidad"}
+          onValueChange={(value) => setValue("unidad_venta", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona la unidad" />
+          </SelectTrigger>
+          <SelectContent>
+            {UnidadMedida.map((unidad) => (
+              <SelectItem key={unidad.value} value={unidad.value}>
+                {unidad.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.unidad_venta && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.unidad_venta.message as string}
+          </p>
+        )}
+      </div>
+
       {!isEdit && (
         <>
           <div className="flex justify-between">
-            <div className="space-y-2">
-              <Label htmlFor="precio" className="font-bold">
-                Precio*
-              </Label>
-              <Input
-                id="precio"
-                type="number"
-                step="0.01"
-                {...register("precio", {
-                  required: "El precio es requerido",
-                  min: { value: 0, message: "El precio no puede ser negativo" },
-                })}
-                placeholder="0.00"
-                defaultValue={
-                  isEdit ? editSubServicio?.preciosPorPais?.[0]?.precio : ""
-                }
-              />
-              {errors.precio && (
-                <p className="text-sm font-medium text-red-500">
-                  {errors.precio.message as string}
-                </p>
-              )}
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="costo" className="font-bold">
                 Costo*
@@ -315,6 +317,29 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
               {errors.costo && (
                 <p className="text-sm font-medium text-red-500">
                   {errors.costo.message as string}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="precio" className="font-bold">
+                Precio*
+              </Label>
+              <Input
+                id="precio"
+                type="number"
+                step="0.01"
+                {...register("precio", {
+                  required: "El precio es requerido",
+                  min: { value: 0, message: "El precio no puede ser negativo" },
+                })}
+                placeholder="0.00"
+                defaultValue={
+                  isEdit ? editSubServicio?.preciosPorPais?.[0]?.precio : ""
+                }
+              />
+              {errors.precio && (
+                <p className="text-sm font-medium text-red-500">
+                  {errors.precio.message as string}
                 </p>
               )}
             </div>
@@ -341,32 +366,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="unidad_venta" className="font-bold">
-          Unidad de Venta*
-        </Label>
-        <Select
-          defaultValue={isEdit ? editSubServicio?.unidad_venta : "unidad"}
-          onValueChange={(value) => setValue("unidad_venta", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona la unidad" />
-          </SelectTrigger>
-          <SelectContent>
-            {UnidadMedida.map((unidad) => (
-              <SelectItem key={unidad.value} value={unidad.value}>
-                {unidad.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.unidad_venta && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.unidad_venta.message as string}
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">
