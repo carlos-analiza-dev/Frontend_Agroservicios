@@ -64,6 +64,10 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         precio: Number(editSubServicio.preciosPorPais?.[0]?.precio),
         costo: Number(editSubServicio.preciosPorPais?.[0]?.costo),
         taxId: editSubServicio.tax?.id,
+        compra_minima: editSubServicio.compra_minima || 1,
+        distribucion_minima: editSubServicio.distribucion_minima || 1,
+        venta_minima: editSubServicio.venta_minima || 1,
+        es_compra_bodega: editSubServicio.es_compra_bodega || false,
       });
       setValue("unidad_venta", editSubServicio.unidad_venta);
     } else {
@@ -81,6 +85,10 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         precio: undefined,
         costo: undefined,
         taxId: undefined,
+        compra_minima: 1,
+        distribucion_minima: 1,
+        venta_minima: 1,
+        es_compra_bodega: false,
       });
     }
   }, [isEdit, editSubServicio, reset, setValue]);
@@ -144,6 +152,9 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       tipo: "producto",
       precio: Number(data.precio),
       costo: Number(data.costo),
+      compra_minima: Number(data.compra_minima),
+      distribucion_minima: Number(data.distribucion_minima),
+      venta_minima: Number(data.venta_minima),
       paisId: user?.pais.id,
     };
     if (isEdit) {
@@ -292,6 +303,108 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
             {errors.unidad_venta.message as string}
           </p>
         )}
+      </div>
+
+      {/* Nuevos campos de mínimos */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="compra_minima" className="font-bold">
+            Compra Mínima*
+          </Label>
+          <Input
+            id="compra_minima"
+            type="number"
+            min="1"
+            step="1"
+            {...register("compra_minima", {
+              required: "La compra mínima es requerida",
+              min: {
+                value: 1,
+                message: "La compra mínima debe ser al menos 1",
+              },
+            })}
+            placeholder="Ej: 100"
+            defaultValue={isEdit ? editSubServicio?.compra_minima || 1 : 1}
+          />
+          {errors.compra_minima && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.compra_minima.message as string}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="distribucion_minima" className="font-bold">
+            Distribución Mínima*
+          </Label>
+          <Input
+            id="distribucion_minima"
+            type="number"
+            min="1"
+            step="1"
+            {...register("distribucion_minima", {
+              required: "La distribución mínima es requerida",
+              min: {
+                value: 1,
+                message: "La distribución mínima debe ser al menos 1",
+              },
+            })}
+            placeholder="Ej: 50"
+            defaultValue={
+              isEdit ? editSubServicio?.distribucion_minima || 1 : 1
+            }
+          />
+          {errors.distribucion_minima && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.distribucion_minima.message as string}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="venta_minima" className="font-bold">
+            Venta Mínima*
+          </Label>
+          <Input
+            id="venta_minima"
+            type="number"
+            min="1"
+            step="1"
+            {...register("venta_minima", {
+              required: "La venta mínima es requerida",
+              min: { value: 1, message: "La venta mínima debe ser al menos 1" },
+            })}
+            placeholder="Ej: 10"
+            defaultValue={isEdit ? editSubServicio?.venta_minima || 1 : 1}
+          />
+          {errors.venta_minima && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.venta_minima.message as string}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="font-bold">Tipo de Compra</Label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="es_compra_bodega"
+            {...register("es_compra_bodega")}
+            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            defaultChecked={
+              isEdit ? editSubServicio?.es_compra_bodega || false : false
+            }
+          />
+          <Label htmlFor="es_compra_bodega" className="text-sm font-normal">
+            Compra directa a bodega
+          </Label>
+        </div>
+        <p className="text-sm text-gray-500">
+          Marque esta opción si el producto se compra directamente a bodega en
+          lugar de por unidad
+        </p>
       </div>
 
       {!isEdit && (

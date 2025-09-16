@@ -139,22 +139,6 @@ const TableCompras = ({ comprasData, isLoading }: Props) => {
                 formatDate={formatDate}
                 formatCurrency={formatCurrency}
               />
-
-              <div>
-                <h3 className="font-semibold mb-3">Productos Comprados</h3>
-                <TableDetailsProductos
-                  selectedCompra={selectedCompra}
-                  formatCurrency={formatCurrency}
-                />
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-3">Lotes Recibidos</h3>
-                <TableDetailsLotes
-                  selectedCompra={selectedCompra}
-                  formatCurrency={formatCurrency}
-                />
-              </div>
             </div>
           )}
         </AlertDialogContent>

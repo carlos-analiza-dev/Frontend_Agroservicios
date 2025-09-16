@@ -18,6 +18,10 @@ const InfoCompra = ({ selectedCompra, formatDate, formatCurrency }: Props) => {
           {selectedCompra.proveedor.nombre_legal}
         </p>
         <p>
+          <span className="font-medium">Factura:</span>{" "}
+          {selectedCompra.numero_factura}
+        </p>
+        <p>
           <span className="font-medium">NIT/RTN:</span>{" "}
           {selectedCompra.proveedor.nit_rtn}
         </p>

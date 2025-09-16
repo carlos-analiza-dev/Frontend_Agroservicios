@@ -87,6 +87,7 @@ const TableDescuentosInsumo = ({ selectedInsumo, user }: Props) => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedDescuento, setSelectedDescuento] =
     useState<DescuentoLocal | null>(null);
+  const [selectedProveedor, setSelectedProveedor] = useState("");
 
   const {
     register,
@@ -105,6 +106,7 @@ const TableDescuentosInsumo = ({ selectedInsumo, user }: Props) => {
       });
       toast.success("Descuento creado exitosamente");
       reset();
+      setSelectedProveedor("");
     },
     onError: (error) => {
       if (isAxiosError(error)) {
@@ -275,7 +277,13 @@ const TableDescuentosInsumo = ({ selectedInsumo, user }: Props) => {
             <Label htmlFor="proveedorId" className="font-bold">
               Proveedor
             </Label>
-            <Select onValueChange={(value) => setValue("proveedorId", value)}>
+            <Select
+              value={selectedProveedor}
+              onValueChange={(value) => {
+                setValue("proveedorId", value);
+                setSelectedProveedor(value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un proveedor" />
               </SelectTrigger>

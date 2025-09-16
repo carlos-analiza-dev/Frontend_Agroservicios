@@ -88,6 +88,7 @@ const TableEscalaInsumo = ({ selectedInsumo, user }: Props) => {
   const [selectedEscala, setSelectedEscala] = useState<EscalaLocal | null>(
     null
   );
+  const [selectedProveedor, setSelectedProveedor] = useState("");
 
   const { data: escalasData, isLoading } = useGetEscalasInsumos(
     limit,
@@ -118,6 +119,7 @@ const TableEscalaInsumo = ({ selectedInsumo, user }: Props) => {
       });
       toast.success("Escala creada exitosamente");
       reset();
+      setSelectedProveedor("");
     },
     onError: (error) => {
       if (isAxiosError(error)) {
@@ -324,7 +326,13 @@ const TableEscalaInsumo = ({ selectedInsumo, user }: Props) => {
             <Label htmlFor="proveedorId" className="font-bold">
               Proveedor
             </Label>
-            <Select onValueChange={(value) => setValue("proveedorId", value)}>
+            <Select
+              value={selectedProveedor}
+              onValueChange={(value) => {
+                setValue("proveedorId", value);
+                setSelectedProveedor(value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un proveedor" />
               </SelectTrigger>
