@@ -1,5 +1,6 @@
-import { CreateUser } from "@/apis/users/accions/crear-usuario";
-import { CrearUsuario } from "@/apis/users/interfaces/create-user.interface";
+import { actualizarCliente } from "@/apis/clientes/accions/actualizar-cliente";
+import { CreateCliente } from "@/apis/clientes/accions/crear-cliente";
+import { CrearClienteInterface } from "@/apis/clientes/interfaces/crear-cliente.interface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,27 +12,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { sexos } from "@/helpers/data/sexos";
-import useGetDeptosActivesByPais from "@/hooks/departamentos/useGetDeptosActivesByPais";
-import useGetMunicipiosActivosByDepto from "@/hooks/municipios/useGetMunicipiosActivosByDepto";
+import useGetClienteById from "@/hooks/clientes/useGetClienteById";
+import useGetDepartamentosByPais from "@/hooks/departamentos/useGetDepartamentosByPais";
+import useGetMunicipiosByDepto from "@/hooks/municipios/useGetMunicipiosByDepto";
 import useGetPaisesActivos from "@/hooks/paises/useGetPaisesActivos";
 import usePaisesById from "@/hooks/paises/usePaisesById";
-import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
-import { useMutation } from "@tanstack/react-query";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
-const FormRegister = () => {
-  const [prefijoNumber, setPrefijoNumber] = useState("");
-  const router = useRouter();
-  const [codigoPais, setCodigoPais] = useState("");
-  const [paisId, setPaisId] = useState("");
-  const [departamentoId, setDepartamentoId] = useState("");
+interface Props {
+  clienteId?: string;
+  onSuccess: () => void;
+}
 
-  const { data: sucursales } = useGetSucursalesPais(paisId);
+const FormClientes = ({ clienteId, onSuccess }: Props) => {
+  const [prefijoNumber, setPrefijoNumber] = useState("");
+  const { data: cliente } = useGetClienteById(clienteId ?? "");
+  const queryClient = useQueryClient();
+  const [codigoPais, setCodigoPais] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -39,21 +43,35 @@ const FormRegister = () => {
     formState: { errors },
     setValue,
     reset,
-  } = useForm<CrearUsuario>({
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-      identificacion: "",
-      direccion: "",
-      telefono: "",
-      pais: "",
-      departamento: "",
-      municipio: "",
-      sucursal: "",
-      sexo: "",
-    },
-  });
+    watch,
+  } = useForm<CrearClienteInterface>();
+
+  useEffect(() => {
+    if (cliente) {
+      reset({
+        email: cliente.data.email,
+        nombre: cliente.data.nombre,
+        identificacion: cliente.data.identificacion,
+        direccion: cliente.data.direccion,
+        telefono: cliente.data.telefono.split(" ")[1],
+        pais: cliente.data.pais.id,
+        sexo: cliente.data.sexo,
+        departamento: cliente.data.departamento.id,
+        municipio: cliente.data.municipio.id,
+        isActive: cliente.data.isActive,
+      });
+
+      setCodigoPais(cliente.data.pais.code);
+      setPrefijoNumber(cliente.data.pais.code_phone);
+
+      setValue("departamento", cliente.data.departamento.id, {
+        shouldValidate: true,
+      });
+      setValue("municipio", cliente.data.municipio.id, {
+        shouldValidate: true,
+      });
+    }
+  }, [cliente, reset, setValue]);
 
   const ID_REGEX = {
     HN: {
@@ -79,11 +97,10 @@ const FormRegister = () => {
   };
 
   const { data: paises } = useGetPaisesActivos();
-
-  const { data: departamentos } = useGetDeptosActivesByPais(paisId);
-
-  const { data: municipios } = useGetMunicipiosActivosByDepto(departamentoId);
-
+  const paisId = watch("pais");
+  const { data: departamentos } = useGetDepartamentosByPais(paisId);
+  const departamentoId = watch("departamento");
+  const { data: municipios } = useGetMunicipiosByDepto(departamentoId);
   const { data: pais } = usePaisesById(paisId);
 
   useEffect(() => {
@@ -109,13 +126,13 @@ const FormRegister = () => {
   };
 
   const mutation = useMutation({
-    mutationFn: CreateUser,
+    mutationFn: CreateCliente,
     onSuccess: () => {
-      toast.success("Usuario creado correctamente");
+      toast.success("Cliente creado correctamente");
       reset({
         email: "",
         password: "",
-        name: "",
+        nombre: "",
         identificacion: "",
         direccion: "",
         telefono: "",
@@ -123,15 +140,12 @@ const FormRegister = () => {
         departamento: "",
         municipio: "",
         sexo: "",
-        sucursal: "",
       });
-      setPaisId("");
-      setDepartamentoId("");
+      queryClient.invalidateQueries({ queryKey: ["clientes-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["cliente"] });
+      onSuccess();
       setCodigoPais("");
       setPrefijoNumber("");
-      setTimeout(() => {
-        router.push("/");
-      }, 3000);
     },
     onError: (error) => {
       if (isAxiosError(error)) {
@@ -140,12 +154,43 @@ const FormRegister = () => {
           ? messages[0]
           : typeof messages === "string"
             ? messages
-            : "Hubo un error al crear el médico";
+            : "Hubo un error al crear el cliente";
 
         toast.error(errorMessage);
       } else {
         toast.error(
-          "Hubo un error al momento de crear el usuario. Inténtalo de nuevo."
+          "Hubo un error al momento de crear el cliente. Inténtalo de nuevo."
+        );
+      }
+    },
+  });
+
+  const mutationUpdate = useMutation({
+    mutationFn: (data: CrearClienteInterface) =>
+      actualizarCliente(clienteId!, {
+        ...data,
+        telefono: `${prefijoNumber} ${data.telefono}`,
+      }),
+    onSuccess: () => {
+      toast.success("Cliente actualizado correctamente");
+      queryClient.invalidateQueries({ queryKey: ["clientes-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["cliente"] });
+      onSuccess();
+    },
+
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const messages = error.response?.data?.message;
+        const errorMessage = Array.isArray(messages)
+          ? messages[0]
+          : typeof messages === "string"
+            ? messages
+            : "Hubo un error al actualizar el cliente";
+
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          "Hubo un error al momento de actualizar el cliente. Inténtalo de nuevo."
         );
       }
     },
@@ -165,15 +210,18 @@ const FormRegister = () => {
     );
   };
 
-  const onSubmit = (data: CrearUsuario) => {
-    const telefonoConPrefijo = `${prefijoNumber} ${data.telefono}`;
+  const onSubmit = (data: CrearClienteInterface) => {
+    if (clienteId) {
+      mutationUpdate.mutate(data);
+    } else {
+      const telefonoConPrefijo = `${prefijoNumber} ${data.telefono}`;
+      const payload: CrearClienteInterface = {
+        ...data,
+        telefono: telefonoConPrefijo,
+      };
 
-    const payload: CrearUsuario = {
-      ...data,
-      telefono: telefonoConPrefijo,
-    };
-
-    mutation.mutate(payload);
+      mutation.mutate(payload);
+    }
   };
 
   return (
@@ -197,30 +245,41 @@ const FormRegister = () => {
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Contraseña*</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            {...register("password", {
-              required: "La contraseña es requerida",
-              validate: validatePassword,
-            })}
-          />
-          {errors.password && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.password.message as string}
-            </p>
-          )}
-        </div>
+        {!clienteId && (
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña*</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password", {
+                  required: "La contraseña es requerida",
+                  validate: validatePassword,
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-sm font-medium text-red-500">
+                {errors.password.message as string}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2">
-          <Label htmlFor="name">Nombre Completo*</Label>
+          <Label htmlFor="nombre">Nombre Completo*</Label>
           <Input
-            id="name"
+            id="nombre"
             placeholder="Juan Pérez"
-            {...register("name", {
+            {...register("nombre", {
               required: "El nombre es requerido",
               minLength: {
                 value: 3,
@@ -228,9 +287,9 @@ const FormRegister = () => {
               },
             })}
           />
-          {errors.name && (
+          {errors.nombre && (
             <p className="text-sm font-medium text-red-500">
-              {errors.name.message as string}
+              {errors.nombre.message as string}
             </p>
           )}
         </div>
@@ -238,9 +297,11 @@ const FormRegister = () => {
         <div className="space-y-2">
           <Label htmlFor="pais">País*</Label>
           <Select
+            value={watch("pais")}
             onValueChange={(value) => {
               setValue("pais", value);
-              setPaisId(value);
+              setValue("departamento", "");
+              setValue("municipio", "");
             }}
           >
             <SelectTrigger>
@@ -264,23 +325,25 @@ const FormRegister = () => {
         <div className="space-y-2">
           <Label htmlFor="departamento">Departamento*</Label>
           <Select
+            value={watch("departamento") || cliente?.data.departamento.id}
             onValueChange={(value) => {
               setValue("departamento", value);
-              setDepartamentoId(value);
+              setValue("municipio", "");
             }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona un departamento" />
             </SelectTrigger>
             <SelectContent>
-              {departamentos && departamentos.data.length > 0 ? (
-                departamentos?.data.map((depto) => (
+              {departamentos &&
+              departamentos?.data?.departamentos?.length > 0 ? (
+                departamentos.data.departamentos.map((depto) => (
                   <SelectItem key={depto.id} value={depto.id}>
                     {depto.nombre}
                   </SelectItem>
                 ))
               ) : (
-                <p>No se encontraron departamentos</p>
+                <p>No hay departamentos disponibles</p>
               )}
             </SelectContent>
           </Select>
@@ -294,6 +357,7 @@ const FormRegister = () => {
         <div className="space-y-2">
           <Label htmlFor="municipio">Municipio*</Label>
           <Select
+            value={watch("municipio") || cliente?.data.municipio.id}
             onValueChange={(value) => {
               setValue("municipio", value);
             }}
@@ -302,49 +366,20 @@ const FormRegister = () => {
               <SelectValue placeholder="Selecciona un municipio" />
             </SelectTrigger>
             <SelectContent>
-              {municipios && municipios.data.length > 0 ? (
-                municipios?.data.map((mun) => (
+              {municipios && municipios?.data?.municipios?.length > 0 ? (
+                municipios.data.municipios.map((mun) => (
                   <SelectItem key={mun.id} value={mun.id}>
                     {mun.nombre}
                   </SelectItem>
                 ))
               ) : (
-                <p>No se encontraron municipios</p>
+                <p>No hay municipios disponibles</p>
               )}
             </SelectContent>
           </Select>
           {errors.municipio && (
             <p className="text-sm font-medium text-red-500">
               {errors.municipio.message as string}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="sucursal">Sucursal</Label>
-          <Select
-            onValueChange={(value) => {
-              setValue("sucursal", value);
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona una sucursal" />
-            </SelectTrigger>
-            <SelectContent>
-              {sucursales && sucursales.length > 0 ? (
-                sucursales?.map((sucursal) => (
-                  <SelectItem key={sucursal.id} value={sucursal.id}>
-                    {sucursal.nombre} - {sucursal.tipo}
-                  </SelectItem>
-                ))
-              ) : (
-                <p>No se encontraron sucursales</p>
-              )}
-            </SelectContent>
-          </Select>
-          {errors.sucursal && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.sucursal.message as string}
             </p>
           )}
         </div>
@@ -419,6 +454,7 @@ const FormRegister = () => {
             onValueChange={(value) => {
               setValue("sexo", value);
             }}
+            value={watch("sexo")}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona una opción" />
@@ -437,29 +473,35 @@ const FormRegister = () => {
             </p>
           )}
         </div>
+
+        {clienteId && (
+          <div className="space-y-2">
+            <Label htmlFor="isActive">Estado</Label>
+            <Select
+              onValueChange={(value) => {
+                setValue("isActive", value === "true");
+              }}
+              value={watch("isActive")?.toString() || "true"}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Activo</SelectItem>
+                <SelectItem value="false">Inactivo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
-      <div className="mt-6">
-        <Button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700"
-        >
-          Registrarse
+      <div className="mt-6 flex justify-end">
+        <Button type="submit">
+          {clienteId ? "Editar Cliente" : "Crear Cliente"}
         </Button>
-      </div>
-      <div className="flex justify-between">
-        <Link href="/reset-password" className="text-green-600 hover:underline">
-          ¿Olvidaste tu contraseña?
-        </Link>
-        <div className="flex items-center gap-4">
-          <p>¿Ya tienes una cuenta?</p>
-          <Link href="/" className="text-green-600 hover:underline">
-            Iniciar Sesión
-          </Link>
-        </div>
       </div>
     </form>
   );
 };
 
-export default FormRegister;
+export default FormClientes;

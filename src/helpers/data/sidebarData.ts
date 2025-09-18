@@ -22,6 +22,7 @@ import {
   HousePlus,
   ShoppingBag,
   TicketPercent,
+  UsersIcon,
 } from "lucide-react";
 
 export const navItems = [
@@ -35,6 +36,7 @@ export const navItems = [
     category: "Gestión",
     items: [
       { name: "Usuarios", href: "/users-admin", icon: Users },
+      { name: "Clientes", href: "/clientes-admin", icon: UsersIcon },
       { name: "Paises", href: "/paises-admin", icon: Globe },
       { name: "Departamentos", href: "/deptos-admin", icon: Locate },
       { name: "Sucursales", href: "/sucursales-admin", icon: HousePlus },
