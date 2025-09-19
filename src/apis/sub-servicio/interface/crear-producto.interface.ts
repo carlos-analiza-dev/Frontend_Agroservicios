@@ -19,5 +19,8 @@ export interface CrearSubServicio {
   compra_minima?: number;
   distribucion_minima?: number;
   venta_minima?: number;
+  unidad_fraccionamiento?: number;
+  contenido?: number;
+  tipo_fraccionamiento?: string;
   es_compra_bodega?: boolean;
 }

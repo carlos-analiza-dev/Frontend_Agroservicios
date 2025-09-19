@@ -21,7 +21,7 @@ import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActiv
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -34,6 +34,7 @@ interface Props {
 const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [unidadVentaSeleccionada, setUnidadVentaSeleccionada] = useState("");
 
   const { data: marcasActivas } = useGetMarcasActivas();
   const { data: proveedoresActivos } = useGetProveedoresActivos();
@@ -45,8 +46,62 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CrearSubServicio>();
+
+  const unidadVenta = watch("unidad_venta");
+
+  useEffect(() => {
+    setUnidadVentaSeleccionada(unidadVenta || "");
+  }, [unidadVenta]);
+
+  const getUnidadesFraccionamiento = () => {
+    switch (unidadVentaSeleccionada) {
+      case "kilogramo":
+        return UnidadMedida.filter((u) =>
+          ["gramo", "libra", "onza"].includes(u.value)
+        );
+
+      case "gramo":
+        return UnidadMedida.filter((u) => ["miligramo"].includes(u.value));
+
+      case "libra":
+        return UnidadMedida.filter((u) => ["onza"].includes(u.value));
+
+      case "galon":
+        return UnidadMedida.filter((u) =>
+          ["litro", "mililitro"].includes(u.value)
+        );
+
+      case "litro":
+        return UnidadMedida.filter((u) =>
+          ["mililitro", "centilitro"].includes(u.value)
+        );
+
+      case "mililitro":
+        return UnidadMedida.filter((u) => ["centilitro"].includes(u.value));
+
+      case "metro":
+        return UnidadMedida.filter((u) =>
+          ["centimetro", "milimetro", "pie", "pulgada"].includes(u.value)
+        );
+
+      case "m2":
+        return UnidadMedida.filter((u) => ["cm2", "pie2"].includes(u.value));
+
+      case "m3":
+        return UnidadMedida.filter((u) =>
+          ["litro", "mililitro"].includes(u.value)
+        );
+
+      case "pieza":
+        return UnidadMedida.filter((u) => ["unidad"].includes(u.value));
+
+      default:
+        return [];
+    }
+  };
 
   useEffect(() => {
     if (isEdit && editSubServicio) {
@@ -54,6 +109,9 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         nombre: editSubServicio.nombre,
         tipo: editSubServicio.tipo,
         unidad_venta: editSubServicio.unidad_venta,
+        unidad_fraccionamiento: editSubServicio.unidad_fraccionamiento || 1,
+        tipo_fraccionamiento: editSubServicio.tipo_fraccionamiento,
+        contenido: editSubServicio.contenido || 1,
         disponible: editSubServicio.disponible,
         isActive: editSubServicio.isActive,
         marcaId: editSubServicio.marca.id,
@@ -69,12 +127,15 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         venta_minima: editSubServicio.venta_minima || 1,
         es_compra_bodega: editSubServicio.es_compra_bodega || false,
       });
-      setValue("unidad_venta", editSubServicio.unidad_venta);
+      setUnidadVentaSeleccionada(editSubServicio.unidad_venta);
     } else {
       reset({
         nombre: "",
         tipo: "producto",
         unidad_venta: "unidad",
+        unidad_fraccionamiento: 1,
+        tipo_fraccionamiento: undefined,
+        contenido: 1,
         disponible: true,
         isActive: true,
         marcaId: undefined,
@@ -155,6 +216,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
       compra_minima: Number(data.compra_minima),
       distribucion_minima: Number(data.distribucion_minima),
       venta_minima: Number(data.venta_minima),
+      contenido: Number(data.contenido) || 1,
       paisId: user?.pais.id,
     };
     if (isEdit) {
@@ -285,7 +347,13 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
         </Label>
         <Select
           defaultValue={isEdit ? editSubServicio?.unidad_venta : "unidad"}
-          onValueChange={(value) => setValue("unidad_venta", value)}
+          onValueChange={(value) => {
+            setValue("unidad_venta", value);
+            setUnidadVentaSeleccionada(value);
+
+            setValue("unidad_fraccionamiento", undefined);
+            setValue("contenido", 1);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona la unidad" />
@@ -304,6 +372,88 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
           </p>
         )}
       </div>
+
+      {unidadVentaSeleccionada && unidadVentaSeleccionada !== "unidad" && (
+        <div className="block gap-4 p-4 border rounded-lg bg-gray-50">
+          <h3 className="col-span-full font-bold text-lg">Fraccionamiento</h3>
+
+          <div className="space-y-2">
+            <Label htmlFor="tipo_fraccionamiento" className="font-bold">
+              Tipo de Fraccionamiento
+            </Label>
+            <Select
+              defaultValue={
+                isEdit && editSubServicio?.tipo_fraccionamiento
+                  ? editSubServicio.tipo_fraccionamiento
+                  : undefined
+              }
+              onValueChange={(value) => setValue("tipo_fraccionamiento", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona unidad de fraccionamiento" />
+              </SelectTrigger>
+              <SelectContent>
+                {getUnidadesFraccionamiento().map((unidad) => (
+                  <SelectItem key={unidad.value} value={unidad.value}>
+                    {unidad.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="unidad_fraccionamiento" className="font-bold">
+              Unidad de Fraccionamiento
+            </Label>
+            <Input
+              id="unidad_fraccionamiento"
+              type="number"
+              {...register("unidad_fraccionamiento", {
+                min: {
+                  value: 0.0001,
+                  message: "La unidad de fraccionamiento debe ser mayor a 0",
+                },
+              })}
+              placeholder="Ej: 1000 (para kg a gramos)"
+              defaultValue={
+                isEdit ? editSubServicio?.unidad_fraccionamiento || 1 : 1
+              }
+            />
+            {errors.unidad_fraccionamiento && (
+              <p className="text-sm font-medium text-red-500">
+                {errors.unidad_fraccionamiento.message as string}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contenido" className="font-bold">
+              Contenido por Fracción
+            </Label>
+            <Input
+              id="contenido"
+              type="number"
+              {...register("contenido", {
+                min: {
+                  value: 0.0001,
+                  message: "El contenido debe ser mayor a 0",
+                },
+              })}
+              placeholder="Ej: 1000 (para kg a gramos)"
+              defaultValue={isEdit ? editSubServicio?.contenido || 1 : 1}
+            />
+            {errors.contenido && (
+              <p className="text-sm font-medium text-red-500">
+                {errors.contenido.message as string}
+              </p>
+            )}
+            <p className="text-xs text-gray-500">
+              Cuántas unidades de fraccionamiento equivalen a 1 unidad principal
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Nuevos campos de mínimos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
