@@ -23,6 +23,8 @@ import {
   ShoppingBag,
   TicketPercent,
   UsersIcon,
+  ChartColumnStacked,
+  ChartNoAxesGantt,
 } from "lucide-react";
 
 export const navItems = [
@@ -40,6 +42,16 @@ export const navItems = [
       { name: "Paises", href: "/paises-admin", icon: Globe },
       { name: "Departamentos", href: "/deptos-admin", icon: Locate },
       { name: "Sucursales", href: "/sucursales-admin", icon: HousePlus },
+      {
+        name: "Datos Empresa",
+        href: "/datos-empresa",
+        icon: ChartColumnStacked,
+      },
+      {
+        name: "Datos Factura",
+        href: "/rangos-facturas",
+        icon: ChartNoAxesGantt,
+      },
       {
         name: "Servicios",
         href: "/servicios-admin",
