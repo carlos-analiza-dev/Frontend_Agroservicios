@@ -48,7 +48,7 @@ export const navItems = [
         icon: ChartColumnStacked,
       },
       {
-        name: "Datos Factura",
+        name: "Rangos Factura",
         href: "/rangos-facturas",
         icon: ChartNoAxesGantt,
       },
