@@ -22,6 +22,7 @@ import {
   Package2,
   ImageIcon,
   Settings,
+  Eye,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -37,6 +38,7 @@ import FormEditPrecios from "./FormEditPrecios";
 import ProductoImagenes from "./ProductoImagenes";
 import OptionsProducto from "./OptionsProducto";
 import { useAuthStore } from "@/providers/store/useAuthStore";
+import LotesByProducto from "./LotesByProducto";
 
 interface Props {
   productos: Producto[];
@@ -50,6 +52,8 @@ const TableProducts = ({ productos }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenPrecios, setIsOpenPrecios] = useState(false);
   const [isOpenSettings, setIsOpenSettings] = useState(false);
+  const [isOpenLotes, setIsOpenLotes] = useState(false);
+  const [productoId, setProductoId] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(
     null
@@ -74,6 +78,11 @@ const TableProducts = ({ productos }: Props) => {
   const handleOpenSettings = (producto: Producto) => {
     setIsOpenSettings(true);
     setSelectedProducto(producto);
+  };
+
+  const handleViewLotes = (productoId: string) => {
+    setIsOpenLotes(true);
+    setProductoId(productoId);
   };
 
   return (
@@ -298,6 +307,15 @@ const TableProducts = ({ productos }: Props) => {
                           onClick={() => handleEditProducto(producto)}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Lotes"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleViewLotes(producto.id)}
+                        >
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
@@ -660,6 +678,24 @@ const TableProducts = ({ productos }: Props) => {
           </AlertDialogHeader>
           <div className="flex-1">
             <OptionsProducto user={user} selectedProducto={selectedProducto} />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpenLotes} onOpenChange={setIsOpenLotes}>
+        <AlertDialogContent className="max-w-6xl h-full overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Lotes de Producto</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras observar los lotes del producto
+              seleccionado
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex-1">
+            <LotesByProducto productoId={productoId} user={user} />
           </div>
         </AlertDialogContent>
       </AlertDialog>

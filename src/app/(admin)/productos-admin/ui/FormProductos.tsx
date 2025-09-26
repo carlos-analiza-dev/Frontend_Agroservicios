@@ -429,7 +429,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
 
           <div className="space-y-2">
             <Label htmlFor="contenido" className="font-bold">
-              Contenido por Fracción
+              Contenido
             </Label>
             <Input
               id="contenido"

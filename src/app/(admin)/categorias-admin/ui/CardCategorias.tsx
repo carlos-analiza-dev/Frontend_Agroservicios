@@ -49,6 +49,10 @@ const CardCategorias = ({ categoria }: Props) => {
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground space-y-1">
+            <div>
+              <span className="font-medium">Tipo:</span>{" "}
+              <Badge>{categoria.tipo}</Badge>
+            </div>
             <p>
               <span className="font-medium">Creada:</span>{" "}
               {new Date(categoria.created_at).toLocaleDateString()}

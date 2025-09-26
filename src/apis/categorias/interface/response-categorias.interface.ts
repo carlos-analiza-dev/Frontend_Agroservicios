@@ -8,6 +8,7 @@ export interface ResponseCategoriasInterface {
 export interface Categoria {
   id: string;
   nombre: string;
+  tipo: string;
   descripcion: string;
   is_active: boolean;
   created_at: Date;

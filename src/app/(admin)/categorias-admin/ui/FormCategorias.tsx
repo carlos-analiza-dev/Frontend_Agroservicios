@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import React, { useEffect } from "react";
@@ -28,6 +35,7 @@ const FormCategorias = ({ onSucces, editCategoria, isEdit }: Props) => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CrearCatInterface>();
 
@@ -37,6 +45,7 @@ const FormCategorias = ({ onSucces, editCategoria, isEdit }: Props) => {
         nombre: editCategoria.nombre,
         descripcion: editCategoria.descripcion,
         is_active: editCategoria.is_active,
+        tipo: editCategoria.tipo, // <--- importante!
       });
     }
   }, [editCategoria, isEdit, reset]);
@@ -129,6 +138,29 @@ const FormCategorias = ({ onSucces, editCategoria, isEdit }: Props) => {
         {errors.descripcion && (
           <p className="text-sm font-medium text-red-500">
             {errors.descripcion.message as string}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label className="font-bold">Tipo de Categoría*</Label>
+        <Select
+          defaultValue={editCategoria?.tipo}
+          onValueChange={(value) =>
+            setValue("tipo", value as "Ganaderia" | "Agricultura")
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione el tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Ganaderia">Ganadería</SelectItem>
+            <SelectItem value="Agricultura">Agricultura</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.tipo && (
+          <p className="text-sm font-medium text-red-500">
+            {errors.tipo.message as string}
           </p>
         )}
       </div>
