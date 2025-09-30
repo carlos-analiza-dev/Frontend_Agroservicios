@@ -17,11 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Barcode, Edit, Package, Settings } from "lucide-react";
+import { Barcode, Edit, Eye, Package, Settings } from "lucide-react";
 import React, { useState } from "react";
 import FormInsumos from "./FormInsumos";
 import OptionsInsumos from "./OptionsInsumos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
+import LotesByInsumo from "./LotesByInsumo";
 
 interface Props {
   filteredInsumos: Insumo[];
@@ -32,6 +33,8 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editInsumo, setEditInsumo] = useState<Insumo | null>(null);
+  const [isOpenLotes, setIsOpenLotes] = useState(false);
+  const [insumoId, setInsumoId] = useState("");
   const [isOpenSettings, setIsOpenSettings] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
 
@@ -44,6 +47,11 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
   const handleOpenSettings = (insumo: Insumo) => {
     setIsOpenSettings(true);
     setSelectedInsumo(insumo);
+  };
+
+  const handleViewLotes = (insumoId: string) => {
+    setIsOpenLotes(true);
+    setInsumoId(insumoId);
   };
 
   return (
@@ -134,24 +142,35 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
               </TableCell>
 
               <TableCell className="text-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  title="Editar Insumos"
-                  onClick={() => handleEditInsumo(insumo)}
-                >
-                  <Edit className="h-4 w-4 text-blue-500" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  title="Mas opciones"
-                  className="h-8 w-8 p-0"
-                  onClick={() => handleOpenSettings(insumo)}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
+                <div className="flex justify-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Editar Insumos"
+                    onClick={() => handleEditInsumo(insumo)}
+                  >
+                    <Edit className="h-4 w-4 text-blue-500" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Lotes"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleViewLotes(insumo.id)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Mas opciones"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleOpenSettings(insumo)}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -191,6 +210,23 @@ const TableInsumos = ({ filteredInsumos }: Props) => {
           </AlertDialogHeader>
           <div className="flex-1">
             <OptionsInsumos user={user} selectedInsumo={selectedInsumo} />
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isOpenLotes} onOpenChange={setIsOpenLotes}>
+        <AlertDialogContent className="max-w-6xl h-full overflow-y-auto">
+          <div className="flex justify-end">
+            <AlertDialogCancel>X</AlertDialogCancel>
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Lotes de Insumo</AlertDialogTitle>
+            <AlertDialogDescription>
+              En esta seccion podras observar los lotes del Insumo seleccionado
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex-1">
+            <LotesByInsumo insumoId={insumoId} user={user} />
           </div>
         </AlertDialogContent>
       </AlertDialog>
