@@ -125,6 +125,16 @@ export const navItems = [
     ],
   },
   {
+    category: "Facturacion",
+    items: [
+      {
+        name: "Facturacion",
+        href: "/facturacion-admin",
+        icon: Warehouse,
+      },
+    ],
+  },
+  {
     category: "Impuestos",
     items: [{ name: "Impuestos", href: "/impuestos-admin", icon: FileText }],
   },
