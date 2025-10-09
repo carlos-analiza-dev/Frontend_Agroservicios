@@ -7,6 +7,7 @@ export interface Factura {
   id: string;
   id_cliente: string;
   pais_id: string;
+  usuario_id: string;
   forma_pago: string;
   estado: string;
   numero_factura: string;
@@ -31,6 +32,7 @@ export interface Factura {
   rango_factura: RangoFactura;
   pais: Pais;
   detalles: Detalle[];
+  descuento: Descuento | null;
 }
 
 export interface Cliente {
@@ -43,6 +45,12 @@ export interface Cliente {
   sexo: string;
   isActive: boolean;
   createdAt: Date;
+}
+
+export interface Descuento {
+  id: string;
+  nombre: string;
+  porcentaje: string;
 }
 
 export interface Detalle {

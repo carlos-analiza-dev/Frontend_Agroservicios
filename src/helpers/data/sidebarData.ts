@@ -135,8 +135,16 @@ export const navItems = [
     ],
   },
   {
-    category: "Impuestos",
-    items: [{ name: "Impuestos", href: "/impuestos-admin", icon: FileText }],
+    category: "Impuestos y Descuentos",
+    items: [
+      { name: "Impuestos", href: "/impuestos-admin", icon: FileText },
+
+      {
+        name: "Descuentos Clientes",
+        href: "/descuentos-clientes-admin",
+        icon: FileText,
+      },
+    ],
   },
   {
     category: "Administración",

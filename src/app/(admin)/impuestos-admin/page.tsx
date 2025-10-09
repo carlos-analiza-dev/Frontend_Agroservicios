@@ -17,13 +17,19 @@ import {
 import dynamic from "next/dynamic";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 
-const FormImpuestos = dynamic(() => import("./ui/FormImpuestos"), {
-  loading: () => <LoaderComponents />,
-});
+const FormImpuestos = dynamic(
+  () => import("@/components/impuestos/FormImpuestos"),
+  {
+    loading: () => <LoaderComponents />,
+  }
+);
 
-const TableImpuestos = dynamic(() => import("./ui/TableImpuestos"), {
-  loading: () => <TableUsersSkeleton />,
-});
+const TableImpuestos = dynamic(
+  () => import("@/components/impuestos/TableImpuestos"),
+  {
+    loading: () => <TableUsersSkeleton />,
+  }
+);
 
 const ImpuestosPaisAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +51,7 @@ const ImpuestosPaisAdmin = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <TableImpuestos impuestos={impuestos} />
+        <TableImpuestos impuestos={impuestos} tipo="impuesto" />
       </CardContent>
 
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
@@ -59,7 +65,7 @@ const ImpuestosPaisAdmin = () => {
               En esta seccion podras agregar los diferentes tipos de impuesto
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <FormImpuestos onSuccess={() => setIsOpen(false)} />
+          <FormImpuestos onSuccess={() => setIsOpen(false)} tipo="impuesto" />
         </AlertDialogContent>
       </AlertDialog>
     </Card>

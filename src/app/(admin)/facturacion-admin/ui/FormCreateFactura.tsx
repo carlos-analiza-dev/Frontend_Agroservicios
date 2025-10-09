@@ -24,7 +24,14 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Calculator } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Calculator,
+  AlertTriangle,
+  Search,
+  Check,
+} from "lucide-react";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetServiciosDisponibles from "@/hooks/servicios/useGetServiciosDisponibles";
 import { toast } from "react-toastify";
@@ -32,9 +39,26 @@ import useGetClientesActivos from "@/hooks/clientes/useGetClientesActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import { obtenerExistenciaProductos } from "@/apis/existencia_productos/accions/obtener-existencia-productos";
+import { PreciosPorPai } from "@/apis/productos/interfaces/response-productos.interface";
+import ResumenFactura from "./ResumenFactura";
+import ExistenciaBadge from "./ExistenciaBadge";
+import SelectorProductoServicio from "./SelectorProductoServicio";
+import BuscadorClientes from "./BuscadorClientes";
+import useGetDescuentosClientes from "@/hooks/descuentos-clientes/useGetDescuentosClientes";
+import { Descuento } from "@/apis/facturas/interfaces/response-facturas.interface";
 
 interface Props {
   onSuccess: () => void;
+}
+
+interface ProductoServicioUnificado {
+  id: string;
+  nombre: string;
+  tipo: "producto" | "servicio";
+  precio?: number;
+  preciosPorPais: PreciosPorPai[];
+  cantidadMin?: number;
+  cantidadMax?: number;
 }
 
 const FormCreateFactura = ({ onSuccess }: Props) => {
@@ -48,8 +72,15 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     useGetServiciosDisponibles();
   const { data: clientes, isLoading: loadingClientes } =
     useGetClientesActivos();
+  const { data: descuentos_clientes } = useGetDescuentosClientes();
 
-  const [productosYServicios, setProductosYServicios] = useState<any[]>([]);
+  const [productosYServicios, setProductosYServicios] = useState<
+    ProductoServicioUnificado[]
+  >([]);
+  const [preciosServicioSeleccionados, setPreciosServicioSeleccionados] =
+    useState<{ [key: string]: PreciosPorPai[] }>({});
+
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   React.useEffect(() => {
     if (productos && servicios) {
@@ -58,7 +89,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
           ...p,
           tipo: "producto",
           nombre: p.nombre,
-          precio: p.precio_venta,
+          preciosPorPais: p.preciosPorPais || [],
         })) || [];
 
       const serviciosFormateados =
@@ -66,7 +97,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
           ...s,
           tipo: "servicio",
           nombre: s.nombre,
-          precio: s.precio,
+          preciosPorPais: s.preciosPorPais || [],
         })) || [];
 
       setProductosYServicios([
@@ -84,13 +115,14 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     watch,
     control,
     formState: { errors },
-  } = useForm<CrearFacturaInterface>({
+  } = useForm<CrearFacturaInterface & { cantidadAnimales?: number }>({
     defaultValues: {
       detalles: [{ id_producto_servicio: "", cantidad: 1, precio: 0 }],
       sub_total: 0,
       descuentos_rebajas: 0,
       importe_exento: 0,
       importe_exonerado: 0,
+      descuento_id: null,
     },
   });
 
@@ -99,10 +131,158 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     name: "detalles",
   });
 
-  const detalles = watch("detalles");
+  const detalles = watch("detalles") ?? [];
+
   const descuentos = watch("descuentos_rebajas") || 0;
   const importeExento = watch("importe_exento") || 0;
   const importeExonerado = watch("importe_exonerado") || 0;
+
+  const actualizarExistencias = () => {
+    setForceUpdate((prev) => prev + 1);
+  };
+
+  const productosSeleccionados = React.useMemo(() => {
+    return detalles
+      .filter((detalle) => detalle.id_producto_servicio)
+      .map((detalle) => detalle.id_producto_servicio);
+  }, [JSON.stringify(detalles)]);
+
+  const hayProductosDuplicados = React.useMemo(() => {
+    const productosIds = detalles
+      .filter((detalle) => detalle.id_producto_servicio)
+      .map((detalle) => detalle.id_producto_servicio);
+
+    return new Set(productosIds).size !== productosIds.length;
+  }, [JSON.stringify(detalles)]);
+
+  const productosDuplicados = React.useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    const duplicates: string[] = [];
+
+    detalles.forEach((detalle) => {
+      if (detalle.id_producto_servicio) {
+        counts[detalle.id_producto_servicio] =
+          (counts[detalle.id_producto_servicio] || 0) + 1;
+      }
+    });
+
+    Object.keys(counts).forEach((productoId) => {
+      if (counts[productoId] > 1) {
+        duplicates.push(productoId);
+      }
+    });
+
+    return duplicates;
+  }, [JSON.stringify(detalles)]);
+
+  const obtenerPreciosServicio = (servicioId: string): PreciosPorPai[] => {
+    const servicio = productosYServicios.find(
+      (p) => p.id === servicioId && p.tipo === "servicio"
+    );
+    return servicio?.preciosPorPais || [];
+  };
+
+  const formatearRangoAnimales = (precio: PreciosPorPai): string => {
+    if (precio.cantidadMin === null && precio.cantidadMax === null) {
+      return "Cantidad estándar";
+    }
+    if (precio.cantidadMin !== null && precio.cantidadMax !== null) {
+      return `${precio.cantidadMin} - ${precio.cantidadMax} animales`;
+    }
+    if (precio.cantidadMin !== null) {
+      return `Mínimo ${precio.cantidadMin} animales`;
+    }
+    if (precio.cantidadMax !== null) {
+      return `Máximo ${precio.cantidadMax} animales`;
+    }
+    return "Cantidad estándar";
+  };
+
+  const handleDescuentoChange = (value: string) => {
+    if (value === "ninguno") {
+      setValue("descuentos_rebajas", 0);
+      setValue("descuento_id", null);
+    } else {
+      const descuentoSeleccionado = descuentos_clientes?.find(
+        (d: Descuento) => d.id === value
+      );
+      if (descuentoSeleccionado) {
+        const descuento_calculado =
+          Number(descuentoSeleccionado.porcentaje) / 100;
+        const descuento_final = totalGeneral * descuento_calculado;
+        setValue("descuentos_rebajas", descuento_final);
+        setValue("descuento_id", descuentoSeleccionado.id);
+      } else {
+        setValue("descuentos_rebajas", 0);
+        setValue("descuento_id", null);
+      }
+    }
+  };
+
+  const handleProductoChange = (index: number, value: string) => {
+    const itemSeleccionado = productosYServicios.find((p) => p.id === value);
+
+    if (itemSeleccionado) {
+      setValue(`detalles.${index}.id_producto_servicio`, value);
+
+      if (itemSeleccionado.tipo === "servicio") {
+        const preciosServicio = obtenerPreciosServicio(value);
+        setPreciosServicioSeleccionados((prev) => ({
+          ...prev,
+          [index]: preciosServicio,
+        }));
+
+        if (preciosServicio.length > 0) {
+          setValue(
+            `detalles.${index}.precio`,
+            Number(preciosServicio[0].precio)
+          );
+        }
+      } else {
+        setValue(
+          `detalles.${index}.precio`,
+          Number(itemSeleccionado.preciosPorPais[0]?.precio || 0)
+        );
+
+        setPreciosServicioSeleccionados((prev) => {
+          const newPrecios = { ...prev };
+          delete newPrecios[index];
+          return newPrecios;
+        });
+      }
+    }
+
+    setTimeout(actualizarExistencias, 100);
+  };
+
+  const handlePrecioServicioChange = (index: number, precioId: string) => {
+    const preciosDisponibles = preciosServicioSeleccionados[index];
+    if (preciosDisponibles) {
+      const precioSeleccionado = preciosDisponibles.find(
+        (p) => p.id === precioId
+      );
+      if (precioSeleccionado) {
+        setValue(`detalles.${index}.precio`, Number(precioSeleccionado.precio));
+      }
+    }
+  };
+
+  const useCantidadChange = (index: number) => {
+    const { onChange, ...rest } = register(`detalles.${index}.cantidad`, {
+      required: "La cantidad es requerida",
+      min: { value: 1, message: "Mínimo 1" },
+      valueAsNumber: true,
+    });
+
+    return {
+      ...rest,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange(e);
+
+        setTimeout(actualizarExistencias, 300);
+      },
+    };
+  };
 
   const productosParaVerificar = React.useMemo(() => {
     return detalles
@@ -115,22 +295,31 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
       .map((detalle) => ({
         productoId: detalle.id_producto_servicio,
         cantidad: detalle.cantidad || 0,
+
+        forceUpdate: forceUpdate,
       }));
-  }, [detalles, productosYServicios]);
+  }, [detalles, productosYServicios, forceUpdate]);
 
   const existenciasQueries = useQueries({
     queries: productosParaVerificar.map((producto) => ({
-      queryKey: ["existencia-productos", producto.productoId, sucursal_id],
+      queryKey: [
+        "existencia-productos",
+        producto.productoId,
+        sucursal_id,
+        producto.cantidad,
+        producto.forceUpdate,
+      ],
       queryFn: () =>
         obtenerExistenciaProductos(producto.productoId, sucursal_id),
       enabled: !!producto.productoId && !!sucursal_id,
       retry: false,
+      staleTime: 0,
+      cacheTime: 0,
     })),
   });
 
   const mapaExistencias = React.useMemo(() => {
     const mapa: { [key: string]: number } = {};
-
     existenciasQueries.forEach((query, index) => {
       const productoId = productosParaVerificar[index]?.productoId;
       if (productoId && query.data && query.data.length > 0) {
@@ -138,19 +327,8 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
         mapa[productoId] = parseInt(existenciaData.existenciaTotal) || 0;
       }
     });
-
     return mapa;
   }, [existenciasQueries, productosParaVerificar]);
-
-  const mapaCargando = React.useMemo(() => {
-    const mapa: { [key: string]: boolean } = {};
-
-    productosParaVerificar.forEach((producto, index) => {
-      mapa[producto.productoId] = existenciasQueries[index]?.isLoading || false;
-    });
-
-    return mapa;
-  }, [productosParaVerificar, existenciasQueries]);
 
   const productosSinExistencia = React.useMemo(() => {
     return detalles.filter((detalle) => {
@@ -192,7 +370,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
         return total + cantidad * precio;
       }, 0) || 0
     );
-  }, [detalles]);
+  }, [JSON.stringify(detalles)]);
 
   const totalGeneral = React.useMemo(() => {
     return subTotal - descuentos + importeExento + importeExonerado;
@@ -201,16 +379,6 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
   React.useEffect(() => {
     setValue("sub_total", subTotal);
   }, [subTotal, setValue]);
-
-  const handleProductoChange = (index: number, value: string) => {
-    const productoSeleccionado = productosYServicios.find(
-      (p) => p.id === value
-    );
-    if (productoSeleccionado) {
-      setValue(`detalles.${index}.precio`, productoSeleccionado.precio);
-      setValue(`detalles.${index}.id_producto_servicio`, value);
-    }
-  };
 
   const calcularTotalLinea = (cantidad: number, precio: number) => {
     return (Number(cantidad) || 0) * (Number(precio) || 0);
@@ -232,7 +400,6 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
           : typeof messages === "string"
             ? messages
             : "Hubo un error al crear la factura";
-
         toast.error(errorMessage);
       } else {
         toast.error(
@@ -241,47 +408,6 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
       }
     },
   });
-
-  const ExistenciaBadge = ({
-    productoId,
-    cantidad,
-  }: {
-    productoId: string;
-    cantidad: number;
-  }) => {
-    const producto = productosYServicios.find((p) => p.id === productoId);
-
-    if (!productoId || producto?.tipo === "servicio") return null;
-
-    const existencia = mapaExistencias[productoId];
-    const isLoading = mapaCargando[productoId] || false;
-    const suficiente = existencia !== undefined && existencia >= cantidad;
-
-    if (isLoading) {
-      return (
-        <Badge variant="outline" className="ml-2">
-          <div className="h-3 w-3 animate-spin rounded-full border border-blue-500 border-t-transparent mr-1" />
-          Cargando...
-        </Badge>
-      );
-    }
-
-    if (existencia === undefined) {
-      return (
-        <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700">
-          Sin datos
-        </Badge>
-      );
-    }
-
-    return (
-      <Badge variant={suficiente ? "default" : "destructive"} className="ml-2">
-        {suficiente
-          ? `Disponible: ${existencia}`
-          : `Insuficiente: ${existencia}`}
-      </Badge>
-    );
-  };
 
   const onSubmit = (data: CrearFacturaInterface) => {
     if (!data.detalles || data.detalles.length === 0) {
@@ -294,6 +420,20 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     );
     if (detallesInvalidos) {
       toast.error("Todos los productos/servicios deben estar seleccionados");
+      return;
+    }
+
+    if (hayProductosDuplicados) {
+      const productosDuplicadosNombres = productosDuplicados
+        .map((productoId) => {
+          const producto = productosYServicios.find((p) => p.id === productoId);
+          return producto?.nombre || "Producto desconocido";
+        })
+        .join(", ");
+
+      toast.error(
+        `No puede agregar el mismo producto más de una vez: ${productosDuplicadosNombres}`
+      );
       return;
     }
 
@@ -312,13 +452,17 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     mutation.mutate({ ...data, pais_id: paisId });
   };
 
-  const agregarDetalle = () => {
-    append({ id_producto_servicio: "", cantidad: 1, precio: 0 });
-  };
-
   const eliminarDetalle = (index: number) => {
     if (fields.length > 1) {
       remove(index);
+
+      setPreciosServicioSeleccionados((prev) => {
+        const newPrecios = { ...prev };
+        delete newPrecios[index];
+        return newPrecios;
+      });
+
+      setTimeout(actualizarExistencias, 100);
     } else {
       toast.error("Debe haber al menos un producto o servicio");
     }
@@ -330,6 +474,8 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <input type="hidden" {...register("descuento_id")} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -338,22 +484,27 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label className="font-bold">Cliente*</Label>
-              <Select onValueChange={(value) => setValue("id_cliente", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione un cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes?.data?.clientes.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nombre} - {cliente.identificacion}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <BuscadorClientes
+                value={watch("id_cliente") || ""}
+                onValueChange={(value) => setValue("id_cliente", value)}
+                clientes={clientes?.data?.clientes || []}
+                placeholder="Buscar cliente por nombre o identificación..."
+                className={errors.id_cliente ? "border-red-300" : ""}
+              />
               {errors.id_cliente && (
                 <p className="text-sm font-medium text-red-500">
                   {errors.id_cliente.message as string}
                 </p>
+              )}
+              {watch("id_cliente") && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Cliente seleccionado:{" "}
+                  {
+                    clientes?.data?.clientes.find(
+                      (c) => c.id === watch("id_cliente")
+                    )?.nombre
+                  }
+                </div>
               )}
             </div>
 
@@ -382,63 +533,99 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
             <CardTitle className="text-lg">Totales</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
                 <Label className="font-bold">Sub Total</Label>
                 <Input
                   value={subTotal.toFixed(2)}
                   disabled
-                  className="font-bold text-lg"
+                  className="font-bold text-lg text-right bg-gray-100"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Descuentos y Rebajas</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  {...register("descuentos_rebajas", {
-                    min: 0,
-                    valueAsNumber: true,
-                  })}
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label>Importe Exento</Label>
                 <Input
                   type="number"
                   step="0.01"
                   {...register("importe_exento", {
-                    min: 0,
+                    min: { value: 0, message: "No puede ser negativo" },
                     valueAsNumber: true,
                   })}
                   placeholder="0.00"
+                  className="text-right"
                 />
+                {errors.importe_exento && (
+                  <p className="text-sm text-red-500">
+                    {errors.importe_exento.message}
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label>Importe Exonerado</Label>
                 <Input
                   type="number"
                   step="0.01"
                   {...register("importe_exonerado", {
-                    min: 0,
+                    min: { value: 0, message: "No puede ser negativo" },
                     valueAsNumber: true,
                   })}
                   placeholder="0.00"
+                  className="text-right"
                 />
+                {errors.importe_exonerado && (
+                  <p className="text-sm text-red-500">
+                    {errors.importe_exonerado.message}
+                  </p>
+                )}
               </div>
 
-              <div className="border-t pt-4">
-                <Label className="font-bold text-lg">Total General</Label>
+              <div className="border-t pt-4 md:col-span-2">
+                <Label className="font-bold">Total General</Label>
                 <Input
                   value={totalGeneral.toFixed(2)}
                   disabled
-                  className="font-bold text-2xl text-green-600"
+                  className="font-bold text-2xl text-green-600 text-right bg-gray-100"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descuentos y Rebajas</Label>
+              <Select
+                onValueChange={handleDescuentoChange}
+                disabled={
+                  !productosSeleccionados || productosSeleccionados.length === 0
+                }
+                value={watch("descuento_id") || "ninguno"}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      !productosSeleccionados ||
+                      productosSeleccionados.length === 0
+                        ? "Agregue productos primero"
+                        : "Seleccione un descuento"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ninguno">Sin descuento</SelectItem>
+                  {descuentos_clientes?.map((descuento: Descuento) => (
+                    <SelectItem key={descuento.id} value={descuento.id}>
+                      {descuento.nombre} - {descuento.porcentaje}%
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(!productosSeleccionados ||
+                productosSeleccionados.length === 0) && (
+                <p className="text-sm text-gray-500">
+                  Debe agregar al menos un producto/servicio para aplicar
+                  descuentos
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -447,22 +634,91 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Productos y Servicios</CardTitle>
-          <Button
-            type="button"
-            onClick={agregarDetalle}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Agregar Producto/Servicio
-          </Button>
+          <div className="flex items-center gap-2">
+            {(hayProductosDuplicados || !tieneExistenciaSuficiente) && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Problemas detectados
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
+          <SelectorProductoServicio
+            onAgregar={(productoId) => {
+              const emptyFieldIndex = fields.findIndex(
+                (field, index) =>
+                  !watch(`detalles.${index}.id_producto_servicio`)
+              );
+
+              if (emptyFieldIndex !== -1) {
+                handleProductoChange(emptyFieldIndex, productoId);
+              } else {
+                append({ id_producto_servicio: "", cantidad: 1, precio: 0 });
+                setTimeout(() => {
+                  const newIndex = fields.length;
+                  handleProductoChange(newIndex, productoId);
+                }, 100);
+              }
+            }}
+            productosYServicios={productosYServicios}
+            productosSeleccionados={productosSeleccionados}
+            disabled={
+              productosYServicios.length === productosSeleccionados.length ||
+              hayProductosDuplicados ||
+              !tieneExistenciaSuficiente
+            }
+          />
+
+          {hayProductosDuplicados && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="font-medium">
+                  Productos duplicados detectados:
+                </span>
+              </div>
+              <ul className="mt-1 text-sm text-red-600">
+                {productosDuplicados.map((productoId) => {
+                  const producto = productosYServicios.find(
+                    (p) => p.id === productoId
+                  );
+                  return (
+                    <li key={productoId}>
+                      • {producto?.nombre || "Producto desconocido"}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {!tieneExistenciaSuficiente && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 text-orange-700">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="font-medium">
+                  Productos con existencia insuficiente:
+                </span>
+              </div>
+              <ul className="mt-1 text-sm text-orange-600">
+                {infoProductosSinExistencia.map((p, index) => (
+                  <li key={index}>
+                    • {p.nombre} (necesita: {p.cantidadRequerida}, tiene:{" "}
+                    {p.existenciaActual})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Producto/Servicio</TableHead>
+                <TableHead>Producto/Servicio Seleccionado</TableHead>
                 <TableHead>Cantidad</TableHead>
                 <TableHead>Precio Unitario</TableHead>
+                <TableHead>Rango de Animales</TableHead>
                 <TableHead>Existencia</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -474,76 +730,144 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                   `detalles.${index}.id_producto_servicio`
                 );
                 const cantidad = watch(`detalles.${index}.cantidad`) || 0;
-                const producto = productosYServicios.find(
+                const precio = watch(`detalles.${index}.precio`) || 0;
+                const item = productosYServicios.find(
                   (p) => p.id === productoId
                 );
+                const esServicio = item?.tipo === "servicio";
+                const preciosDisponibles = preciosServicioSeleccionados[index];
                 const existencia = mapaExistencias[productoId];
                 const sinSuficienteExistencia =
-                  producto?.tipo === "producto" &&
+                  item?.tipo === "producto" &&
                   existencia !== undefined &&
                   existencia < cantidad;
+                const esDuplicado = productosDuplicados.includes(productoId);
+
+                const cantidadInputProps = useCantidadChange(index);
+
+                if (!productoId) return null;
 
                 return (
                   <TableRow
                     key={field.id}
-                    className={sinSuficienteExistencia ? "bg-red-50" : ""}
+                    className={
+                      sinSuficienteExistencia || esDuplicado ? "bg-red-50" : ""
+                    }
                   >
                     <TableCell>
                       <div className="flex flex-col">
-                        <Select
-                          onValueChange={(value) =>
-                            handleProductoChange(index, value)
-                          }
-                          value={productoId}
-                        >
-                          <SelectTrigger
-                            className={
-                              sinSuficienteExistencia ? "border-red-300" : ""
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{item?.nombre}</span>
+                          <Badge
+                            variant={
+                              item?.tipo === "producto"
+                                ? "default"
+                                : "secondary"
                             }
                           >
-                            <SelectValue placeholder="Seleccione producto/servicio" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {productosYServicios.map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.nombre} - {item.precio} ({item.tipo})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                            {item?.tipo === "producto"
+                              ? "Producto"
+                              : "Servicio"}
+                          </Badge>
+                        </div>
                         <ExistenciaBadge
                           productoId={productoId}
                           cantidad={cantidad}
+                          productosYServicios={productosYServicios}
+                          mapaExistencias={mapaExistencias}
+                          existenciasQueries={existenciasQueries}
                         />
+                        {esDuplicado && (
+                          <Badge variant="destructive" className="mt-1 w-fit">
+                            Producto duplicado
+                          </Badge>
+                        )}
                       </div>
                     </TableCell>
+
                     <TableCell>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         min="1"
                         className={
                           sinSuficienteExistencia ? "border-red-300" : ""
                         }
-                        {...register(`detalles.${index}.cantidad`, {
-                          required: "La cantidad es requerida",
-                          min: { value: 1, message: "Mínimo 1" },
-                          valueAsNumber: true,
-                        })}
+                        {...cantidadInputProps}
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Tab"
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                     </TableCell>
+
                     <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...register(`detalles.${index}.precio`, {
-                          required: "El precio es requerido",
-                          min: { value: 0, message: "Mínimo 0" },
-                          valueAsNumber: true,
-                        })}
-                      />
+                      {esServicio && preciosDisponibles ? (
+                        <Select
+                          onValueChange={(value) =>
+                            handlePrecioServicioChange(index, value)
+                          }
+                          value={
+                            preciosDisponibles.find(
+                              (p) => Number(p.precio) === precio
+                            )?.id || ""
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione precio" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {preciosDisponibles.map((precioItem) => (
+                              <SelectItem
+                                key={precioItem.id}
+                                value={precioItem.id}
+                              >
+                                L. {precioItem.precio} -{" "}
+                                {formatearRangoAnimales(precioItem)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          readOnly
+                          value={precio}
+                          {...register(`detalles.${index}.precio`, {
+                            required: "El precio es requerido",
+                            valueAsNumber: true,
+                          })}
+                        />
+                      )}
                     </TableCell>
+
                     <TableCell>
-                      {producto?.tipo === "producto" &&
+                      {esServicio && preciosDisponibles ? (
+                        <div className="text-sm text-gray-600">
+                          {preciosDisponibles.find(
+                            (p) => Number(p.precio) === precio
+                          )
+                            ? formatearRangoAnimales(
+                                preciosDisponibles.find(
+                                  (p) => Number(p.precio) === precio
+                                )!
+                              )
+                            : "Seleccione un precio"}
+                        </div>
+                      ) : (
+                        <Badge variant="outline">Producto</Badge>
+                      )}
+                    </TableCell>
+
+                    <TableCell>
+                      {item?.tipo === "producto" &&
                         existencia !== undefined && (
                           <div className="flex flex-col">
                             <span
@@ -562,24 +886,21 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                             )}
                           </div>
                         )}
-                      {producto?.tipo === "servicio" && (
+                      {item?.tipo === "servicio" && (
                         <Badge variant="outline">Servicio</Badge>
                       )}
                     </TableCell>
+
                     <TableCell className="font-medium">
-                      L.{" "}
-                      {calcularTotalLinea(
-                        cantidad,
-                        watch(`detalles.${index}.precio`) || 0
-                      ).toFixed(2)}
+                      L. {calcularTotalLinea(cantidad, precio).toFixed(2)}
                     </TableCell>
+
                     <TableCell>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => eliminarDetalle(index)}
-                        disabled={fields.length === 1}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -589,54 +910,32 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
               })}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Resumen de la Factura
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="space-y-2">
-              <Badge variant="secondary" className="w-full">
-                Sub Total
-              </Badge>
-              <p className="text-xl font-bold">L. {subTotal.toFixed(2)}</p>
-            </div>
-            <div className="space-y-2">
-              <Badge variant="secondary" className="w-full">
-                Descuentos
-              </Badge>
-              <p className="text-xl font-bold text-red-600">
-                -L. {descuentos.toFixed(2)}
+          {productosSeleccionados.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Search className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+              <p>No hay productos/servicios seleccionados</p>
+              <p className="text-sm">
+                Use el buscador arriba para agregar items
               </p>
             </div>
-            <div className="space-y-2">
-              <Badge variant="secondary" className="w-full">
-                Items
-              </Badge>
-              <p className="text-xl font-bold">{fields.length}</p>
-            </div>
-            <div className="space-y-2">
-              <Badge variant="default" className="w-full">
-                Total General
-              </Badge>
-              <p className="text-2xl font-bold text-green-600">
-                L. {totalGeneral.toFixed(2)}
-              </p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
-
+      <ResumenFactura
+        subTotal={subTotal}
+        descuentos={descuentos}
+        fields={fields}
+        totalGeneral={totalGeneral}
+      />
       <div className="flex justify-end pt-4">
         <Button
           type="submit"
-          disabled={mutation.isPending || !tieneExistenciaSuficiente}
+          disabled={
+            mutation.isPending ||
+            hayProductosDuplicados ||
+            !tieneExistenciaSuficiente
+          }
           className="flex items-center gap-2"
           size="lg"
         >

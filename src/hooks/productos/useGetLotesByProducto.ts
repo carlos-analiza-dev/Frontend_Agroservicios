@@ -6,7 +6,6 @@ const useGetLotesByProducto = (productoId: string) => {
     queryKey: ["lotes-producto", productoId],
     queryFn: () => ObtenerLotesProducto(productoId),
     retry: 0,
-    staleTime: 60 * 1000 * 5,
   });
 };
 

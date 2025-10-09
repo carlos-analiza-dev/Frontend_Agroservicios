@@ -24,9 +24,10 @@ import { StatusMessage } from "@/components/generics/StatusMessage";
 
 interface Props {
   impuestos: ResponseTaxesInterface[] | undefined;
+  tipo: "impuesto" | "descuento";
 }
 
-const TableImpuestos = ({ impuestos }: Props) => {
+const TableImpuestos = ({ impuestos, tipo }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editImpuesto, setEditImpuesto] =
@@ -46,7 +47,7 @@ const TableImpuestos = ({ impuestos }: Props) => {
             <TableHead className="text-center font-bold">Nombre</TableHead>
             <TableHead className="text-center font-bold">Porcentaje</TableHead>
             <TableHead className="text-center font-bold">País</TableHead>
-            <TableHead className="text-center font-bold">Estado</TableHead>
+
             <TableHead className="text-center font-bold">Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -66,16 +67,7 @@ const TableImpuestos = ({ impuestos }: Props) => {
                     {impuesto.pais.nombre}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <Badge
-                    variant={impuesto.pais.isActive ? "default" : "secondary"}
-                    className={
-                      impuesto.pais.isActive ? "bg-green-500" : "bg-gray-500"
-                    }
-                  >
-                    {impuesto.pais.isActive ? "Activo" : "Inactivo"}
-                  </Badge>
-                </TableCell>
+
                 <TableCell className="text-center">
                   <Button
                     variant="ghost"
@@ -116,6 +108,7 @@ const TableImpuestos = ({ impuestos }: Props) => {
             onSuccess={() => setIsOpen(false)}
             editImpuesto={editImpuesto}
             isEdit={isEdit}
+            tipo={tipo}
           />
         </AlertDialogContent>
       </AlertDialog>
