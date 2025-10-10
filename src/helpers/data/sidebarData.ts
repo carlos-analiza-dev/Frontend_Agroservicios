@@ -25,6 +25,7 @@ import {
   UsersIcon,
   ChartColumnStacked,
   ChartNoAxesGantt,
+  ShoppingBagIcon,
 } from "lucide-react";
 
 export const navItems = [
@@ -125,6 +126,21 @@ export const navItems = [
     ],
   },
   {
+    category: "Faltantes",
+    items: [
+      {
+        name: "Productos",
+        href: "/productos-faltantes-admin",
+        icon: ShoppingBagIcon,
+      },
+      {
+        name: "Insumos",
+        href: "/insumos-faltantes-admin",
+        icon: Warehouse,
+      },
+    ],
+  },
+  {
     category: "Facturacion",
     items: [
       {
@@ -134,8 +150,9 @@ export const navItems = [
       },
     ],
   },
+
   {
-    category: "Impuestos y Descuentos",
+    category: "Impuestos",
     items: [
       { name: "Impuestos", href: "/impuestos-admin", icon: FileText },
 

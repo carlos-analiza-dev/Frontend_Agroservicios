@@ -347,6 +347,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditFactura(factura)}
+                        title="Editar Factura"
                         className="flex items-center gap-1"
                       >
                         <Edit className="h-4 w-4" />
@@ -354,6 +355,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                       <Button
                         variant="outline"
                         size="sm"
+                        title="Verificar Stock"
                         onClick={() => verificarExistencia(factura)}
                         disabled={verificandoExistencia === factura.id}
                         className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:text-blue-800"
@@ -374,6 +376,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAbrirConfirmacionProcesar(factura)}
+                        title="Procesar Factura"
                         disabled={
                           procesandoId === factura.id ||
                           verificandoExistencia === factura.id
@@ -400,6 +403,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleAbrirConfirmacionCancelar(factura)}
+                      title="Cancelar Factura"
                       disabled={cancelandoId === factura.id}
                       className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:text-red-800"
                     >
@@ -421,6 +425,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePreviewFactura(factura)}
+                    title="Ver Factura"
                     className="flex items-center gap-1"
                   >
                     <Eye className="h-4 w-4" />
@@ -430,6 +435,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDescargarFactura(factura)}
+                    title="Descarfar Factura"
                     disabled={descargandoId === factura.id}
                     className="flex items-center gap-1"
                   >
@@ -664,18 +670,6 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
             <AlertDialogCancel onClick={handleCerrarVerificacion}>
               Cerrar
             </AlertDialogCancel>
-            {resultadoVerificacion?.suficiente && (
-              <AlertDialogAction
-                onClick={() => {
-                  setIsVerificacionDialogOpen(false);
-                  setIsConfirmDialogOpen(true);
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Continuar con Procesamiento
-              </AlertDialogAction>
-            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

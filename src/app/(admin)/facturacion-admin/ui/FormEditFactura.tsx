@@ -222,27 +222,6 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
     return "Cantidad estándar";
   };
 
-  const handleDescuentoChange = (value: string) => {
-    if (value === "ninguno") {
-      setValue("descuentos_rebajas", 0);
-      setValue("descuento_id", null);
-    } else {
-      const descuentoSeleccionado = descuentos_clientes?.find(
-        (d: Descuento) => d.id === value
-      );
-      if (descuentoSeleccionado) {
-        const descuento_calculado =
-          Number(descuentoSeleccionado.porcentaje) / 100;
-        const descuento_final = totalGeneral * descuento_calculado;
-        setValue("descuentos_rebajas", descuento_final);
-        setValue("descuento_id", descuentoSeleccionado.id);
-      } else {
-        setValue("descuentos_rebajas", 0);
-        setValue("descuento_id", null);
-      }
-    }
-  };
-
   const handleProductoChange = (index: number, value: string) => {
     const itemSeleccionado = productosYServicios.find((p) => p.id === value);
 
@@ -402,6 +381,44 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
   useEffect(() => {
     setValue("sub_total", subTotal);
   }, [subTotal, setValue]);
+
+  useEffect(() => {
+    const descuentoId = watch("descuento_id");
+
+    if (descuentoId && descuentoId !== "ninguno") {
+      const descuentoSeleccionado = descuentos_clientes?.find(
+        (d: Descuento) => d.id === descuentoId
+      );
+
+      if (descuentoSeleccionado) {
+        const descuento_calculado =
+          Number(descuentoSeleccionado.porcentaje) / 100;
+        const descuento_final = subTotal * descuento_calculado;
+        setValue("descuentos_rebajas", descuento_final);
+      }
+    }
+  }, [subTotal, watch("descuento_id"), descuentos_clientes, setValue]);
+
+  const handleDescuentoChange = (value: string) => {
+    if (value === "ninguno") {
+      setValue("descuentos_rebajas", 0);
+      setValue("descuento_id", null);
+    } else {
+      const descuentoSeleccionado = descuentos_clientes?.find(
+        (d: Descuento) => d.id === value
+      );
+      if (descuentoSeleccionado) {
+        const descuento_calculado =
+          Number(descuentoSeleccionado.porcentaje) / 100;
+        const descuento_final = subTotal * descuento_calculado;
+        setValue("descuentos_rebajas", descuento_final);
+        setValue("descuento_id", descuentoSeleccionado.id);
+      } else {
+        setValue("descuentos_rebajas", 0);
+        setValue("descuento_id", null);
+      }
+    }
+  };
 
   const calcularTotalLinea = (cantidad: number, precio: number) => {
     return (Number(cantidad) || 0) * (Number(precio) || 0);
