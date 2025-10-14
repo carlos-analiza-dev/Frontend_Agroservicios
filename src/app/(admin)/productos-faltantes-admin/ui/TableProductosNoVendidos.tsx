@@ -84,9 +84,6 @@ const TableProductosNoVendidos = ({ filteredProductos, simbolo }: Props) => {
                 <p className="font-medium text-gray-900">
                   {producto.sucursal.nombre}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {producto.sucursal.municipio.nombre}
-                </p>
               </div>
             </TableCell>
             <TableCell className="text-center">

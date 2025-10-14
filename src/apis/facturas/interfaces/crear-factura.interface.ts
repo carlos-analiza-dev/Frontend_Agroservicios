@@ -1,6 +1,7 @@
 export interface CrearFacturaInterface {
   id_cliente: string;
   pais_id: string;
+  sucursal_id: string;
   forma_pago: string;
   sub_total: number;
   descuentos_rebajas: number;

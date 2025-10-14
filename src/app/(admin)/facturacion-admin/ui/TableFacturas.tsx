@@ -281,8 +281,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
           <TableRow>
             <TableHead className="text-center">N° Factura</TableHead>
             <TableHead className="text-center">Cliente</TableHead>
-            <TableHead className="text-center">Fecha Recepción</TableHead>
-            <TableHead className="text-center">Fecha Límite</TableHead>
+
             <TableHead className="text-center">Estado</TableHead>
             <TableHead className="text-center">Sub Total</TableHead>
             <TableHead className="text-center">Total</TableHead>
@@ -307,18 +306,6 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                       {factura.cliente.identificacion}
                     </p>
                   </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex justify-center items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  {formatDate(factura.fecha_recepcion)}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex justify-center items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  {formatDate(factura.fecha_limite_emision)}
                 </div>
               </TableCell>
 

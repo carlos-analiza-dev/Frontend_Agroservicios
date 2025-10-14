@@ -24,17 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Trash2,
-  Plus,
-  Calculator,
-  AlertTriangle,
-  Search,
-  Check,
-  View,
-  ViewIcon,
-  Eye,
-} from "lucide-react";
+import { Trash2, Plus, AlertTriangle, Search, Eye } from "lucide-react";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetServiciosDisponibles from "@/hooks/servicios/useGetServiciosDisponibles";
 import { toast } from "react-toastify";
@@ -483,7 +473,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
       return;
     }
 
-    mutation.mutate({ ...data, pais_id: paisId });
+    mutation.mutate({ ...data, pais_id: paisId, sucursal_id: sucursal_id });
   };
 
   const eliminarDetalle = (index: number) => {
