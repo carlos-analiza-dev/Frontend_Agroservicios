@@ -42,14 +42,11 @@ const LoginForm = () => {
           case "Administrador":
             router.push("/dashboard-admin");
             break;
-          case "Ganadero":
-            router.push("/farmer/dashboard");
-            break;
           case "Secretario":
             router.push("/secretary/dashboard");
             break;
           case "Veterinario":
-            router.push("/vet/dashboard");
+            router.push("/citas-veterinario");
             break;
           default:
             toast.error("No tienes permisos para acceder a esta aplicación.");

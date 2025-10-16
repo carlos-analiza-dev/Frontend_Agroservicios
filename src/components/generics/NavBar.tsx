@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "../ui/button";
 import { LogOut, Menu, User } from "lucide-react";
-import { navItems } from "@/helpers/data/sidebarData";
+import { navItems, navItemsVete } from "@/helpers/data/sidebarData";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,11 @@ interface Props {
 
 const NavBar = ({ handleLogout, setMobileSidebarOpen }: Props) => {
   const { user } = useAuthStore();
+
+  let menuItems = navItems;
+  if (user?.role?.name === "Veterinario") {
+    menuItems = navItemsVete;
+  }
   const pathname = usePathname();
 
   return (
@@ -35,7 +40,7 @@ const NavBar = ({ handleLogout, setMobileSidebarOpen }: Props) => {
           <Menu className="h-6 w-6" />
         </Button>
         <h2 className="ml-4 text-lg font-medium text-gray-900">
-          {navItems
+          {menuItems
             .flatMap((category) => category.items)
             .find((item) => item.href === pathname)?.name || "Dashboard"}
         </h2>

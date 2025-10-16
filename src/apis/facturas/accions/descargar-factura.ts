@@ -1,19 +1,18 @@
 import axios from "axios";
 import { Factura } from "../interfaces/response-facturas.interface";
+import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
 
 export const descargarFacturaPDFConAxios = async (
   id: string,
   factura: Factura
 ) => {
   try {
-    const url_api = `${process.env.NEXT_PUBLIC_API_URL}/facturas/${id}/pdf`;
+    const url_api = `/facturas/${id}/pdf`;
 
-    const response = await axios({
-      method: "GET",
-      url: url_api,
+    const response = await veterinariaAPI.get(url_api, {
       responseType: "blob",
       headers: {
-        "Content-Type": "application/pdf",
+        Accept: "application/pdf",
       },
     });
 
@@ -31,7 +30,6 @@ export const descargarFacturaPDFConAxios = async (
     link.href = url;
     link.download = `factura_${factura.numero_factura}.pdf`;
     link.style.display = "none";
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

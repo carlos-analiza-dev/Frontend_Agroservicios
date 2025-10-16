@@ -46,6 +46,7 @@ import FormEditFactura from "./FormEditFactura";
 import { Badge } from "@/components/ui/badge";
 import { isAxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
 
 interface Props {
   facturas: ResponseFacturasInterface | undefined;
@@ -76,9 +77,25 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
   const [isVerificacionDialogOpen, setIsVerificacionDialogOpen] =
     useState(false);
 
-  const handlePreviewFactura = (factura: Factura) => {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/facturas/${factura.id}/preview`;
-    setFacturaPreview(url);
+  const handlePreviewFactura = async (factura: Factura) => {
+    try {
+      const url = `/facturas/${factura.id}/preview`;
+
+      const response = await veterinariaAPI.get(url, {
+        responseType: "blob",
+      });
+
+      if (!response.data) {
+        throw new Error("No se pudo obtener la vista previa de la factura.");
+      }
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const objectUrl = URL.createObjectURL(blob);
+
+      setFacturaPreview(objectUrl);
+    } catch (error) {
+      console.error("Error al obtener la vista previa de la factura:", error);
+    }
   };
 
   const handleDescargarFactura = async (factura: Factura) => {

@@ -26,6 +26,10 @@ import {
   ChartColumnStacked,
   ChartNoAxesGantt,
   ShoppingBagIcon,
+  CalendarCheck,
+  CalendarArrowDown,
+  CalendarCog,
+  CalendarDays,
 } from "lucide-react";
 
 export const navItems = [
@@ -98,16 +102,6 @@ export const navItems = [
   {
     category: "Inventarios",
     items: [
-      /*  {
-        name: "Insumos",
-        href: "/insumos-inventario-admin",
-        icon: ClipboardList,
-      },
-      {
-        name: "Productos",
-        href: "/productos-inventario-admin",
-        icon: Package,
-      }, */
       {
         name: "Existencias Productos",
         href: "/existencias-inventario-admin",
@@ -168,6 +162,29 @@ export const navItems = [
     items: [
       { name: "Reportes", href: "/admin/reports", icon: FileText },
       { name: "Configuración", href: "/admin/settings", icon: Settings },
+    ],
+  },
+];
+
+export const navItemsVete = [
+  {
+    category: "Citas",
+    items: [
+      {
+        name: "Citas Pendientes",
+        href: "/citas-veterinario",
+        icon: CalendarCog,
+      },
+      {
+        name: "Citas Confirmadas",
+        href: "/citas-confirmadas",
+        icon: CalendarCheck,
+      },
+      {
+        name: "Historial Citas",
+        href: "/historial-ciitas",
+        icon: CalendarDays,
+      },
     ],
   },
 ];

@@ -1,7 +1,8 @@
-import { navItems } from "@/helpers/data/sidebarData";
+"use client";
+
+import { navItems, navItemsVete } from "@/helpers/data/sidebarData";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
 import { Separator } from "../ui/separator";
 import { LogOut } from "lucide-react";
 import {
@@ -10,6 +11,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import { useAuthStore } from "@/providers/store/useAuthStore";
+import React from "react";
 
 interface Props {
   handleLogout: () => Promise<void>;
@@ -17,17 +20,23 @@ interface Props {
 
 const SidebarAdmin = ({ handleLogout }: Props) => {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+
+  let menuItems = navItems;
+  if (user?.role?.name === "Veterinario") {
+    menuItems = navItemsVete;
+  }
 
   return (
     <div className="hidden lg:flex lg:flex-shrink-0">
       <div className="flex w-64 flex-col border-r border-gray-200 bg-white">
         <div className="flex h-16 flex-shrink-0 items-center px-6">
-          <h1 className="text-xl font-bold text-gray-900">AdminPanel</h1>
+          <h1 className="text-xl font-bold text-gray-900">Panel</h1>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-4">
             <Accordion type="multiple" className="w-full">
-              {navItems.map((category) => (
+              {menuItems.map((category) => (
                 <AccordionItem
                   key={category.category}
                   value={category.category}
@@ -37,7 +46,6 @@ const SidebarAdmin = ({ handleLogout }: Props) => {
                     <>
                       <AccordionTrigger className="px-4 py-3 text-sm font-medium text-gray-600 hover:no-underline hover:bg-gray-50 hover:text-gray-900 rounded-lg">
                         <span className="flex items-center">
-                          {/* Puedes añadir un icono para la categoría si lo deseas */}
                           {category.category}
                         </span>
                       </AccordionTrigger>
