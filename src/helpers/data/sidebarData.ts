@@ -113,8 +113,8 @@ export const navItems = [
         icon: Warehouse,
       },
       {
-        name: "Movimientos",
-        href: "/movimientos-inventario-admin",
+        name: "Movimientos Productos",
+        href: "/movimientos-productos-admin",
         icon: PackageOpen,
       },
     ],
@@ -184,6 +184,16 @@ export const navItemsVete = [
         name: "Historial Citas",
         href: "/historial-ciitas",
         icon: CalendarDays,
+      },
+    ],
+  },
+  {
+    category: "Facturacion",
+    items: [
+      {
+        name: "Facturacion",
+        href: "/facturacion-vet",
+        icon: Warehouse,
       },
     ],
   },

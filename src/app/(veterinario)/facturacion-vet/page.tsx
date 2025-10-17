@@ -1,11 +1,18 @@
 "use client";
-import useGetFacturas from "@/hooks/facturas/useGetFacturas";
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import FormCreateFactura from "@/components/facturacion/FormCreateFactura";
+import TableFacturas from "@/components/facturacion/TableFacturas";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Plus } from "lucide-react";
-import { formatCurrency } from "@/helpers/funciones/formatCurrency";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -15,19 +22,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import TableFacturas from "@/components/facturacion/TableFacturas";
-import FormCreateFactura from "@/components/facturacion/FormCreateFactura";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/helpers/funciones/formatCurrency";
+import useGetFacturas from "@/hooks/facturas/useGetFacturas";
+import { FileText, Plus } from "lucide-react";
+import React, { useState } from "react";
 
-const FacturacionPage = () => {
+const FacturacionVeterinarioPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [offset, setOffset] = React.useState(0);
   const limit = 10;
@@ -59,7 +60,6 @@ const FacturacionPage = () => {
 
     return pages;
   };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -282,4 +282,4 @@ const FacturacionPage = () => {
   );
 };
 
-export default FacturacionPage;
+export default FacturacionVeterinarioPage;
