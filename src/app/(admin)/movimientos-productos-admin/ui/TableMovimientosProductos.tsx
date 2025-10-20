@@ -9,13 +9,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/helpers/funciones/formatDate";
+import { User } from "@/interfaces/auth/user";
 import React from "react";
 
 interface Props {
   movimientosData: ResponseMovimientosProductosInterface | undefined;
+  user: User | undefined;
 }
 
-const TableMovimientosProductos = ({ movimientosData }: Props) => {
+const TableMovimientosProductos = ({ movimientosData, user }: Props) => {
+  const simbolo = user?.pais.simbolo_moneda;
   return (
     <Table>
       <TableHeader>
@@ -91,7 +94,8 @@ const TableMovimientosProductos = ({ movimientosData }: Props) => {
                     {movimiento.factura.numero_factura}
                   </div>
                   <div className="text-muted-foreground">
-                    ${parseFloat(movimiento.factura.total).toLocaleString()}
+                    {simbolo}
+                    {parseFloat(movimiento.factura.total).toLocaleString()}
                   </div>
                 </div>
               </TableCell>

@@ -30,6 +30,8 @@ import {
   CalendarArrowDown,
   CalendarCog,
   CalendarDays,
+  PackageSearch,
+  PackageCheck,
 } from "lucide-react";
 
 export const navItems = [
@@ -100,6 +102,16 @@ export const navItems = [
     ],
   },
   {
+    category: "Pedidos",
+    items: [
+      {
+        name: "Pedidos",
+        href: "/pedidos",
+        icon: PackageSearch,
+      },
+    ],
+  },
+  {
     category: "Inventarios",
     items: [
       {
@@ -113,24 +125,19 @@ export const navItems = [
         icon: Warehouse,
       },
       {
-        name: "Movimientos Productos",
+        name: "Movimientos",
         href: "/movimientos-productos-admin",
         icon: PackageOpen,
       },
     ],
   },
   {
-    category: "Faltantes",
+    category: "Ventas Perdidas",
     items: [
       {
-        name: "Productos",
+        name: "Ventas Perdidas",
         href: "/productos-faltantes-admin",
         icon: ShoppingBagIcon,
-      },
-      {
-        name: "Insumos",
-        href: "/insumos-faltantes-admin",
-        icon: Warehouse,
       },
     ],
   },
