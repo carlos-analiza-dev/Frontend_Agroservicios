@@ -27,6 +27,7 @@ import { formatCurrency } from "@/helpers/funciones/formatCurrency";
 import { formatDate } from "@/helpers/funciones/formatDate";
 import { User } from "@/interfaces/auth/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import {
   Calendar,
   MapPin,
@@ -114,18 +115,18 @@ const PedidoCard = ({ pedido, user }: Props) => {
         onSuccess: () => {
           toast.success(mensajeExito);
           closeDialog();
-          queryClient.invalidateQueries({
-            queryKey: ["pedidos-user", nuevoEstado],
-          });
 
-          queryClient.invalidateQueries({
-            queryKey: ["count-pedidos-por-estado"],
-          });
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         },
-        onError: (error: any) => {
-          toast.error(
-            error?.response?.data?.message || `Error al ${dialogType} el pedido`
-          );
+        onError: (error) => {
+          if (isAxiosError(error)) {
+            toast.error(
+              error?.response?.data?.message ||
+                `Error al ${dialogType} el pedido`
+            );
+          }
         },
       }
     );

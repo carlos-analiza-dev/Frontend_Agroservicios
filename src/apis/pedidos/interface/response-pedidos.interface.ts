@@ -9,6 +9,12 @@ export interface Pedido {
   id_sucursal: string;
   total: string;
   estado: string;
+  direccion_entrega: string;
+  latitud: string;
+  longitud: string;
+  tipo_entrega: string;
+  costo_delivery: string;
+  nombre_finca: string;
   created_at: string;
   updated_at: string;
   cliente: Cliente;

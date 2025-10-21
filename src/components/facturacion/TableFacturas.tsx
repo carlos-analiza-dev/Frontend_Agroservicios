@@ -28,17 +28,17 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/helpers/funciones/formatCurrency";
 import {
-  Calendar,
   Download,
   Edit,
   Eye,
   FileText,
-  User,
+  User2,
   CheckCircle,
   Package,
   AlertTriangle,
   XCircle,
   RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
@@ -47,13 +47,18 @@ import { Badge } from "@/components/ui/badge";
 import { isAxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { veterinariaAPI } from "@/helpers/api/veterinariaAPI";
+import { User } from "@/interfaces/auth/user";
+import { AutorizarCancelacionFactura } from "@/apis/facturas/accions/autorizar-factura";
 
 interface Props {
   facturas: ResponseFacturasInterface | undefined;
   onFacturaActualizada?: () => void;
+  user: User | undefined;
 }
 
-const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
+const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
+  const rolUsuario = user?.role.name || "";
+  const esAdministrador = rolUsuario === "Administrador";
   const queryClient = useQueryClient();
   const [descargandoId, setDescargandoId] = useState<string | null>(null);
   const [facturaPreview, setFacturaPreview] = useState<string | null>(null);
@@ -61,12 +66,17 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
   const [facturaEditando, setFacturaEditando] = useState<Factura | null>(null);
   const [procesandoId, setProcesandoId] = useState<string | null>(null);
   const [cancelandoId, setCancelandoId] = useState<string | null>(null);
+  const [autorizandoId, setAutorizandoId] = useState<string | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isAutorizarDialogOpen, setIsAutorizarDialogOpen] = useState(false);
   const [facturaAProcesar, setFacturaAProcesar] = useState<Factura | null>(
     null
   );
   const [facturaACancelar, setFacturaACancelar] = useState<Factura | null>(
+    null
+  );
+  const [facturaAAutorizar, setFacturaAAutorizar] = useState<Factura | null>(
     null
   );
   const [verificandoExistencia, setVerificandoExistencia] = useState<
@@ -113,6 +123,11 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
     } finally {
       setDescargandoId(null);
     }
+  };
+
+  const handleAbrirAutorizacionCancelacion = (factura: Factura) => {
+    setFacturaAAutorizar(factura);
+    setIsAutorizarDialogOpen(true);
   };
 
   const handleEditFactura = (factura: Factura) => {
@@ -205,6 +220,15 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
     setResultadoVerificacion(null);
   };
 
+  const mostrarBotonAutorizar = (factura: Factura) => {
+    return (
+      esAdministrador &&
+      factura.estado === "Procesada" &&
+      !factura.autorizada_cancelacion &&
+      factura.usuario_id !== user?.id
+    );
+  };
+
   const handleProcesarFacturaConfirmada = async () => {
     if (!facturaAProcesar) return;
 
@@ -261,8 +285,35 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES");
+  const handleCerrarAutorizacion = () => {
+    setIsAutorizarDialogOpen(false);
+    setFacturaAAutorizar(null);
+  };
+
+  const handleAutorizarCancelacionConfirmada = async () => {
+    if (!facturaAAutorizar) return;
+
+    setAutorizandoId(facturaAAutorizar.id);
+    setIsAutorizarDialogOpen(false);
+
+    try {
+      await AutorizarCancelacionFactura(facturaAAutorizar.id);
+      queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      toast.success("✅ Cancelación autorizada exitosamente");
+
+      onFacturaActualizada?.();
+    } catch (error) {
+      if (isAxiosError(error)) {
+        const message =
+          error.response?.data?.message || "Error al autorizar la cancelación";
+        toast.error(message);
+      } else {
+        toast.error("Error inesperado al autorizar la cancelación");
+      }
+    } finally {
+      setAutorizandoId(null);
+      setFacturaAAutorizar(null);
+    }
   };
 
   const getEstadoBadgeVariant = (estado: string) => {
@@ -298,7 +349,6 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
           <TableRow>
             <TableHead className="text-center">N° Factura</TableHead>
             <TableHead className="text-center">Cliente</TableHead>
-
             <TableHead className="text-center">Estado</TableHead>
             <TableHead className="text-center">Sub Total</TableHead>
             <TableHead className="text-center">Total</TableHead>
@@ -316,7 +366,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
               </TableCell>
               <TableCell>
                 <div className="flex justify-center items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
+                  <User2 className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="font-medium">{factura.cliente.nombre}</p>
                     <p className="text-sm text-gray-500">
@@ -403,26 +453,57 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
                   )}
 
                   {factura.estado === "Procesada" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAbrirConfirmacionCancelar(factura)}
-                      title="Cancelar Factura"
-                      disabled={cancelandoId === factura.id}
-                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:text-red-800"
-                    >
-                      {cancelandoId === factura.id ? (
-                        <>
-                          <div className="h-3 w-3 animate-spin rounded-full border border-red-300 border-t-red-600" />
-                          <span>Cancelando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RotateCcw className="h-4 w-4" />
-                          <span>Cancelar</span>
-                        </>
+                    <>
+                      {mostrarBotonAutorizar(factura) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleAbrirAutorizacionCancelacion(factura)
+                          }
+                          title="Autorizar Cancelación"
+                          disabled={autorizandoId === factura.id}
+                          className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 hover:text-purple-800"
+                        >
+                          {autorizandoId === factura.id ? (
+                            <>
+                              <div className="h-3 w-3 animate-spin rounded-full border border-purple-300 border-t-purple-600" />
+                              <span>Autorizando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="h-4 w-4" />
+                              <span>Autorizar</span>
+                            </>
+                          )}
+                        </Button>
                       )}
-                    </Button>
+
+                      {(factura.autorizada_cancelacion || esAdministrador) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleAbrirConfirmacionCancelar(factura)
+                          }
+                          title="Cancelar Factura"
+                          disabled={cancelandoId === factura.id}
+                          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:text-red-800"
+                        >
+                          {cancelandoId === factura.id ? (
+                            <>
+                              <div className="h-3 w-3 animate-spin rounded-full border border-red-300 border-t-red-600" />
+                              <span>Cancelando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <RotateCcw className="h-4 w-4" />
+                              <span>Cancelar</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   <Button
@@ -461,6 +542,64 @@ const TableFacturas = ({ facturas, onFacturaActualizada }: Props) => {
           ))}
         </TableBody>
       </Table>
+
+      <AlertDialog
+        open={isAutorizarDialogOpen}
+        onOpenChange={setIsAutorizarDialogOpen}
+      >
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-purple-600" />
+              Autorizar Cancelación
+            </AlertDialogTitle>
+
+            <div className="text-sm text-muted-foreground space-y-3">
+              <p>
+                ¿Está seguro que desea autorizar la cancelación de la factura{" "}
+                <strong>{facturaAAutorizar?.numero_factura}</strong>?
+              </p>
+              <div className="bg-purple-50 p-3 rounded-md text-sm border border-purple-200">
+                <div className="flex items-center gap-2 text-purple-700 mb-2">
+                  <User2 className="h-4 w-4" />
+                  <span className="font-medium">Información de la Factura</span>
+                </div>
+                <p>
+                  <strong>Cliente:</strong> {facturaAAutorizar?.cliente.nombre}
+                </p>
+                <p>
+                  <strong>Total:</strong>{" "}
+                  {facturaAAutorizar &&
+                    formatCurrency(
+                      facturaAAutorizar.total,
+                      facturaAAutorizar.pais.simbolo_moneda
+                    )}
+                </p>
+                <p>
+                  <strong>Creada por: </strong>{" "}
+                  {facturaAAutorizar?.usuario.name}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500">
+                Al autorizar, el usuario que creó esta factura podrá cancelarla.
+                Esta autorización será válida por 24 horas.
+              </p>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCerrarAutorizacion}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAutorizarCancelacionConfirmada}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Sí, Autorizar Cancelación
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={isConfirmDialogOpen}

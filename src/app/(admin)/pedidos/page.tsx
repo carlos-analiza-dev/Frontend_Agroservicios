@@ -5,14 +5,7 @@ import useGetCountPedidosPorEstado from "@/hooks/pedidos/useGetCountPedidosPorEs
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  ShoppingCart,
-  AlertCircle,
-  Building,
-  Filter,
-  ChevronDown,
-} from "lucide-react";
-
+import { ShoppingCart, Building, Filter } from "lucide-react";
 import { EstadoPedido } from "@/apis/pedidos/interface/crear-pedido.interface";
 import PedidosSkeleton from "@/components/pedidos/PedidosSkeleton";
 import PedidoCard from "@/components/pedidos/PedidoCard";
@@ -42,7 +35,11 @@ const PedididosPendientesAdmin = () => {
   const { data: sucursalesPais, isLoading: isLoadingSucursales } =
     useGetSucursalesPais(paisId);
 
-  const { data: pedidosData, isLoading: isLoadingPedidos } = useGetPedidos(
+  const {
+    data: pedidosData,
+    isLoading: isLoadingPedidos,
+    isError,
+  } = useGetPedidos(
     sucursalSeleccionada,
     ITEMS_PER_PAGE,
     (currentPage - 1) * ITEMS_PER_PAGE,

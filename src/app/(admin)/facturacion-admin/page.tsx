@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Filter, Calendar, Building } from "lucide-react";
 import { formatCurrency } from "@/helpers/funciones/formatCurrency";
 import {
   Pagination,
@@ -26,13 +26,42 @@ import {
 } from "@/components/ui/alert-dialog";
 import TableFacturas from "@/components/facturacion/TableFacturas";
 import FormCreateFactura from "@/components/facturacion/FormCreateFactura";
+import { useAuthStore } from "@/providers/store/useAuthStore";
+import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const FacturacionPage = () => {
+  const { user } = useAuthStore();
+  const sucursalUsuario = user?.sucursal.id || "";
+  const paisId = user?.pais.id || "";
+
   const [isOpen, setIsOpen] = useState(false);
-  const [offset, setOffset] = React.useState(0);
+  const [offset, setOffset] = useState(0);
+  const [sucursalSeleccionada, setSucursalSeleccionada] =
+    useState(sucursalUsuario);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+
   const limit = 10;
 
-  const { data: facturas, isLoading } = useGetFacturas(limit, offset);
+  const { data: sucursales, isLoading: cargandoSucursales } =
+    useGetSucursalesPais(paisId);
+
+  const { data: facturas, isLoading } = useGetFacturas({
+    limit,
+    offset,
+    sucursal: sucursalSeleccionada,
+    fechaInicio,
+    fechaFin,
+  });
 
   const totalPages = facturas ? Math.ceil(facturas.total / limit) : 0;
   const currentPage = Math.floor(offset / limit) + 1;
@@ -40,6 +69,17 @@ const FacturacionPage = () => {
   const handlePageChange = (newPage: number) => {
     const newOffset = (newPage - 1) * limit;
     setOffset(newOffset);
+  };
+
+  const handleFiltroChange = () => {
+    setOffset(0);
+  };
+
+  const limpiarFiltros = () => {
+    setSucursalSeleccionada(sucursalUsuario);
+    setFechaInicio("");
+    setFechaFin("");
+    setOffset(0);
   };
 
   const getPageNumbers = () => {
@@ -60,22 +100,146 @@ const FacturacionPage = () => {
     return pages;
   };
 
+  const getNombreSucursal = () => {
+    if (sucursalSeleccionada === sucursalUsuario) {
+      return user?.sucursal.nombre || "Mi Sucursal";
+    }
+    return (
+      sucursales?.find((s) => s.id === sucursalSeleccionada)?.nombre ||
+      "Sucursal"
+    );
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Facturación</h1>
         <Button onClick={() => setIsOpen(true)}>
-          <Plus /> Generar Factura
+          <Plus className="h-4 w-4 mr-2" />
+          Generar Factura
         </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sucursal" className="flex items-center gap-2">
+                <Building className="h-4 w-4" />
+                Sucursal:
+              </Label>
+              <Select
+                value={sucursalSeleccionada}
+                onValueChange={(value) => {
+                  setSucursalSeleccionada(value);
+                  handleFiltroChange();
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar sucursal">
+                    {getNombreSucursal()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={sucursalUsuario}>
+                    Mi Sucursal ({user?.sucursal.nombre})
+                  </SelectItem>
+                  {sucursales
+                    ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                    .map((sucursal) => (
+                      <SelectItem key={sucursal.id} value={sucursal.id}>
+                        {sucursal.nombre}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaInicio" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Fecha Inicio:
+              </Label>
+              <Input
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => {
+                  setFechaInicio(e.target.value);
+                  handleFiltroChange();
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaFin" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Fecha Fin:
+              </Label>
+              <Input
+                type="date"
+                value={fechaFin}
+                onChange={(e) => {
+                  setFechaFin(e.target.value);
+                  handleFiltroChange();
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="outline"
+              onClick={limpiarFiltros}
+              disabled={!sucursalSeleccionada && !fechaInicio && !fechaFin}
+            >
+              Limpiar Filtros
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {(sucursalSeleccionada !== sucursalUsuario ||
+        fechaInicio ||
+        fechaFin) && (
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <p className="text-sm text-blue-800">
+            Filtros aplicados:{" "}
+            <span className="font-medium">{getNombreSucursal()}</span>
+            {fechaInicio && (
+              <span className="ml-2">
+                desde <span className="font-medium">{fechaInicio}</span>
+              </span>
+            )}
+            {fechaFin && (
+              <span className="ml-2">
+                hasta <span className="font-medium">{fechaFin}</span>
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+
       <Badge variant="secondary" className="text-sm">
         Total: {facturas?.total || 0} facturas
+        {(sucursalSeleccionada || fechaInicio || fechaFin) && " (filtradas)"}
       </Badge>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Lista de Facturas
+            {sucursalSeleccionada && (
+              <span className="text-sm font-normal text-gray-500">
+                - {getNombreSucursal()}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -93,7 +257,7 @@ const FacturacionPage = () => {
             </div>
           ) : (
             <>
-              <TableFacturas facturas={facturas} />
+              <TableFacturas facturas={facturas} user={user} />
 
               {facturas && facturas.total > limit && (
                 <div className="flex items-center justify-between mt-6">
@@ -185,7 +349,7 @@ const FacturacionPage = () => {
         </CardContent>
       </Card>
 
-      {!isLoading && facturas && (
+      {!isLoading && facturas && facturas.data.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -270,9 +434,9 @@ const FacturacionPage = () => {
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
           <AlertDialogHeader>
-            <AlertDialogTitle>Generacion de Factura</AlertDialogTitle>
+            <AlertDialogTitle>Generación de Factura</AlertDialogTitle>
             <AlertDialogDescription>
-              Aqui puede generar las facturas de ventas realizadas
+              Aquí puede generar las facturas de ventas realizadas
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FormCreateFactura onSuccess={() => setIsOpen(false)} />

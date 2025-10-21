@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import FormProductosNoVendidos from "./FormProductosNoVendidos";
+import { FormaPago } from "@/helpers/data/formaPago";
 
 interface Props {
   onSuccess: () => void;
@@ -552,8 +553,17 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                     <SelectValue placeholder="Seleccione forma de pago" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Contado">Contado</SelectItem>
-                    <SelectItem value="Credito">Crédito</SelectItem>
+                    <SelectItem value={FormaPago.CONTADO}>Contado</SelectItem>
+                    <SelectItem value={FormaPago.CREDITO}>Crédito</SelectItem>
+                    <SelectItem value={FormaPago.TRANSFERENCIA}>
+                      Transferencia
+                    </SelectItem>
+                    <SelectItem value={FormaPago.NOTA_CREDITO}>
+                      Nota de Crédito
+                    </SelectItem>
+                    <SelectItem value={FormaPago.COMBINACION}>
+                      Combinación
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.forma_pago && (
