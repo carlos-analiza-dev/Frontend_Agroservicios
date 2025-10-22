@@ -305,7 +305,7 @@ const ProductosFaltantesPage = () => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Lista de Productos Faltantes</CardTitle>
+          <CardTitle>Lista de Productos No Vendidos</CardTitle>
           <div className="text-sm text-gray-500">
             {filteredProductos.length} productos encontrados
           </div>

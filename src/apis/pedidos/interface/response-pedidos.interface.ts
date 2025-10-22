@@ -1,3 +1,5 @@
+import { TipoEntrega } from "./crear-pedido.interface";
+
 export interface ResponsePedidosInterface {
   total: number;
   pedidos: Pedido[];
@@ -12,7 +14,7 @@ export interface Pedido {
   direccion_entrega: string;
   latitud: string;
   longitud: string;
-  tipo_entrega: string;
+  tipo_entrega: TipoEntrega;
   costo_delivery: string;
   nombre_finca: string;
   created_at: string;

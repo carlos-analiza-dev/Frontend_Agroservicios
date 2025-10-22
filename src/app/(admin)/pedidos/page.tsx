@@ -22,8 +22,8 @@ const ITEMS_PER_PAGE = 5;
 
 const PedididosPendientesAdmin = () => {
   const { user } = useAuthStore();
-  const sucursalUsuario = user?.sucursal.id || "";
-  const paisId = user?.pais.id || "";
+  const sucursalUsuario = user?.sucursal?.id || "default";
+  const paisId = user?.pais?.id || "";
 
   const [currentPage, setCurrentPage] = useState(1);
   const [tipoPedido, setTipoPedido] = useState<EstadoPedido>(
@@ -68,13 +68,18 @@ const PedididosPendientesAdmin = () => {
 
   const getNombreSucursal = () => {
     if (sucursalSeleccionada === sucursalUsuario) {
-      return user?.sucursal.nombre || "Mi Sucursal";
+      return user?.sucursal?.nombre || "Mi Sucursal";
     }
     return (
       sucursalesPais?.find((s) => s.id === sucursalSeleccionada)?.nombre ||
       "Sucursal"
     );
   };
+
+  const sucursalesValidas =
+    sucursalesPais?.filter(
+      (sucursal) => sucursal.id && sucursal.id.trim() !== ""
+    ) || [];
 
   if (isLoading) {
     return <PedidosSkeleton />;
@@ -110,23 +115,25 @@ const PedididosPendientesAdmin = () => {
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccionar sucursal">
                   {sucursalSeleccionada === sucursalUsuario
-                    ? `Mi Sucursal (${user?.sucursal.nombre || ""})`
+                    ? `Mi Sucursal (${user?.sucursal?.nombre || ""})`
                     : sucursalesPais?.find((s) => s.id === sucursalSeleccionada)
                         ?.nombre}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={sucursalUsuario}>
-                  <div className="flex justify-between items-center w-full">
-                    <span>Mi Sucursal</span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      {user?.sucursal.nombre}
-                    </span>
-                  </div>
-                </SelectItem>
+                {sucursalUsuario && sucursalUsuario !== "default" && (
+                  <SelectItem value={sucursalUsuario}>
+                    <div className="flex justify-between items-center w-full">
+                      <span>Mi Sucursal</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        {user?.sucursal?.nombre}
+                      </span>
+                    </div>
+                  </SelectItem>
+                )}
 
-                {sucursalesPais
-                  ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                {sucursalesValidas
+                  .filter((sucursal) => sucursal.id !== sucursalUsuario)
                   .map((sucursal) => (
                     <SelectItem key={sucursal.id} value={sucursal.id}>
                       {sucursal.nombre}

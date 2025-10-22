@@ -40,8 +40,8 @@ import { Label } from "@/components/ui/label";
 
 const FacturacionPage = () => {
   const { user } = useAuthStore();
-  const sucursalUsuario = user?.sucursal.id || "";
-  const paisId = user?.pais.id || "";
+  const sucursalUsuario = user?.sucursal?.id || "default";
+  const paisId = user?.pais?.id || "";
 
   const [isOpen, setIsOpen] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -102,13 +102,18 @@ const FacturacionPage = () => {
 
   const getNombreSucursal = () => {
     if (sucursalSeleccionada === sucursalUsuario) {
-      return user?.sucursal.nombre || "Mi Sucursal";
+      return user?.sucursal?.nombre || "Mi Sucursal";
     }
     return (
       sucursales?.find((s) => s.id === sucursalSeleccionada)?.nombre ||
       "Sucursal"
     );
   };
+
+  const sucursalesValidas =
+    sucursales?.filter(
+      (sucursal) => sucursal.id && sucursal.id.trim() !== ""
+    ) || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -147,11 +152,14 @@ const FacturacionPage = () => {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={sucursalUsuario}>
-                    Mi Sucursal ({user?.sucursal.nombre})
-                  </SelectItem>
-                  {sucursales
-                    ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                  {sucursalUsuario && sucursalUsuario !== "default" && (
+                    <SelectItem value={sucursalUsuario}>
+                      Mi Sucursal ({user?.sucursal?.nombre || "Actual"})
+                    </SelectItem>
+                  )}
+
+                  {sucursalesValidas
+                    .filter((sucursal) => sucursal.id !== sucursalUsuario)
                     .map((sucursal) => (
                       <SelectItem key={sucursal.id} value={sucursal.id}>
                         {sucursal.nombre}

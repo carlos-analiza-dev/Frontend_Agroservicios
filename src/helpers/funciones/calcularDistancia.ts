@@ -4,7 +4,7 @@ export async function obtenerDistanciaGoogleMaps(
   lat2: number,
   lon2: number
 ): Promise<number | null> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${lat1},${lon1}&destination=${lat2},${lon2}&key=${apiKey}`;
 
@@ -40,7 +40,7 @@ export async function obtenerTiempoViajeGoogleMaps(
   distanciaTexto: string | null;
   distanciaMetros: number | null;
 } | null> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${lat1},${lon1}&destination=${lat2},${lon2}&mode=${modo}&key=${apiKey}`;
 

@@ -2,6 +2,7 @@ import { EditarPedido } from "@/apis/pedidos/accions/editar-pedido";
 import {
   CrearPedidoInterface,
   EstadoPedido,
+  TipoEntrega,
 } from "@/apis/pedidos/interface/crear-pedido.interface";
 import { Pedido } from "@/apis/pedidos/interface/response-pedidos.interface";
 import {
@@ -38,6 +39,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import MapaUbicacion from "./MapaUbicacion";
 
 interface Props {
   pedido: Pedido;
@@ -205,6 +207,33 @@ const PedidoCard = ({ pedido, user }: Props) => {
                   </p>
                 </div>
               </div>
+
+              {pedido.latitud && pedido.longitud && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">
+                    Ubicación de Entrega
+                  </h3>
+
+                  {pedido.direccion_entrega && (
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        Dirección:
+                      </span>
+                      <p className="text-gray-500 text-sm mt-1">
+                        {pedido.direccion_entrega}
+                      </p>
+                    </div>
+                  )}
+
+                  <MapaUbicacion
+                    latitud={pedido.latitud}
+                    longitud={pedido.longitud}
+                    direccion={pedido.direccion_entrega}
+                    titulo={`Ubicación del pedido #${pedido.id.slice(-8)}`}
+                    className="w-full h-48 rounded-lg border"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-2">
@@ -255,6 +284,16 @@ const PedidoCard = ({ pedido, user }: Props) => {
                     {formatCurrency(pedido.total, simbolo)}
                   </span>
                 </div>
+                {pedido.tipo_entrega === TipoEntrega.DELIVERY && (
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-sm text-gray-600">
+                      Delivery (Incluido en el total)
+                    </span>
+                    <span className="text-lg font-bold text-green-600">
+                      {formatCurrency(pedido.costo_delivery, simbolo)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-sm text-gray-600">Total</span>
                   <span className="text-lg font-bold text-green-600">

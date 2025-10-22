@@ -30,7 +30,8 @@ import {
 } from "@/apis/medicos/interfaces/obtener-citas-medicos.interface";
 import { toast } from "react-toastify";
 import { obtenerTiempoViajeGoogleMaps } from "@/apis/google-maps/accions/obtenerTiempoViajeGoogleMaps";
-import MapIframe from "@/components/generics/MapIframe";
+import GoogleMapViewer from "@/components/generics/GoogleMapViewer";
+import { InsumoDis } from "@/apis/insumos/interfaces/response-insumos-disponibles.interface";
 
 interface Props {
   item: Cita;
@@ -38,7 +39,7 @@ interface Props {
   onCancel?: () => void;
   onComplete?: () => void;
   onAddProducts?: () => void;
-  selectedInsumos?: { [key: string]: { insumo: Insumo; quantity: number } };
+  selectedInsumos?: { [key: string]: { insumo: InsumoDis; quantity: number } };
   selectedProductos?: {
     [key: string]: { producto: Producto; quantity: number };
   };
@@ -111,13 +112,6 @@ const CardCitasMedico = ({
     fetchLocationData();
   }, [item.finca.latitud, item.finca.longitud]);
 
-  const handleOpenMap = (finca: Finca) => {
-    if (finca.latitud && finca.longitud) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${finca.latitud},${finca.longitud}`;
-      window.open(url, "_blank");
-    }
-  };
-
   const handleCall = (phoneNumber: string) => {
     window.open(`tel:${phoneNumber}`);
   };
@@ -174,28 +168,22 @@ const CardCitasMedico = ({
         </div>
 
         {item.finca.latitud && item.finca.longitud && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between items-center">
               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Ubicación
+                Ubicación de la Finca
               </h4>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleOpenMap(item.finca)}
-                className="h-8 text-xs text-blue-600 hover:text-blue-700"
-              >
-                <ExternalLinkIcon className="h-3 w-3 mr-1" />
-                Abrir en Maps
-              </Button>
             </div>
-            <div className="w-full h-48 rounded-lg border border-gray-300 overflow-hidden">
-              <MapIframe
-                lat={item.finca.latitud}
-                lng={item.finca.longitud}
-                className="w-full h-full"
-              />
-            </div>
+
+            <GoogleMapViewer
+              latitud={item.finca.latitud}
+              longitud={item.finca.longitud}
+              titulo={item.finca.nombre_finca}
+              direccion={item.finca.ubicacion}
+              height="h-56"
+              showDirectionsButton={true}
+              className="w-full rounded-lg border border-gray-300"
+            />
           </div>
         )}
 
@@ -278,15 +266,12 @@ const CardCitasMedico = ({
             Finca
           </h4>
           <div className="space-y-2">
-            <button
-              onClick={() => handleOpenMap(item.finca)}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              <MapPinIcon className="h-4 w-4" />
-              <span className="text-left truncate">
+            <div className="flex items-center gap-2">
+              <MapPinIcon className="h-4 w-4 text-gray-600" />
+              <span className="text-sm text-gray-700">
                 {item.finca.nombre_finca}
               </span>
-            </button>
+            </div>
             <div className="flex items-center gap-2">
               <BuildingIcon className="h-4 w-4 text-gray-600" />
               <span className="text-sm text-gray-700">
@@ -418,17 +403,6 @@ const CardCitasMedico = ({
                 Cancelar
               </Button>
             )}
-
-          {item.estado.toLowerCase() === "completada" && (
-            <Button
-              onClick={handleDownloadInvoice}
-              variant="outline"
-              className="flex-1"
-            >
-              <SendIcon className="h-4 w-4 mr-2" />
-              Enviar Factura
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

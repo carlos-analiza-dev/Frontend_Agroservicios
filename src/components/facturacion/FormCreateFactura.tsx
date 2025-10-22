@@ -802,7 +802,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                     <TableRow
                       key={field.id}
                       className={
-                        sinSuficienteExistencia || esDuplicado || !existencia
+                        sinSuficienteExistencia || esDuplicado
                           ? "bg-red-300"
                           : ""
                       }

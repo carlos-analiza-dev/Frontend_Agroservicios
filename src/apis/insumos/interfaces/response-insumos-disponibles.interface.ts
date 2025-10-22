@@ -15,13 +15,6 @@ export interface InsumoDis {
   pais: Pais;
   marca: Marca;
   proveedor: Proveedor;
-  inventario: Inventario | null;
-}
-
-export interface Inventario {
-  id: string;
-  cantidadDisponible: number;
-  stockMinimo: number;
 }
 
 export interface Marca {
@@ -37,12 +30,12 @@ export interface Marca {
 
 export interface AtedBy {
   id: string;
-  email: Email;
-  name: CreatedByName;
-  identificacion: Identificacion;
-  direccion: Direccion;
-  sexo: Sexo;
-  telefono: Telefono;
+  email: string;
+  name: string;
+  identificacion: string;
+  direccion: string;
+  sexo: string;
+  telefono: string;
   isActive: boolean;
   isAuthorized: boolean;
   createdAt: Date;
@@ -55,85 +48,28 @@ export interface AtedBy {
 
 export interface Departamento {
   id: string;
-  nombre: DepartamentoNombre;
+  nombre: string;
   isActive: boolean;
   municipios?: Departamento[];
 }
 
-export enum DepartamentoNombre {
-  FranciscoMorazán = "Francisco Morazán",
-  Tegucigalpa = "Tegucigalpa",
-}
-
-export enum Direccion {
-  TegucigalpaHonduras = "Tegucigalpa, Honduras",
-}
-
-export enum Email {
-  AlcerroCarlos20GmailCOM = "alcerro.carlos20@gmail.com",
-}
-
-export enum Identificacion {
-  The1201200000131 = "1201-2000-00131",
-}
-
-export enum CreatedByName {
-  CarlosEduardoAlcerroLainez = "Carlos Eduardo Alcerro Lainez",
-}
-
 export interface Pais {
   id: string;
-  nombre: PaisNombre;
-  code: Code;
+  nombre: string;
+  code: string;
   code_phone: string;
-  nombre_moneda: NombreMoneda;
-  simbolo_moneda: SimboloMoneda;
-  nombre_documento: NombreDocumento;
+  nombre_moneda: string;
+  simbolo_moneda: string;
+  nombre_documento: string;
   isActive: boolean;
   departamentos: Departamento[];
 }
 
-export enum Code {
-  Hn = "HN",
-}
-
-export enum PaisNombre {
-  Honduras = "Honduras",
-}
-
-export enum NombreDocumento {
-  Dni = "DNI",
-}
-
-export enum NombreMoneda {
-  Lempira = "Lempira",
-}
-
-export enum SimboloMoneda {
-  L = "L",
-}
-
 export interface Role {
   id: string;
-  name: RoleName;
-  description: Description;
+  name: string;
+  description: string;
   isActive: boolean;
-}
-
-export enum Description {
-  AdministradorDelSistema = "Administrador del sistema",
-}
-
-export enum RoleName {
-  Administrador = "Administrador",
-}
-
-export enum Sexo {
-  M = "M",
-}
-
-export enum Telefono {
-  The50487709116 = "+504 8770-9116",
 }
 
 export interface Proveedor {

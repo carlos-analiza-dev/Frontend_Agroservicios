@@ -1,6 +1,6 @@
 import React from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
-import { navItems } from "@/helpers/data/sidebarData";
+import { navItems, navItemsVete } from "@/helpers/data/sidebarData";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
 import { LogOut } from "lucide-react";
@@ -11,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import { useAuthStore } from "@/providers/store/useAuthStore";
 
 interface Props {
   setMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,7 +24,19 @@ const SheetContentComp = ({
   handleLogout,
   mobileSidebarOpen,
 }: Props) => {
+  const { user } = useAuthStore();
+  const rolUser = user?.role.name || "";
   const pathname = usePathname();
+
+  let itemSideBar: typeof navItems | typeof navItemsVete | undefined;
+
+  if (rolUser === "Administrador") {
+    itemSideBar = navItems;
+  } else if (rolUser === "Veterinario") {
+    itemSideBar = navItemsVete;
+  } else {
+    itemSideBar = navItems;
+  }
 
   return (
     <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
@@ -31,14 +44,14 @@ const SheetContentComp = ({
         <SheetHeader className="border-b border-gray-200">
           <div className="flex h-16 items-center justify-between px-6">
             <SheetTitle className="text-xl font-bold text-gray-900">
-              AdminPanel
+              Panel
             </SheetTitle>
           </div>
         </SheetHeader>
         <div className="flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-4">
             <Accordion type="multiple" className="w-full">
-              {navItems.map((category) => (
+              {itemSideBar?.map((category) => (
                 <AccordionItem
                   key={category.category}
                   value={category.category}

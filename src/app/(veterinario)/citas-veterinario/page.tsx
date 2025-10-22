@@ -13,7 +13,7 @@ import { EstadoCita } from "@/helpers/data/estadosCita";
 import { MessageError } from "@/components/generics/MessageError";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import HojaRutaOptimizada from "./ui/HojaRutaOptimizada";
-import CardCitasMedico from "./ui/CardCitasMedicos";
+import CardCitasMedico from "@/components/generics/CardCitasMedicos";
 
 const CitasPendientesVeterinario = () => {
   const { user } = useAuthStore();

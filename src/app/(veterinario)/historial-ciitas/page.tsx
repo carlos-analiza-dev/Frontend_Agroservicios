@@ -2,23 +2,19 @@
 
 import useGetCitasCompletadasByMedico from "@/hooks/citas/useGetCitasCompletadasByMedico";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-
-import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapIcon } from "lucide-react";
 import { MessageError } from "@/components/generics/MessageError";
-import HojaRutaOptimizada from "../citas-veterinario/ui/HojaRutaOptimizada";
-import CardCitasMedico from "../citas-veterinario/ui/CardCitasMedicos";
+import CardCitasMedico from "@/components/generics/CardCitasMedicos";
 
 const HistorialCitasPage = () => {
   const { user } = useAuthStore();
 
   const userId = user?.id || "";
   const limit = 10;
-  const [mostrarHojaRuta, setMostrarHojaRuta] = useState(false);
 
   const {
     data: citas_completadas,
@@ -68,27 +64,8 @@ const HistorialCitasPage = () => {
 
   const allCitas = citas_completadas?.pages.flatMap((page) => page.citas) || [];
 
-  if (mostrarHojaRuta) {
-    return (
-      <HojaRutaOptimizada
-        citas={allCitas}
-        onBack={() => setMostrarHojaRuta(false)}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-1 flex-col p-4 md:p-6">
-      {allCitas && allCitas.length > 0 && (
-        <Button
-          className="mb-4 md:mb-6 lg:mx-auto lg:max-w-2xl w-full"
-          onClick={() => setMostrarHojaRuta(true)}
-        >
-          <MapIcon className="h-4 w-4 mr-2" />
-          Ver Ruta Optimizada del Historial
-        </Button>
-      )}
-
       <ScrollArea className="flex-1">
         <div className="space-y-4 lg:mx-auto lg:max-w-4xl">
           {allCitas.map((item) => (

@@ -1,3 +1,4 @@
-export const formatCurrency = (amount: string, simbolo: string) => {
-  return `${simbolo} ${parseFloat(amount).toFixed(2)}`;
+export const formatCurrency = (amount: number | string, simbolo: string) => {
+  const value = typeof amount === "string" ? parseFloat(amount) : amount;
+  return `${simbolo} ${value.toFixed(2)}`;
 };

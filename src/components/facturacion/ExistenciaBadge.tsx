@@ -51,7 +51,7 @@ const ExistenciaBadge = ({
   if (existencia === undefined) {
     return (
       <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700">
-        Sin datos
+        Sin existencia
       </Badge>
     );
   }
