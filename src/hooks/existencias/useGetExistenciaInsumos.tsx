@@ -5,6 +5,7 @@ const useGetExistenciaInsumos = (insumo?: string, sucursal?: string) => {
   return useQuery({
     queryKey: ["existencia-insumos", insumo, sucursal],
     queryFn: () => obtenerExistenciaInsumos(insumo, sucursal),
+    enabled: !!sucursal,
     retry: false,
   });
 };

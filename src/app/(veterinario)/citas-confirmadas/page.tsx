@@ -4,16 +4,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Minus, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { isAxiosError } from "axios";
 import { Cita } from "@/apis/citas/interfaces/response-citas-confirm.interface";
-
 import { Producto } from "@/apis/productos/interfaces/response-productos.interface";
 import useGetCitasConfirmadasByMedico from "@/hooks/citas/useGetCitasConfirmadasByMedico";
 import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
@@ -29,6 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import useGetExistenciaInsumos from "@/hooks/existencias/useGetExistenciaInsumos";
+import useGetExistenciaProductos from "@/hooks/existencias/useGetExistenciaProductos";
+import { ResponseExistenciaInsumosInterface } from "@/apis/existencia_insumos/interfaces/response-exsistencia-insumos.interface";
+import { ResponseExistenciaProductosInterface } from "@/apis/existencia_productos/interfaces/response-existencia-productos.interface";
+import CardDetailsInsumos from "./ui/CardDetailsInsumos";
+import CardDetailsProductos from "./ui/CardDetailsProductos";
+import ResumenCita from "./ui/ResumenCita";
+import { CreateCitaInsumo } from "@/apis/cita-insumos/accions/crear-cita-insumo";
+import { CreateCitaProducto } from "@/apis/cita-producto/accions/crear-cita-producto";
 
 interface CrearCitaInsumos {
   citaId: string;
@@ -44,16 +49,9 @@ interface CrearCitaProductos {
   precioUnitario: number;
 }
 
-const CreateCitaInsumos = async (data: CrearCitaInsumos) => {
-  return Promise.resolve();
-};
-
-const CreateCitaProductos = async (data: CrearCitaProductos) => {
-  return Promise.resolve();
-};
-
 const CitasConfirmadasVeterinario = () => {
   const { user } = useAuthStore();
+  const sucursalId = user?.sucursal.id || "";
   const queryClient = useQueryClient();
 
   const userId = user?.id || "";
@@ -80,6 +78,42 @@ const CitasConfirmadasVeterinario = () => {
   const [totalAdicional, setTotalAdicional] = useState<{
     [citaId: string]: number;
   }>({});
+
+  const { data: existenciaInsumos } = useGetExistenciaInsumos(
+    undefined,
+    sucursalId
+  );
+  const { data: existenciaProductos } = useGetExistenciaProductos(
+    undefined,
+    sucursalId
+  );
+
+  const getExistenciaInsumo = useCallback(
+    (insumoId: string): number => {
+      if (!existenciaInsumos) return 0;
+
+      const existencia = existenciaInsumos.find(
+        (item: ResponseExistenciaInsumosInterface) => item.insumoId === insumoId
+      );
+
+      return Number(existencia?.existenciaTotal) || 0;
+    },
+    [existenciaInsumos]
+  );
+
+  const getExistenciaProducto = useCallback(
+    (productoId: string): number => {
+      if (!existenciaProductos) return 0;
+
+      const existencia = existenciaProductos.find(
+        (item: ResponseExistenciaProductosInterface) =>
+          item.productoId === productoId
+      );
+
+      return Number(existencia?.existenciaTotal) || 0;
+    },
+    [existenciaProductos]
+  );
 
   const {
     data: citas,
@@ -200,32 +234,52 @@ const CitasConfirmadasVeterinario = () => {
         const currentCitaProducts = prev[selectedCita.id] || {};
         const product = currentCitaProducts[id]?.insumo;
 
-        // Para insumos, usamos la propiedad 'cantidad' en lugar de 'inventario.cantidadDisponible'
-        if (!product || quantity > (product.cantidad || 0)) return prev;
+        const existenciaReal = getExistenciaInsumo(id);
+        if (!product || quantity > existenciaReal) return prev;
 
-        return {
+        const updated = {
           ...prev,
           [selectedCita.id]: {
             ...currentCitaProducts,
             [id]: { ...currentCitaProducts[id], quantity },
           },
         };
+
+        setTimeout(() => {
+          const newTotal = calculateTotal(selectedCita.id);
+          setTotalAdicional((prevTotal) => ({
+            ...prevTotal,
+            [selectedCita.id]: newTotal,
+          }));
+        }, 0);
+
+        return updated;
       });
     } else {
       setSelectedProductos((prev) => {
         const currentCitaProducts = prev[selectedCita.id] || {};
         const product = currentCitaProducts[id]?.producto;
 
-        // Para productos, verificamos la disponibilidad según tu interfaz
-        if (!product || !product.disponible) return prev;
+        const existenciaReal = getExistenciaProducto(id);
+        if (!product || quantity > existenciaReal) return prev;
 
-        return {
+        const updated = {
           ...prev,
           [selectedCita.id]: {
             ...currentCitaProducts,
             [id]: { ...currentCitaProducts[id], quantity },
           },
         };
+
+        setTimeout(() => {
+          const newTotal = calculateTotal(selectedCita.id);
+          setTotalAdicional((prevTotal) => ({
+            ...prevTotal,
+            [selectedCita.id]: newTotal,
+          }));
+        }, 0);
+
+        return updated;
       });
     }
   };
@@ -243,7 +297,6 @@ const CitasConfirmadasVeterinario = () => {
       const productosTotal = selectedProductos[citaId]
         ? Object.values(selectedProductos[citaId]).reduce(
             (total, { producto, quantity }) => {
-              // Usamos el precio del primer país o un valor por defecto
               const precio = producto.preciosPorPais?.[0]?.precio || "0";
               return total + parseFloat(precio) * quantity;
             },
@@ -281,7 +334,6 @@ const CitasConfirmadasVeterinario = () => {
             precioUnitario: parseFloat(insumo.costo),
           };
 
-          await CreateCitaInsumos(insumoData);
           return { success: true, insumoId: insumo.id };
         });
 
@@ -300,7 +352,6 @@ const CitasConfirmadasVeterinario = () => {
             precioUnitario: parseFloat(precio),
           };
 
-          await CreateCitaProductos(productoData);
           return { success: true, productoId: producto.id };
         });
 
@@ -385,46 +436,82 @@ const CitasConfirmadasVeterinario = () => {
 
     try {
       if (selectedInsumos[id]) {
-        const insumosSinStock = Object.values(selectedInsumos[id]).filter(
-          ({ insumo, quantity }) => quantity > (insumo.cantidad || 0)
+        const sinStock = Object.values(selectedInsumos[id]).filter(
+          ({ insumo, quantity }) => quantity > getExistenciaInsumo(insumo.id)
         );
-
-        if (insumosSinStock.length > 0) {
-          const nombresInsumos = insumosSinStock
-            .map(({ insumo }) => insumo.nombre)
-            .join(", ");
-          throw new Error(`No hay suficiente stock para: ${nombresInsumos}`);
+        if (sinStock.length > 0) {
+          throw new Error(
+            `No hay suficiente stock para: ${sinStock
+              .map(({ insumo }) => insumo.nombre)
+              .join(", ")}`
+          );
         }
       }
 
       if (selectedProductos[id]) {
-        const productosSinStock = Object.values(selectedProductos[id]).filter(
-          ({ producto, quantity }) => !producto.disponible
+        const sinStock = Object.values(selectedProductos[id]).filter(
+          ({ producto, quantity }) =>
+            quantity > getExistenciaProducto(producto.id)
         );
-
-        if (productosSinStock.length > 0) {
-          const nombresProductos = productosSinStock
-            .map(({ producto }) => producto.nombre)
-            .join(", ");
-          throw new Error(`Productos no disponibles: ${nombresProductos}`);
+        if (sinStock.length > 0) {
+          throw new Error(
+            `No hay suficiente stock para: ${sinStock
+              .map(({ producto }) => producto.nombre)
+              .join(", ")}`
+          );
         }
+      }
+
+      if (selectedInsumos[id]) {
+        const insumosPromises = Object.values(selectedInsumos[id]).map(
+          async ({ insumo, quantity }) => {
+            const data = {
+              citaId: id,
+              insumoId: insumo.id,
+              cantidad: quantity,
+              precioUnitario: parseFloat(insumo.costo),
+            };
+            await CreateCitaInsumo(data);
+          }
+        );
+        await Promise.all(insumosPromises);
+      }
+
+      if (selectedProductos[id]) {
+        const productosPromises = Object.values(selectedProductos[id]).map(
+          async ({ producto, quantity }) => {
+            const precio = producto.preciosPorPais?.[0]?.precio || "0";
+            const data = {
+              citaId: id,
+              productoId: producto.id,
+              cantidad: quantity,
+              precioUnitario: parseFloat(precio),
+            };
+            await CreateCitaProducto(data);
+          }
+        );
+        await Promise.all(productosPromises);
       }
 
       await updateCitaMutation.mutateAsync({
         id,
         estado: EstadoCita.COMPLETADA,
-        totalFinal: totalFinal,
+        totalFinal,
       });
+
+      toast.success(
+        `Cita completada correctamente (${user?.pais.simbolo_moneda}${totalFinal.toFixed(2)})`
+      );
     } catch (error) {
-      let errorMessage = "Error al completar la cita";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || error.message;
+      console.error(error);
+      if (isAxiosError(error)) {
+        const msg = error.response?.data?.message;
+        toast.error(
+          Array.isArray(msg) ? msg[0] : msg || "Error al completar la cita"
+        );
+      } else {
+        toast.error((error as Error).message || "Error al completar la cita");
       }
-
-      toast.error(errorMessage);
     }
   };
 
@@ -468,6 +555,12 @@ const CitasConfirmadasVeterinario = () => {
                     setSelectedCita(item);
                     handleRemoveProduct(productId, type);
                   }}
+                  onUpdateQuantity={(productId, quantity, type) => {
+                    setSelectedCita(item);
+                    updateProductQuantity(productId, quantity, type);
+                  }}
+                  existenciaInsumos={existenciaInsumos || []}
+                  existenciaProductos={existenciaProductos || []}
                 />
               </div>
             ))}
@@ -496,6 +589,9 @@ const CitasConfirmadasVeterinario = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Seleccionar Insumos/Productos</span>
+              <Badge variant="outline" className="ml-2">
+                Sucursal: {user?.sucursal.nombre}
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
@@ -511,96 +607,29 @@ const CitasConfirmadasVeterinario = () => {
             </TabsList>
           </Tabs>
 
-          <ScrollArea className="flex-1">
-            <div className="space-y-3 p-1">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="space-y-3 p-1 max-h-[300px] overflow-y-auto">
               {activeTab === "insumos"
                 ? insumos_disponibles?.insumos.map((insumo) => {
                     const isSelected =
                       selectedCita &&
                       selectedInsumos[selectedCita.id]?.[insumo.id];
+                    const existenciaReal = getExistenciaInsumo(insumo.id);
+                    const disponible = existenciaReal > 0;
+
                     return (
-                      <Card
+                      <CardDetailsInsumos
                         key={insumo.id}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected ? "bg-blue-50 border-blue-200" : ""
-                        }`}
-                      >
-                        <CardContent className="p-4">
-                          <div
-                            onClick={() =>
-                              handleProductSelection(insumo, "insumo")
-                            }
-                            className="space-y-2"
-                          >
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-semibold text-lg">
-                                {insumo.nombre}
-                              </h3>
-                              <Badge variant="secondary">
-                                {insumo.costo} {user?.pais.simbolo_moneda}
-                              </Badge>
-                            </div>
-
-                            <p className="text-sm">
-                              Disponibles: {insumo.cantidad || 0}{" "}
-                              {insumo.unidad_venta}
-                            </p>
-
-                            {isSelected && (
-                              <div className="flex items-center space-x-3 mt-3">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateProductQuantity(
-                                      insumo.id,
-                                      selectedInsumos[selectedCita.id!][
-                                        insumo.id
-                                      ].quantity - 1,
-                                      "insumo"
-                                    );
-                                  }}
-                                  disabled={
-                                    selectedInsumos[selectedCita.id!][insumo.id]
-                                      .quantity <= 1
-                                  }
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </Button>
-
-                                <span className="font-medium w-8 text-center">
-                                  {
-                                    selectedInsumos[selectedCita.id!][insumo.id]
-                                      .quantity
-                                  }
-                                </span>
-
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateProductQuantity(
-                                      insumo.id,
-                                      selectedInsumos[selectedCita.id!][
-                                        insumo.id
-                                      ].quantity + 1,
-                                      "insumo"
-                                    );
-                                  }}
-                                  disabled={
-                                    selectedInsumos[selectedCita.id!][insumo.id]
-                                      .quantity >= (insumo.cantidad || 0)
-                                  }
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                        insumo={insumo}
+                        isSelected={isSelected}
+                        disponible={disponible}
+                        handleProductSelection={handleProductSelection}
+                        user={user}
+                        existenciaReal={existenciaReal}
+                        updateProductQuantity={updateProductQuantity}
+                        selectedInsumos={selectedInsumos}
+                        selectedCita={selectedCita}
+                      />
                     );
                   })
                 : productos_disponibles?.data.productos.map((producto) => {
@@ -608,157 +637,35 @@ const CitasConfirmadasVeterinario = () => {
                       selectedCita &&
                       selectedProductos[selectedCita.id]?.[producto.id];
                     const precio = producto.preciosPorPais?.[0]?.precio || "0";
+                    const existenciaReal = getExistenciaProducto(producto.id);
+                    const disponible = existenciaReal > 0;
+
                     return (
-                      <Card
+                      <CardDetailsProductos
                         key={producto.id}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected ? "bg-blue-50 border-blue-200" : ""
-                        }`}
-                      >
-                        <CardContent className="p-4">
-                          <div
-                            onClick={() =>
-                              handleProductSelection(producto, "producto")
-                            }
-                            className="space-y-2"
-                          >
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-semibold text-lg">
-                                {producto.nombre}
-                              </h3>
-                              <Badge variant="secondary">
-                                {precio} {user?.pais.simbolo_moneda}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {producto.descripcion}
-                            </p>
-                            <p className="text-sm">
-                              Disponible: {producto.disponible ? "Sí" : "No"} |{" "}
-                              {producto.unidad_venta}
-                            </p>
-
-                            {isSelected && (
-                              <div className="flex items-center space-x-3 mt-3">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateProductQuantity(
-                                      producto.id,
-                                      selectedProductos[selectedCita.id!][
-                                        producto.id
-                                      ].quantity - 1,
-                                      "producto"
-                                    );
-                                  }}
-                                  disabled={
-                                    selectedProductos[selectedCita.id!][
-                                      producto.id
-                                    ].quantity <= 1
-                                  }
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </Button>
-
-                                <span className="font-medium w-8 text-center">
-                                  {
-                                    selectedProductos[selectedCita.id!][
-                                      producto.id
-                                    ].quantity
-                                  }
-                                </span>
-
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateProductQuantity(
-                                      producto.id,
-                                      selectedProductos[selectedCita.id!][
-                                        producto.id
-                                      ].quantity + 1,
-                                      "producto"
-                                    );
-                                  }}
-                                  disabled={!producto.disponible}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                        producto={producto}
+                        isSelected={isSelected}
+                        disponible={disponible}
+                        handleProductSelection={handleProductSelection}
+                        user={user}
+                        existenciaReal={existenciaReal}
+                        updateProductQuantity={updateProductQuantity}
+                        selectedProductos={selectedProductos}
+                        selectedCita={selectedCita}
+                        precio={precio}
+                      />
                     );
                   })}
             </div>
           </ScrollArea>
 
-          <Card className="mt-4">
-            <CardContent className="p-4">
-              <h4 className="font-semibold mb-3">Resumen</h4>
-
-              {selectedCita && selectedInsumos[selectedCita.id] && (
-                <>
-                  <h5 className="font-medium mb-2">Insumos:</h5>
-                  {Object.values(selectedInsumos[selectedCita.id]).map(
-                    ({ insumo, quantity }) => (
-                      <div
-                        key={insumo.id}
-                        className="flex justify-between ml-4 text-sm"
-                      >
-                        <span>
-                          {insumo.nombre} x {quantity}
-                        </span>
-                        <span>
-                          {(parseFloat(insumo.costo) * quantity).toFixed(2)}{" "}
-                          {user?.pais.simbolo_moneda}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </>
-              )}
-
-              {selectedCita && selectedProductos[selectedCita.id] && (
-                <>
-                  <h5 className="font-medium mt-3 mb-2">Productos:</h5>
-                  {Object.values(selectedProductos[selectedCita.id]).map(
-                    ({ producto, quantity }) => {
-                      const precio =
-                        producto.preciosPorPais?.[0]?.precio || "0";
-                      return (
-                        <div
-                          key={producto.id}
-                          className="flex justify-between ml-4 text-sm"
-                        >
-                          <span>
-                            {producto.nombre} x {quantity}
-                          </span>
-                          <span>
-                            {(parseFloat(precio) * quantity).toFixed(2)}{" "}
-                            {user?.pais.simbolo_moneda}
-                          </span>
-                        </div>
-                      );
-                    }
-                  )}
-                </>
-              )}
-
-              <Separator className="my-3" />
-              <div className="font-semibold text-lg">
-                Total adicional:{" "}
-                {selectedCita
-                  ? totalAdicional[selectedCita.id]?.toFixed(2) || "0.00"
-                  : "0.00"}{" "}
-                {user?.pais.simbolo_moneda}
-              </div>
-            </CardContent>
-          </Card>
+          <ResumenCita
+            selectedCita={selectedCita}
+            selectedProductos={selectedProductos}
+            selectedInsumos={selectedInsumos}
+            totalAdicional={totalAdicional}
+            user={user}
+          />
 
           <Button
             onClick={handleSaveProducts}

@@ -2,11 +2,10 @@
 
 import useGetCitasCompletadasByMedico from "@/hooks/citas/useGetCitasCompletadasByMedico";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapIcon } from "lucide-react";
 import { MessageError } from "@/components/generics/MessageError";
 import CardCitasMedico from "@/components/generics/CardCitasMedicos";
 

@@ -19,6 +19,8 @@ export interface Cita {
   subServicio: SubServicio;
   distancia?: number;
   tiempoViaje?: string;
+  insumosUsados: InsumoUsado[];
+  productosUsados: ProductoUsado[];
 }
 
 export interface Animale {
@@ -53,4 +55,30 @@ export interface SubServicio {
   id: string;
   nombre: string;
   descripcion: string;
+}
+
+export interface InsumoUsado {
+  id: string;
+  insumo: {
+    id: string;
+    nombre: string;
+    codigo: string;
+    unidad_venta: string;
+  };
+  cantidad: number;
+  precioUnitario: string;
+  subtotal: number;
+}
+
+export interface ProductoUsado {
+  id: string;
+  producto: {
+    id: string;
+    nombre: string;
+    descripcion: string;
+    unidad_venta: string;
+  };
+  cantidad: number;
+  precioUnitario: string;
+  subtotal: number;
 }

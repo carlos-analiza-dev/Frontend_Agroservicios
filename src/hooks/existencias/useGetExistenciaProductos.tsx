@@ -5,6 +5,7 @@ const useGetExistenciaProductos = (producto?: string, sucursal?: string) => {
   return useQuery({
     queryKey: ["existencia-productos", producto, sucursal],
     queryFn: () => obtenerExistenciaProductos(producto, sucursal),
+    enabled: !!sucursal,
     retry: false,
   });
 };
