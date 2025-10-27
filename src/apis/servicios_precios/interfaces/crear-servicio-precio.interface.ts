@@ -6,6 +6,12 @@ export interface CrearServicePrecio {
   tiempo: number;
   cantidadMin: number;
   cantidadMax: number;
+  insumos: Insumo[];
+}
+
+export interface Insumo {
+  insumoId: string;
+  cantidad: number;
 }
 
 export interface ServicioPrecio extends CrearServicePrecio {

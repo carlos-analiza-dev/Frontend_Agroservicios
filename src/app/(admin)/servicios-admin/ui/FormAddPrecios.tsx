@@ -14,6 +14,15 @@ import {
   SubServicio,
 } from "@/apis/servicios/interfaces/response-servicios.interface";
 import { useAuthStore } from "@/providers/store/useAuthStore";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
+import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
 
 interface Props {
   subServicioId: string;
@@ -22,6 +31,16 @@ interface Props {
   onSuccess: () => void;
   isEditing?: boolean;
   subServicio?: SubServicio | null;
+}
+
+interface InsumoSeleccionado {
+  id: string;
+  nombre: string;
+  codigo: string;
+  unidad_venta: string;
+  cantidad: number;
+  disponible: boolean;
+  editando?: boolean;
 }
 
 const FormAddPrecios = ({
@@ -36,6 +55,12 @@ const FormAddPrecios = ({
   const paisId = user?.pais.id || "";
   const queryClient = useQueryClient();
   const [precioServicio, setPrecioServicio] = useState<number>(0);
+  const { data: insumos } = useGetInsumosDisponibles();
+  const [insumosSeleccionados, setInsumosSeleccionados] = useState<
+    InsumoSeleccionado[]
+  >([]);
+  const [insumoSeleccionado, setInsumoSeleccionado] = useState<string>("");
+  const [cantidadInsumo, setCantidadInsumo] = useState<number>(1);
 
   const {
     register,
@@ -46,13 +71,98 @@ const FormAddPrecios = ({
     formState: { errors },
   } = useForm<CrearServicePrecio>();
 
+  const insumosDisponibles =
+    insumos?.insumos?.filter(
+      (insumo) =>
+        !insumosSeleccionados.some((selected) => selected.id === insumo.id)
+    ) || [];
+
+  const agregarInsumo = () => {
+    if (!insumoSeleccionado || cantidadInsumo <= 0) {
+      toast.error("Selecciona un insumo y una cantidad válida");
+      return;
+    }
+
+    const insumoExistente = insumos?.insumos.find(
+      (insumo) => insumo.id === insumoSeleccionado
+    );
+
+    if (!insumoExistente) {
+      toast.error("Insumo no encontrado");
+      return;
+    }
+
+    const yaAgregado = insumosSeleccionados.find(
+      (insumo) => insumo.id === insumoSeleccionado
+    );
+
+    if (yaAgregado) {
+      toast.error("Este insumo ya fue agregado");
+      return;
+    }
+
+    const nuevoInsumo: InsumoSeleccionado = {
+      id: insumoExistente.id,
+      nombre: insumoExistente.nombre,
+      codigo: insumoExistente.codigo,
+      unidad_venta: insumoExistente.unidad_venta,
+      cantidad: cantidadInsumo,
+      disponible: insumoExistente.disponible,
+    };
+
+    setInsumosSeleccionados([...insumosSeleccionados, nuevoInsumo]);
+    setInsumoSeleccionado("");
+    setCantidadInsumo(1);
+  };
+
+  const eliminarInsumo = (id: string) => {
+    setInsumosSeleccionados(
+      insumosSeleccionados.filter((insumo) => insumo.id !== id)
+    );
+  };
+
+  const habilitarEdicionInsumo = (id: string) => {
+    setInsumosSeleccionados((prev) =>
+      prev.map((insumo) =>
+        insumo.id === id
+          ? { ...insumo, editando: true }
+          : { ...insumo, editando: false }
+      )
+    );
+  };
+
+  const deshabilitarEdicionInsumo = (id: string) => {
+    setInsumosSeleccionados((prev) =>
+      prev.map((insumo) =>
+        insumo.id === id ? { ...insumo, editando: false } : insumo
+      )
+    );
+  };
+
+  const guardarEdicionInsumo = (id: string, nuevaCantidad: number) => {
+    if (nuevaCantidad <= 0) {
+      toast.error("La cantidad debe ser mayor a 0");
+      return;
+    }
+
+    setInsumosSeleccionados((prev) =>
+      prev.map((insumo) =>
+        insumo.id === id
+          ? { ...insumo, cantidad: nuevaCantidad, editando: false }
+          : insumo
+      )
+    );
+  };
+
   const calcularCostoTotalInsumos = (): number => {
-    if (!subServicio?.insumos || subServicio.insumos.length === 0) {
+    if (insumosSeleccionados.length === 0) {
       return 0;
     }
 
-    return subServicio.insumos.reduce((total, insumo) => {
-      return total + parseFloat(insumo.insumo.costo) * insumo.cantidad;
+    return insumosSeleccionados.reduce((total, insumo) => {
+      const insumoData = insumos?.insumos?.find((i) => i.id === insumo.id);
+      const costoInsumo = insumoData?.costo ? parseFloat(insumoData.costo) : 0;
+      return total + costoInsumo * insumo.cantidad;
     }, 0);
   };
 
@@ -70,7 +180,7 @@ const FormAddPrecios = ({
       setValue("costo", costoTotal);
       setPrecioServicio(precioWatch);
     }
-  }, [precioWatch, setValue]);
+  }, [precioWatch, setValue, insumosSeleccionados]);
 
   useEffect(() => {
     if (isEditing && editPrecio) {
@@ -88,14 +198,30 @@ const FormAddPrecios = ({
       );
 
       setPrecioServicio(precio);
+
+      if (editPrecio.insumos && editPrecio.insumos.length > 0) {
+        const insumosCargados: InsumoSeleccionado[] = editPrecio.insumos.map(
+          (insumo) => ({
+            id: insumo.insumo.id,
+            nombre: insumo.insumo.nombre,
+            codigo: insumo.insumo.codigo,
+            unidad_venta: insumo.insumo.unidad_venta,
+            cantidad: insumo.cantidad,
+            disponible: insumo.insumo.disponible,
+            editando: false,
+          })
+        );
+        setInsumosSeleccionados(insumosCargados);
+      }
     } else {
       reset();
       setPrecioServicio(0);
+      setInsumosSeleccionados([]);
 
       setValue("precio", 0);
       setValue("costo", costoTotalInsumos);
     }
-  }, [isEditing, editPrecio, setValue, reset, costoTotalInsumos]);
+  }, [isEditing, editPrecio, setValue, reset]);
 
   const createMutation = useMutation({
     mutationFn: (data: CrearServicePrecio) => AddServicioPrecio(data),
@@ -178,11 +304,17 @@ const FormAddPrecios = ({
       return;
     }
 
+    const insumosFormateados = insumosSeleccionados.map((insumo) => ({
+      insumoId: insumo.id,
+      cantidad: insumo.cantidad,
+    }));
+
     const costoFinal = data.costo || calcularCostoTotal(data.precio);
 
     const submitData = {
       ...data,
       costo: costoFinal,
+      insumos: insumosFormateados,
     };
 
     if (isEditing) {
@@ -234,6 +366,139 @@ const FormAddPrecios = ({
         </p>
       </div>
 
+      <div className="space-y-4 border rounded-md p-4">
+        <Label className="font-bold text-lg">Insumos del Servicio</Label>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="insumo">Seleccionar Insumo</Label>
+            <Select
+              value={insumoSeleccionado}
+              onValueChange={setInsumoSeleccionado}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un insumo" />
+              </SelectTrigger>
+              <SelectContent>
+                {insumosDisponibles.map((insumo) => (
+                  <SelectItem key={insumo.id} value={insumo.id}>
+                    {insumo.nombre} - {insumo.codigo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cantidad">Cantidad</Label>
+            <Input
+              id="cantidad"
+              type="number"
+              min="1"
+              value={cantidadInsumo}
+              onChange={(e) => setCantidadInsumo(Number(e.target.value))}
+              placeholder="Cantidad"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <Button type="button" onClick={agregarInsumo} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Insumo
+            </Button>
+          </div>
+        </div>
+
+        {insumosSeleccionados.length > 0 && (
+          <div className="mt-4">
+            <Label className="font-bold">Insumos agregados:</Label>
+            <div className="mt-2 space-y-2">
+              {insumosSeleccionados.map((insumo) => (
+                <div
+                  key={insumo.id}
+                  className="flex items-center justify-between p-3 border rounded-md bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">{insumo.nombre}</span>
+                        <span className="text-sm text-gray-500 ml-2">
+                          ({insumo.codigo})
+                        </span>
+                      </div>
+
+                      {insumo.editando ? (
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="number"
+                            min="1"
+                            defaultValue={insumo.cantidad}
+                            onBlur={(e) =>
+                              guardarEdicionInsumo(
+                                insumo.id,
+                                Number(e.target.value)
+                              )
+                            }
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                guardarEdicionInsumo(
+                                  insumo.id,
+                                  Number(e.currentTarget.value)
+                                );
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-20 h-8"
+                            autoFocus
+                          />
+                          <span className="text-sm text-gray-500">
+                            {insumo.unidad_venta}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deshabilitarEdicionInsumo(insumo.id)}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-medium">
+                            {insumo.cantidad} {insumo.unidad_venta}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => habilitarEdicionInsumo(insumo.id)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            ✏️ Editar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => eliminarInsumo(insumo.id)}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Campos existentes de precio, tiempo, cantidad min/max */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="precio" className="font-bold">

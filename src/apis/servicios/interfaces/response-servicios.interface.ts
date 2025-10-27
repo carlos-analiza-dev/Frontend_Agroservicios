@@ -29,7 +29,6 @@ export interface SubServicio {
   updatedAt: Date;
   categoriaId: null;
   preciosPorPais: PreciosPorPai[];
-  insumos: InsumoElement[];
 }
 
 export interface InsumoElement {
@@ -61,6 +60,7 @@ export interface PreciosPorPai {
   cantidadMin: number;
   cantidadMax: number;
   pais: Pais;
+  insumos: InsumoElement[];
 }
 
 export interface Pais {

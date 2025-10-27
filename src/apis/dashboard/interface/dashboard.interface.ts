@@ -7,3 +7,8 @@ export interface TopSucursalesInterface {
   sucursal: string;
   total_ventas: string;
 }
+
+export interface IngresosTotalesInterface {
+  ingresosTotales: number;
+  year: number;
+}

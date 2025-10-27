@@ -206,10 +206,6 @@ const CardsCategorias = ({ servicios }: Props) => {
                         </Badge>
                       </div>
 
-                      <div className="mt-4">
-                        <InsumosExpandible insumos={subServicio.insumos} />
-                      </div>
-
                       <div className="mt-3">
                         <h1 className="font-bold text-sm sm:text-base">
                           Paquetes por Pais
@@ -282,11 +278,12 @@ const CardsCategorias = ({ servicios }: Props) => {
       </AlertDialog>
 
       <AlertDialog open={isOpenPrecios} onOpenChange={setIsOpenPrecios}>
-        <AlertDialogContent className="w-full md:max-w-xl">
+        <AlertDialogContent className="w-full md:max-w-4xl max-h-[90vh] flex flex-col">
           <div className="flex justify-end">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
-          <AlertDialogHeader>
+
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>
               Agregar Paquete para {servicioSelected?.nombre}
             </AlertDialogTitle>
@@ -295,13 +292,16 @@ const CardsCategorias = ({ servicios }: Props) => {
               servicio.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <FormAddPrecios
-            subServicioId={selectedSubServicioId}
-            onCancel={() => setIsOpenPrecios(false)}
-            isEditing={isEditPrecio}
-            onSuccess={() => setIsOpenPrecios(false)}
-            subServicio={servicioSelected}
-          />
+
+          <div className="overflow-y-auto flex-1 px-1">
+            <FormAddPrecios
+              subServicioId={selectedSubServicioId}
+              onCancel={() => setIsOpenPrecios(false)}
+              isEditing={isEditPrecio}
+              onSuccess={() => setIsOpenPrecios(false)}
+              subServicio={servicioSelected}
+            />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

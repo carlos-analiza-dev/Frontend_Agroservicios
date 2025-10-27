@@ -87,7 +87,7 @@ const DetallesPais = ({ subServicio }: Props) => {
       )}
 
       <AlertDialog open={isOpenPrecios} onOpenChange={setIsOpenPrecios}>
-        <AlertDialogContent className="w-[95vw] max-w-xl mx-auto max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="w-full md:max-w-4xl max-h-[90vh] flex flex-col">
           <div className="flex justify-end sticky top-0 bg-background py-2 z-10">
             <AlertDialogCancel>X</AlertDialogCancel>
           </div>
@@ -99,7 +99,7 @@ const DetallesPais = ({ subServicio }: Props) => {
               Modifica los detalles del paquete por país.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="px-1 sm:px-4 pb-4">
+          <div className="overflow-y-auto flex-1 px-1">
             <FormAddPrecios
               subServicioId={subServicio.id}
               editPrecio={editPrecio}
