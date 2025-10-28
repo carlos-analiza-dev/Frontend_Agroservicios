@@ -585,8 +585,8 @@ const CitasConfirmadasVeterinario = () => {
       </div>
 
       <Dialog open={showProductModal} onOpenChange={setShowProductModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center justify-between">
               <span>Seleccionar Insumos/Productos</span>
               <Badge variant="outline" className="ml-2">
@@ -594,12 +594,12 @@ const CitasConfirmadasVeterinario = () => {
               </Badge>
             </DialogTitle>
           </DialogHeader>
-
           <Tabs
             value={activeTab}
             onValueChange={(value) =>
               setActiveTab(value as "insumos" | "productos")
             }
+            className="flex-shrink-0"
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="insumos">Insumos</TabsTrigger>
@@ -607,85 +607,96 @@ const CitasConfirmadasVeterinario = () => {
             </TabsList>
           </Tabs>
 
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="space-y-3 p-1 max-h-[300px] overflow-y-auto">
-              {activeTab === "insumos"
-                ? insumos_disponibles?.insumos.map((insumo) => {
-                    const isSelected =
-                      selectedCita &&
-                      selectedInsumos[selectedCita.id]?.[insumo.id];
-                    const existenciaReal = getExistenciaInsumo(insumo.id);
-                    const disponible = existenciaReal > 0;
+          <div className="flex flex-1 gap-4 min-h-0">
+            <div className="flex-1 min-w-0">
+              <ScrollArea className="h-full border rounded-lg">
+                <div className="space-y-3 p-4">
+                  {activeTab === "insumos"
+                    ? insumos_disponibles?.insumos.map((insumo) => {
+                        const isSelected =
+                          selectedCita &&
+                          selectedInsumos[selectedCita.id]?.[insumo.id];
+                        const existenciaReal = getExistenciaInsumo(insumo.id);
+                        const disponible = existenciaReal > 0;
 
-                    return (
-                      <CardDetailsInsumos
-                        key={insumo.id}
-                        insumo={insumo}
-                        isSelected={isSelected}
-                        disponible={disponible}
-                        handleProductSelection={handleProductSelection}
-                        user={user}
-                        existenciaReal={existenciaReal}
-                        updateProductQuantity={updateProductQuantity}
-                        selectedInsumos={selectedInsumos}
-                        selectedCita={selectedCita}
-                      />
-                    );
-                  })
-                : productos_disponibles?.data.productos.map((producto) => {
-                    const isSelected =
-                      selectedCita &&
-                      selectedProductos[selectedCita.id]?.[producto.id];
-                    const precio = producto.preciosPorPais?.[0]?.precio || "0";
-                    const existenciaReal = getExistenciaProducto(producto.id);
-                    const disponible = existenciaReal > 0;
+                        return (
+                          <CardDetailsInsumos
+                            key={insumo.id}
+                            insumo={insumo}
+                            isSelected={isSelected}
+                            disponible={disponible}
+                            handleProductSelection={handleProductSelection}
+                            user={user}
+                            existenciaReal={existenciaReal}
+                            updateProductQuantity={updateProductQuantity}
+                            selectedInsumos={selectedInsumos}
+                            selectedCita={selectedCita}
+                          />
+                        );
+                      })
+                    : productos_disponibles?.data.productos.map((producto) => {
+                        const isSelected =
+                          selectedCita &&
+                          selectedProductos[selectedCita.id]?.[producto.id];
+                        const precio =
+                          producto.preciosPorPais?.[0]?.precio || "0";
+                        const existenciaReal = getExistenciaProducto(
+                          producto.id
+                        );
+                        const disponible = existenciaReal > 0;
 
-                    return (
-                      <CardDetailsProductos
-                        key={producto.id}
-                        producto={producto}
-                        isSelected={isSelected}
-                        disponible={disponible}
-                        handleProductSelection={handleProductSelection}
-                        user={user}
-                        existenciaReal={existenciaReal}
-                        updateProductQuantity={updateProductQuantity}
-                        selectedProductos={selectedProductos}
-                        selectedCita={selectedCita}
-                        precio={precio}
-                      />
-                    );
-                  })}
+                        return (
+                          <CardDetailsProductos
+                            key={producto.id}
+                            producto={producto}
+                            isSelected={isSelected}
+                            disponible={disponible}
+                            handleProductSelection={handleProductSelection}
+                            user={user}
+                            existenciaReal={existenciaReal}
+                            updateProductQuantity={updateProductQuantity}
+                            selectedProductos={selectedProductos}
+                            selectedCita={selectedCita}
+                            precio={precio}
+                          />
+                        );
+                      })}
+                </div>
+              </ScrollArea>
             </div>
-          </ScrollArea>
 
-          <ResumenCita
-            selectedCita={selectedCita}
-            selectedProductos={selectedProductos}
-            selectedInsumos={selectedInsumos}
-            totalAdicional={totalAdicional}
-            user={user}
-          />
-
-          <Button
-            onClick={handleSaveProducts}
-            disabled={
-              !selectedCita ||
-              ((!selectedInsumos[selectedCita.id] ||
-                Object.keys(selectedInsumos[selectedCita.id]).length === 0) &&
-                (!selectedProductos[selectedCita.id] ||
-                  Object.keys(selectedProductos[selectedCita.id]).length === 0))
-            }
-            className="mt-4"
-          >
-            {selectedCita &&
-            ((selectedInsumos[selectedCita.id] &&
-              Object.keys(selectedInsumos[selectedCita.id]).length > 0) ||
-              (selectedProductos[selectedCita.id] &&
-                Object.keys(selectedProductos[selectedCita.id]).length > 0))
-              ? `Agregar a la cita`
-              : "Selecciona al menos un insumo o producto"}
-          </Button>
+            <div className="w-80 flex-shrink-0">
+              <ResumenCita
+                selectedCita={selectedCita}
+                selectedProductos={selectedProductos}
+                selectedInsumos={selectedInsumos}
+                totalAdicional={totalAdicional}
+                user={user}
+              />
+            </div>
+          </div>
+          <div className="flex-shrink-0 pt-4 border-t">
+            <Button
+              onClick={handleSaveProducts}
+              disabled={
+                !selectedCita ||
+                ((!selectedInsumos[selectedCita.id] ||
+                  Object.keys(selectedInsumos[selectedCita.id]).length === 0) &&
+                  (!selectedProductos[selectedCita.id] ||
+                    Object.keys(selectedProductos[selectedCita.id]).length ===
+                      0))
+              }
+              className="w-full"
+            >
+              {selectedCita &&
+              ((selectedInsumos[selectedCita.id] &&
+                Object.keys(selectedInsumos[selectedCita.id]).length > 0) ||
+                (selectedProductos[selectedCita.id] &&
+                  Object.keys(selectedProductos[selectedCita.id]).length > 0))
+                ? `Agregar a la cita`
+                : "Selecciona al menos un insumo o producto"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

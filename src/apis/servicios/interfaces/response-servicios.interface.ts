@@ -21,19 +21,37 @@ export interface SubServicio {
   atributos: string;
   tipo: string;
   unidad_venta: string;
+  tipo_fraccionamiento: null;
+  contenido: number;
   descripcion: string;
   servicioId: string;
   isActive: boolean;
   disponible: boolean;
+  es_compra_bodega: boolean;
+  compra_minima: number;
+  unidad_fraccionamiento: number;
+  distribucion_minima: number;
+  venta_minima: number;
   createdAt: Date;
   updatedAt: Date;
   categoriaId: null;
   preciosPorPais: PreciosPorPai[];
 }
 
+export interface PreciosPorPai {
+  id: string;
+  precio: string;
+  costo: null | string;
+  tiempo: number;
+  cantidadMin: number;
+  cantidadMax: number;
+  pais: Pais;
+  insumos: InsumoElement[];
+}
+
 export interface InsumoElement {
   id: string;
-  servicioId: string;
+  servicioPaisId: string;
   insumoId: string;
   cantidad: number;
   createdAt: Date;
@@ -50,17 +68,6 @@ export interface InsumoInsumo {
   disponible: boolean;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface PreciosPorPai {
-  id: string;
-  precio: string;
-  costo: null;
-  tiempo: number;
-  cantidadMin: number;
-  cantidadMax: number;
-  pais: Pais;
-  insumos: InsumoElement[];
 }
 
 export interface Pais {

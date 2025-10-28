@@ -195,6 +195,16 @@ export const navItemsVete = [
     ],
   },
   {
+    category: "Historial",
+    items: [
+      {
+        name: "Historial Clinico",
+        href: "/historial-clinico",
+        icon: Warehouse,
+      },
+    ],
+  },
+  {
     category: "Facturacion",
     items: [
       {
