@@ -11,3 +11,10 @@ export interface Detalle {
   tratamiento: string;
   observaciones: string;
 }
+
+export interface Documento {
+  nombre: string;
+  url: string;
+  key: string;
+  mimeType: string;
+}

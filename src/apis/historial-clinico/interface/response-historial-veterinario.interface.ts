@@ -8,6 +8,7 @@ export interface Historial {
   resumen: string;
   createdAt: Date;
   updatedAt: Date;
+  cita: Cita;
   animal: Animal;
   veterinario: Ario;
   detalles: Detalle[];
@@ -81,6 +82,75 @@ export interface Ario {
 export interface TipoAlimentacion {
   origen: string;
   alimento: string;
+  porcentaje_comprado?: number;
+  porcentaje_producido?: number;
+}
+
+export interface Cita {
+  id: string;
+  codigo: string;
+  horaInicio: string;
+  horaFin: string;
+  fecha: string;
+  cantidadAnimales: number;
+  totalPagar: string;
+  totalFinal: string;
+  duracion: number;
+  estado: string;
+  created_at: Date;
+  updated_at: Date;
+  finca: Finca;
+  subServicio: SubServicio;
+}
+
+export interface Finca {
+  id: string;
+  nombre_finca: string;
+  cantidad_animales: number;
+  ubicacion: string;
+  latitud: number;
+  longitud: number;
+  abreviatura: string;
+  tamaño_total: string;
+  area_ganaderia: string;
+  medida_finca: string;
+  tipo_explotacion: TipoExplotacion[];
+  especies_maneja: EspeciesManeja[];
+  fecha_registro: Date;
+  isActive: boolean;
+}
+
+export interface EspeciesManeja {
+  especie: string;
+  cantidad: number;
+}
+
+export interface TipoExplotacion {
+  tipo_explotacion: string;
+}
+
+export interface SubServicio {
+  id: string;
+  nombre: string;
+  codigo: string;
+  codigo_barra: string;
+  atributos: string;
+  tipo: string;
+  unidad_venta: string;
+  tipo_fraccionamiento: null;
+  contenido: number;
+  descripcion: string;
+  servicioId: string;
+  isActive: boolean;
+  disponible: boolean;
+  es_compra_bodega: boolean;
+  compra_minima: number;
+  unidad_fraccionamiento: number;
+  distribucion_minima: number;
+  venta_minima: number;
+  createdAt: Date;
+  updatedAt: Date;
+  categoriaId: null;
 }
 
 export interface Detalle {
@@ -90,4 +160,15 @@ export interface Detalle {
   observaciones: string;
   createdAt: Date;
   updatedAt: Date;
+  subServicio: SubServicio;
+  documentos: Documento[];
+}
+
+export interface Documento {
+  id: string;
+  nombre: string;
+  url: string;
+  key: string;
+  mimeType: string;
+  createdAt: Date;
 }

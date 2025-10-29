@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapIcon, RefreshCwIcon, AlertCircleIcon } from "lucide-react";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import useGetCitasPendientesByMedico from "@/hooks/citas/useGetCitasPendientesByMedico";
 import { ActualizarCita } from "@/apis/citas/accions/update-cita";
 import { toast } from "react-toastify";
 import { EstadoCita } from "@/helpers/data/estadosCita";
@@ -14,6 +13,7 @@ import { MessageError } from "@/components/generics/MessageError";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import HojaRutaOptimizada from "./ui/HojaRutaOptimizada";
 import CardCitasMedico from "@/components/generics/CardCitasMedicos";
+import useGetCitasPendientesByMedico from "@/hooks/citas/useGetCitasPendientesByMedico";
 
 const CitasPendientesVeterinario = () => {
   const { user } = useAuthStore();
