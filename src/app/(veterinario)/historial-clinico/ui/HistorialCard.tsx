@@ -1,9 +1,16 @@
-import { Historial } from "@/apis/historial-clinico/interface/response-historial-veterinario.interface";
+import {
+  Detalle,
+  Documento,
+  Historial,
+} from "@/apis/historial-clinico/interface/response-historial-veterinario.interface";
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +31,15 @@ import {
   X,
   Book,
   BookDown,
+  Trash2,
 } from "lucide-react";
 import React, { useState } from "react";
 import FormHistorialClinico from "./FormHistorialClinico";
 import { SubirDocumentosADetalle } from "@/apis/historial-clinico/accions/agregar-documentos";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
+import { handleDownload } from "@/apis/historial-clinico/accions/descargar-documento";
+import { eliminarDocumento } from "@/apis/historial-clinico/accions/eliminar-documento-historial";
 
 interface HistorialCardProps {
   historial: Historial;
@@ -38,13 +48,17 @@ interface HistorialCardProps {
 const HistorialCard = ({ historial }: HistorialCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDocumentosOpen, setIsDocumentosOpen] = useState(false);
-  const [selectedDetalle, setSelectedDetalle] = useState<any>(null);
+  const [openModalDelete, setOpenModalDelete] = useState(false);
+  const [selectedDocumento, setSelectedDocumento] = useState<Documento | null>(
+    null
+  );
+  const [selectedDetalle, setSelectedDetalle] = useState<Detalle | null>(null);
   const [archivos, setArchivos] = useState<File[]>([]);
   const [isSubiendo, setIsSubiendo] = useState(false);
   const queryClient = useQueryClient();
   const { animal, detalles, createdAt, resumen } = historial;
 
-  const handleAbrirModalDocumentos = (detalle: any) => {
+  const handleAbrirModalDocumentos = (detalle: Detalle) => {
     setSelectedDetalle(detalle);
     setArchivos([]);
     setIsDocumentosOpen(true);
@@ -54,6 +68,11 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
     setIsDocumentosOpen(false);
     setSelectedDetalle(null);
     setArchivos([]);
+  };
+
+  const handleModalDelete = (documento: Documento) => {
+    setOpenModalDelete(true);
+    setSelectedDocumento(documento);
   };
 
   const handleSeleccionarArchivos = (
@@ -150,10 +169,6 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Procedimientos ({detalles.length})
-            </h4>
             <div className="space-y-1 max-h-20 overflow-y-auto">
               {detalles.map((detalle) => (
                 <div
@@ -174,10 +189,22 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
                       detalle.documentos.map((deta) => (
                         <div
                           key={deta.id}
-                          className="mt-2 flex gap-2 hover:cursor-pointer"
+                          className="group mt-2 flex items-center justify-between gap-2 rounded-md border p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                         >
-                          {deta.nombre}
-                          <BookDown size={15} />
+                          <div
+                            onClick={() => handleDownload(deta.id)}
+                            className="flex items-center gap-2 hover:text-blue-600 cursor-pointer"
+                          >
+                            <BookDown size={16} />
+                            <span className="text-sm">{deta.nombre}</span>
+                          </div>
+
+                          <button
+                            onClick={() => handleModalDelete(deta)}
+                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       ))}
                   </div>
@@ -269,7 +296,6 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
 
           <div className="overflow-y-auto max-h-[calc(80vh-120px)] p-6">
             <div className="space-y-6">
-              {/* Selector de archivos */}
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                 <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground mb-2">
@@ -281,7 +307,7 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
                   onChange={handleSeleccionarArchivos}
                   className="hidden"
                   id="file-upload"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  accept=".pdf"
                 />
                 <Button
                   variant="outline"
@@ -292,11 +318,10 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
                   Seleccionar Archivos
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Formatos permitidos: PDF, JPG, PNG, DOC, DOCX
+                  Formatos permitidos: PDF
                 </p>
               </div>
 
-              {/* Lista de archivos seleccionados */}
               {archivos.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">
@@ -360,6 +385,43 @@ const HistorialCard = ({ historial }: HistorialCardProps) => {
               </Button>
             </div>
           </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openModalDelete} onOpenChange={setOpenModalDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Documento</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro que deseas eliminar el documento{" "}
+              <strong>{selectedDocumento?.nombre}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenModalDelete(false)}>
+              Cancelar
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={async () => {
+                if (!selectedDocumento?.id) return;
+                try {
+                  await eliminarDocumento(selectedDocumento.id);
+                  toast.success("Documento eliminado correctamente");
+                  queryClient.invalidateQueries({
+                    queryKey: ["historial-clinico"],
+                  });
+                } catch (error) {
+                  toast.error("Error al eliminar el documento");
+                } finally {
+                  setOpenModalDelete(false);
+                  setSelectedDocumento(null);
+                }
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

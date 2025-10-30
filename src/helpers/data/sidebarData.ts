@@ -32,6 +32,7 @@ import {
   CalendarDays,
   PackageSearch,
   PackageCheck,
+  NotepadTextIcon,
 } from "lucide-react";
 
 export const navItems = [
@@ -148,6 +149,11 @@ export const navItems = [
         name: "Facturacion",
         href: "/facturacion-admin",
         icon: Warehouse,
+      },
+      {
+        name: "Nota de Credito",
+        href: "/nota-credito-admin",
+        icon: NotepadTextIcon,
       },
     ],
   },
