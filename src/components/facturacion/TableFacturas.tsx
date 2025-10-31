@@ -520,7 +520,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDescargarFactura(factura)}
-                    title="Descarfar Factura"
+                    title="Descargar Factura"
                     disabled={descargandoId === factura.id}
                     className="flex items-center gap-1"
                   >
