@@ -105,19 +105,20 @@ const CardCitasMedico = ({
                   setTravelTime(resultado.tiempoTexto);
                 }
               } catch (error) {
-                console.error("Error calculating distance:", error);
+                toast.error(
+                  "Ocurrio un error al momento de calcular la distacia"
+                );
               }
             }
             setLoadingLocation(false);
           },
           (error) => {
-            console.error("Error getting location:", error);
+            toast.error("Ocurrio un error al obtener la ubicacion");
             setLoadingLocation(false);
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
       } catch (error) {
-        console.error("Error fetching location:", error);
         setLoadingLocation(false);
       }
     };

@@ -37,12 +37,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import CardIsvImportes from "./ui/CardIsvImportes";
 
 const FacturacionPage = () => {
   const { user } = useAuthStore();
   const sucursalUsuario = user?.sucursal?.id || "default";
   const paisId = user?.pais?.id || "";
-
+  const simbolo = user?.pais.simbolo_moneda || "";
   const [isOpen, setIsOpen] = useState(false);
   const [offset, setOffset] = useState(0);
   const [sucursalSeleccionada, setSucursalSeleccionada] =
@@ -52,8 +53,7 @@ const FacturacionPage = () => {
 
   const limit = 10;
 
-  const { data: sucursales, isLoading: cargandoSucursales } =
-    useGetSucursalesPais(paisId);
+  const { data: sucursales } = useGetSucursalesPais(paisId);
 
   const { data: facturas, isLoading } = useGetFacturas({
     limit,
@@ -359,80 +359,38 @@ const FacturacionPage = () => {
 
       {!isLoading && facturas && facturas.data.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">ISV 15%</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(
-                  facturas.data
-                    .reduce(
-                      (sum, factura) => sum + parseFloat(factura.isv_15),
-                      0
-                    )
-                    .toString(),
-                  facturas.data[0]?.pais.simbolo_moneda || "L"
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">ISV 18%</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(
-                  facturas.data
-                    .reduce(
-                      (sum, factura) => sum + parseFloat(factura.isv_18),
-                      0
-                    )
-                    .toString(),
-                  facturas.data[0]?.pais.simbolo_moneda || "L"
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Gravado 15%</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(
-                  facturas.data
-                    .reduce(
-                      (sum, factura) =>
-                        sum + parseFloat(factura.importe_gravado_15),
-                      0
-                    )
-                    .toString(),
-                  facturas.data[0]?.pais.simbolo_moneda || "L"
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Gravado 18%</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(
-                  facturas.data
-                    .reduce(
-                      (sum, factura) =>
-                        sum + parseFloat(factura.importe_gravado_18),
-                      0
-                    )
-                    .toString(),
-                  facturas.data[0]?.pais.simbolo_moneda || "L"
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <CardIsvImportes
+            title="ISV 15%"
+            value={facturas.data.reduce(
+              (sum, factura) => sum + parseFloat(factura.isv_15),
+              0
+            )}
+            currencySymbol={simbolo}
+          />
+          <CardIsvImportes
+            title="ISV 18%"
+            value={facturas.data.reduce(
+              (sum, factura) => sum + parseFloat(factura.isv_18),
+              0
+            )}
+            currencySymbol={simbolo}
+          />
+          <CardIsvImportes
+            title="Gravado 15%"
+            value={facturas.data.reduce(
+              (sum, factura) => sum + parseFloat(factura.importe_gravado_15),
+              0
+            )}
+            currencySymbol={simbolo}
+          />
+          <CardIsvImportes
+            title="Gravado 18%"
+            value={facturas.data.reduce(
+              (sum, factura) => sum + parseFloat(factura.importe_gravado_18),
+              0
+            )}
+            currencySymbol={simbolo}
+          />
         </div>
       )}
 

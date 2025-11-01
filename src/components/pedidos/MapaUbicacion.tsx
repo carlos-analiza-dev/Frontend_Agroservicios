@@ -45,7 +45,6 @@ const MapaUbicacion = ({
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
-      console.error("Google Maps API key no encontrada");
       setLoadError(true);
       return;
     }
@@ -127,7 +126,6 @@ const MapaUbicacion = ({
         });
       }
     } catch (error) {
-      console.error("Error al inicializar el mapa:", error);
       setLoadError(true);
     }
   }, [mapLoaded, latitud, longitud, direccion, titulo]);

@@ -170,7 +170,8 @@ const FormCrearNotaCredito = ({ onSucces }: Props) => {
 
       return precioPais && precioPais ? Number(precioPais) : 0;
     } catch (error) {
-      console.error("Error al calcular precio del producto:", error);
+      toast.error("Error al calcular precio del producto");
+
       return 0;
     }
   };
@@ -184,7 +185,8 @@ const FormCrearNotaCredito = ({ onSucces }: Props) => {
       const precio = calcularPrecioProducto(productoId);
       return cantidad * precio;
     } catch (error) {
-      console.error("Error al calcular monto del producto:", error);
+      toast.error("Error al calcular monto del producto");
+
       return 0;
     }
   };
@@ -215,7 +217,7 @@ const FormCrearNotaCredito = ({ onSucces }: Props) => {
 
       setValue("monto", montoTotalCalculado);
     } catch (error) {
-      console.error("Error en useEffect al calcular montos:", error);
+      toast.error("Error al calcular montos");
     }
   }, [detalles, productos, paisId, setValue]);
 
@@ -259,7 +261,8 @@ const FormCrearNotaCredito = ({ onSucces }: Props) => {
       const nuevoMonto = calcularMontoProducto(value, cantidad);
       setValue(`detalles.${index}.montoDevuelto`, nuevoMonto);
     } catch (error) {
-      console.error("Error al cambiar producto:", error);
+      toast.error("Error al cambiar producto");
+
       setValue(`detalles.${index}.montoDevuelto`, 0);
     }
   };
@@ -281,7 +284,8 @@ const FormCrearNotaCredito = ({ onSucces }: Props) => {
         setValue(`detalles.${index}.montoDevuelto`, 0);
       }
     } catch (error) {
-      console.error("Error al cambiar cantidad:", error);
+      toast.error("Error al cambiar cantidad");
+
       setValue(`detalles.${index}.montoDevuelto`, 0);
     }
   };

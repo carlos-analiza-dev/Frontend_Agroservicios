@@ -503,7 +503,6 @@ const CitasConfirmadasVeterinario = () => {
         `Cita completada correctamente (${user?.pais.simbolo_moneda}${totalFinal.toFixed(2)})`
       );
     } catch (error) {
-      console.error(error);
       if (isAxiosError(error)) {
         const msg = error.response?.data?.message;
         toast.error(

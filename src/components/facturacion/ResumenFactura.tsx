@@ -8,7 +8,7 @@ import { FieldArrayWithId } from "react-hook-form";
 
 interface Props {
   subTotal: number;
-  descuentos: number;
+
   fields: FieldArrayWithId<
     CrearFacturaInterface & {
       cantidadAnimales?: number;
@@ -21,7 +21,7 @@ interface Props {
 
 const ResumenFactura = ({
   subTotal,
-  descuentos,
+
   fields,
   totalGeneral,
 }: Props) => {
@@ -36,7 +36,7 @@ const ResumenFactura = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
           <div className="space-y-2">
             <Badge variant="secondary" className="w-full">
               Sub Total
@@ -45,14 +45,14 @@ const ResumenFactura = ({
               {simbolo} {subTotal.toFixed(2)}
             </p>
           </div>
-          <div className="space-y-2">
+          {/*     <div className="space-y-2">
             <Badge variant="secondary" className="w-full">
               Descuentos
             </Badge>
             <p className="text-xl font-bold text-red-600">
               -{simbolo} {descuentos.toFixed(2)}
             </p>
-          </div>
+          </div> */}
           <div className="space-y-2">
             <Badge variant="secondary" className="w-full">
               Items

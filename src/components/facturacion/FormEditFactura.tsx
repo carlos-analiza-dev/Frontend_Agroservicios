@@ -995,7 +995,6 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
 
       <ResumenFactura
         subTotal={subTotal}
-        descuentos={descuentos}
         fields={fields}
         totalGeneral={totalGeneral}
       />

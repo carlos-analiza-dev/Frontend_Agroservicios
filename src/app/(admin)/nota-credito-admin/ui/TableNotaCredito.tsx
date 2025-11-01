@@ -52,7 +52,7 @@ const TableNotaCredito = ({ notas_credito }: Props) => {
 
       setPreviewNota(objectUrl);
     } catch (error) {
-      console.error("Error al obtener la vista previa de la nota:", error);
+      toast.error("Error al obtener la vista previa de la nota");
     }
   };
 

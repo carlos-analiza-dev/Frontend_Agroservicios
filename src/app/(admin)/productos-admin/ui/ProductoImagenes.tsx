@@ -132,7 +132,7 @@ const ProductoImagenes = ({ imagenes, productoId, onUploadSuccess }: Props) => {
       setPreview(null);
       setIsOpen(false);
     } catch (err) {
-      console.error(err);
+      toast.success("Error al procesar la imahgen");
     }
   };
 

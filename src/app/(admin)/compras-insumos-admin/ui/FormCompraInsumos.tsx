@@ -164,7 +164,7 @@ const FormCompraInsumos = ({ onSuccess }: Props) => {
       if (tipoPagoMatch) {
         setValue("tipoPago", tipoPagoMatch.value);
       } else {
-        console.warn(
+        toast.warning(
           `Tipo de pago "${proveedorSeleccionado.tipo_pago_default}" no coincide con los valores disponibles`
         );
         setValue("tipoPago", "");

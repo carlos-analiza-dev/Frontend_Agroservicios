@@ -993,7 +993,6 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
         </Card>
         <ResumenFactura
           subTotal={subTotal}
-          descuentos={descuentos}
           fields={fields}
           totalGeneral={totalGeneral}
         />

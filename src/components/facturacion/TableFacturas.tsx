@@ -104,7 +104,7 @@ const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
 
       setFacturaPreview(objectUrl);
     } catch (error) {
-      console.error("Error al obtener la vista previa de la factura:", error);
+      toast.error("Error al obtener la vista previa de la factura");
     }
   };
 
