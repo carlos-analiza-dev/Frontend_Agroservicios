@@ -21,17 +21,24 @@ import useGetInsumosDisponibles from "@/hooks/insumos/useGetInsumosDisponibles";
 import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { AlertCircle, Download, Filter, Search } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TableExistenciaInsumos from "./ui/TableExistenciaInsumos";
 import { exportToExcelInvInsumos } from "@/helpers/funciones/downLoadInvInsumos";
 
 const ExistenciaInsumosInv = () => {
   const { user } = useAuthStore();
   const paisId = user?.pais.id || "";
+  const sucursalUsuario = user?.sucursal.id || "";
 
   const [selectedInsumo, setSelectedInsumo] = useState<string>("");
   const [selectedSucursal, setSelectedSucursal] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (sucursalUsuario && !selectedSucursal) {
+      setSelectedSucursal(sucursalUsuario);
+    }
+  }, [sucursalUsuario, selectedSucursal]);
 
   const sucursalId = selectedSucursal === "all" ? "" : selectedSucursal;
   const insumoId = selectedInsumo === "all" ? "" : selectedInsumo;
@@ -43,6 +50,10 @@ const ExistenciaInsumosInv = () => {
 
   const { data: insumos } = useGetInsumosDisponibles();
   const { data: sucursales } = useGetSucursalesPais(paisId);
+
+  const sucursalActual =
+    sucursales?.find((s) => s.id === sucursalUsuario)?.nombre ||
+    "Sucursal actual";
 
   const filteredData = existencia_insumos?.filter(
     (item) =>
@@ -112,15 +123,26 @@ const ExistenciaInsumosInv = () => {
               onValueChange={setSelectedSucursal}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por sucursal" />
+                <SelectValue
+                  placeholder={
+                    selectedSucursal === sucursalUsuario
+                      ? sucursalActual
+                      : "Filtrar por sucursal"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={sucursalUsuario}>
+                  {sucursalActual} (Actual)
+                </SelectItem>
                 <SelectItem value="all">Todas las sucursales</SelectItem>
-                {sucursales?.map((sucursal) => (
-                  <SelectItem key={sucursal.id} value={sucursal.id}>
-                    {sucursal.nombre}
-                  </SelectItem>
-                ))}
+                {sucursales
+                  ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                  .map((sucursal) => (
+                    <SelectItem key={sucursal.id} value={sucursal.id}>
+                      {sucursal.nombre}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
 
@@ -128,7 +150,7 @@ const ExistenciaInsumosInv = () => {
               variant="outline"
               onClick={() => {
                 setSelectedInsumo("");
-                setSelectedSucursal("");
+                setSelectedSucursal(sucursalUsuario);
                 setSearchTerm("");
               }}
             >

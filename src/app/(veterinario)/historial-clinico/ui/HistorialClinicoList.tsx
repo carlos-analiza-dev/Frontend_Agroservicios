@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, X } from "lucide-react"; // 👈 Usamos X en vez de Search
 import useGetHistorialVeterinario from "@/hooks/historial-clinico/useGetHistorialVeterinario";
 import HistorialCardSkeleton from "./HistorialCardSkeleton";
 import HistorialCard from "./HistorialCard";
@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import FormHistorialClinico from "./FormHistorialClinico";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface HistorialClinicoListProps {
   veterinarioId: string;
@@ -25,21 +27,35 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [identificador, setIdentificador] = useState("");
+
   const itemsPerPage = 6;
 
   const { data: historialData, isLoading } = useGetHistorialVeterinario({
     limit: itemsPerPage,
     offset: (currentPage - 1) * itemsPerPage,
     veterinario: veterinarioId,
+    fechaInicio: fechaInicio || undefined,
+    fechaFin: fechaFin || undefined,
+    identificador: identificador || undefined,
   });
 
   const historial = historialData?.historial || [];
   const total = historialData?.total || 0;
   const totalPages = Math.ceil(total / itemsPerPage);
 
+  const handleLimpiar = () => {
+    setIdentificador("");
+    setFechaInicio("");
+    setFechaFin("");
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             Historial Clínico
@@ -53,7 +69,49 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 ">
+      <div className="grid md:grid-cols-4 sm:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
+        <div>
+          <Label htmlFor="identificador">Identificador Animal</Label>
+          <Input
+            id="identificador"
+            value={identificador}
+            onChange={(e) => setIdentificador(e.target.value)}
+            placeholder="Ej: VAC-001"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="fechaInicio">Fecha Inicio</Label>
+          <Input
+            id="fechaInicio"
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="fechaFin">Fecha Fin</Label>
+          <Input
+            id="fechaFin"
+            type="date"
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            className="w-full"
+            variant="secondary"
+            onClick={handleLimpiar}
+          >
+            <X className="mr-2 h-4 w-4" /> Limpiar
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, index) => (
             <HistorialCardSkeleton key={index} />

@@ -1,4 +1,5 @@
 "use client";
+
 import useGetNotasCredito from "@/hooks/notas-credito/useGetNotasCredito";
 import React, { useState } from "react";
 import {
@@ -27,18 +28,36 @@ import FormCrearNotaCredito from "./ui/FormCrearNotaCredito";
 const NotaCreditoPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(false);
+
   const limit = 10;
   const offset = (currentPage - 1) * limit;
 
   const { data: notas_credito, isLoading } = useGetNotasCredito({
     limit,
     offset,
+    fechaInicio: fechaInicio || undefined,
+    fechaFin: fechaFin || undefined,
   });
 
   const totalPages = notas_credito ? Math.ceil(notas_credito.total / limit) : 0;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const aplicarFiltros = () => {
+    setCurrentPage(1);
+    setSearchTrigger(!searchTrigger);
+  };
+
+  const limpiarFiltros = () => {
+    setFechaInicio("");
+    setFechaFin("");
+    setCurrentPage(1);
+    setSearchTrigger(!searchTrigger);
   };
 
   return (
@@ -50,9 +69,39 @@ const NotaCreditoPage = () => {
             Gestión y visualización de notas de crédito emitidas
           </p>
         </div>
+        <Button onClick={() => setIsOpen(true)}>
+          <Plus /> Agregar Nota
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-3 sm:grid-cols-1 gap-4 mb-4">
         <div>
-          <Button onClick={() => setIsOpen(true)}>
-            <Plus /> Agregar Nota
+          <label className="block text-sm font-medium text-muted-foreground">
+            Fecha Inicio
+          </label>
+          <input
+            type="date"
+            className="mt-1 block w-full rounded-md border px-2 py-1"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground">
+            Fecha Fin
+          </label>
+          <input
+            type="date"
+            className="mt-1 block w-full rounded-md border px-2 py-1"
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-end">
+          <Button variant="outline" onClick={limpiarFiltros} className="w-full">
+            Limpiar Filtros
           </Button>
         </div>
       </div>
@@ -109,7 +158,7 @@ const NotaCreditoPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Agregar Nota de Credito</AlertDialogTitle>
             <AlertDialogDescription>
-              En esta seccion podras generar un nueva nota de credito
+              En esta sección podrás generar una nueva nota de crédito
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="p-3 h-[500px] overflow-y-auto">

@@ -35,6 +35,11 @@ import GoogleMapViewer from "@/components/generics/GoogleMapViewer";
 import { InsumoDis } from "@/apis/insumos/interfaces/response-insumos-disponibles.interface";
 import { ResponseExistenciaInsumosInterface } from "@/apis/existencia_insumos/interfaces/response-exsistencia-insumos.interface";
 import { ResponseExistenciaProductosInterface } from "@/apis/existencia_productos/interfaces/response-existencia-productos.interface";
+import DetailsPacientes from "./DetailsPacientes";
+import DetailsPorpietario from "./DetailsPorpietario";
+import DetailsFinca from "./DetailsFinca";
+import ProductosAgregados from "./ProductosAgregados";
+import InsumosAgregados from "./InsumosAgregados";
 
 interface Props {
   item: Cita;
@@ -274,24 +279,7 @@ const CardCitasMedico = ({
           </h4>
           <div className="space-y-2">
             {item.animales.map((animal, index) => (
-              <div
-                key={`${animal.id}-${index}`}
-                className="flex items-center gap-2"
-              >
-                <PawPrintIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {animal.identificador} - {animal.especie}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    {animal.razas.length === 1
-                      ? animal.razas[0]
-                      : animal.razas.length > 1
-                        ? "Encaste"
-                        : "Sin raza"}
-                  </p>
-                </div>
-              </div>
+              <DetailsPacientes key={`${animal.id}-${index}`} animal={animal} />
             ))}
           </div>
         </div>
@@ -300,44 +288,19 @@ const CardCitasMedico = ({
           <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Propietario
           </h4>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <UserIcon className="h-4 w-4 text-gray-600" />
-              <span className="text-sm text-gray-700">
-                {primaryAnimal.propietario?.name || "No especificado"}
-              </span>
-            </div>
-            {ownerPhone && (
-              <button
-                onClick={() => handleCall(ownerPhone)}
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <PhoneIcon className="h-4 w-4" />
-                <span>{ownerPhone}</span>
-              </button>
-            )}
-          </div>
+          <DetailsPorpietario
+            key={primaryAnimal.id}
+            primaryAnimal={primaryAnimal}
+            ownerPhone={ownerPhone}
+            handleCall={handleCall}
+          />
         </div>
 
         <div className="space-y-3">
           <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Finca
           </h4>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <MapPinIcon className="h-4 w-4 text-gray-600" />
-              <span className="text-sm text-gray-700">
-                {item.finca.nombre_finca}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BuildingIcon className="h-4 w-4 text-gray-600" />
-              <span className="text-sm text-gray-700">
-                {item.finca.ubicacion.split(",").slice(1).join(",").trim() ||
-                  item.finca.ubicacion}
-              </span>
-            </div>
-          </div>
+          <DetailsFinca item={item} key={item.id} />
         </div>
 
         {(item.productosUsados?.length > 0 ||
@@ -348,81 +311,19 @@ const CardCitasMedico = ({
             </h4>
 
             {item.productosUsados?.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <PackageIcon className="h-4 w-4 text-green-600" />
-                  <h5 className="text-sm font-medium text-gray-700">
-                    Productos ({item.productosUsados.length})
-                  </h5>
-                </div>
-                <div className="space-y-2">
-                  {item.productosUsados.map((producto) => (
-                    <div
-                      key={producto.id}
-                      className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
-                          {producto.producto?.nombre}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Cantidad: {producto.cantidad}{" "}
-                          {producto.producto?.unidad_venta}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {user?.pais.simbolo_moneda}
-                          {producto.subtotal?.toFixed(2) || "0.00"}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {user?.pais.simbolo_moneda}
-                          {producto.precioUnitario} c/u
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ProductosAgregados
+                item={item}
+                user={user}
+                key={`productos-${item.id}`}
+              />
             )}
 
             {item.insumosUsados?.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <SyringeIcon className="h-4 w-4 text-blue-600" />
-                  <h5 className="text-sm font-medium text-gray-700">
-                    Insumos ({item.insumosUsados.length})
-                  </h5>
-                </div>
-                <div className="space-y-2">
-                  {item.insumosUsados.map((insumo) => (
-                    <div
-                      key={insumo.id}
-                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
-                          {insumo.insumo?.nombre}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Cantidad: {insumo.cantidad}{" "}
-                          {insumo.insumo?.unidad_venta}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {user?.pais.simbolo_moneda}
-                          {insumo.subtotal?.toFixed(2) || "0.00"}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {user?.pais.simbolo_moneda}
-                          {insumo.precioUnitario} c/u
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <InsumosAgregados
+                item={item}
+                user={user}
+                key={`insumos-${item.id}`}
+              />
             )}
 
             {(item.productosUsados?.length > 0 ||

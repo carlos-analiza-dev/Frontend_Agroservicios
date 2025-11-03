@@ -3,7 +3,7 @@ import useGetExistenciaProductos from "@/hooks/existencias/useGetExistenciaProdu
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -28,10 +28,17 @@ import { exportToExcel } from "@/helpers/funciones/downLoadInvProductos";
 const ExistenciaProductosAdmin = () => {
   const { user } = useAuthStore();
   const paisId = user?.pais.id || "";
+  const sucursalUsuario = user?.sucursal.id || "";
 
   const [selectedProducto, setSelectedProducto] = useState<string>("");
   const [selectedSucursal, setSelectedSucursal] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (sucursalUsuario && !selectedSucursal) {
+      setSelectedSucursal(sucursalUsuario);
+    }
+  }, [sucursalUsuario, selectedSucursal]);
 
   const sucursalId = selectedSucursal === "all" ? "" : selectedSucursal;
   const productoId = selectedProducto === "all" ? "" : selectedProducto;
@@ -43,6 +50,10 @@ const ExistenciaProductosAdmin = () => {
 
   const { data: productos } = useGetProductosDisponibles();
   const { data: sucursales } = useGetSucursalesPais(paisId);
+
+  const sucursalActual =
+    sucursales?.find((s) => s.id === sucursalUsuario)?.nombre ||
+    "Sucursal actual";
 
   const filteredData = existencia_productos?.filter(
     (item) =>
@@ -116,15 +127,26 @@ const ExistenciaProductosAdmin = () => {
               onValueChange={setSelectedSucursal}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por sucursal" />
+                <SelectValue
+                  placeholder={
+                    selectedSucursal === sucursalUsuario
+                      ? sucursalActual
+                      : "Filtrar por sucursal"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={sucursalUsuario}>
+                  {sucursalActual} (Actual)
+                </SelectItem>
                 <SelectItem value="all">Todas las sucursales</SelectItem>
-                {sucursales?.map((sucursal) => (
-                  <SelectItem key={sucursal.id} value={sucursal.id}>
-                    {sucursal.nombre}
-                  </SelectItem>
-                ))}
+                {sucursales
+                  ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                  .map((sucursal) => (
+                    <SelectItem key={sucursal.id} value={sucursal.id}>
+                      {sucursal.nombre}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
 
@@ -132,7 +154,7 @@ const ExistenciaProductosAdmin = () => {
               variant="outline"
               onClick={() => {
                 setSelectedProducto("");
-                setSelectedSucursal("");
+                setSelectedSucursal(sucursalUsuario);
                 setSearchTerm("");
               }}
             >

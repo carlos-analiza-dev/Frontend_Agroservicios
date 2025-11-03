@@ -1,46 +1,45 @@
-import { ObtenerHistorialVeterinario } from "@/apis/historial-clinico/accions/obtener-historia-veterinario";
+import { ObtenerHistorialAnimal } from "@/apis/historial-clinico/accions/obtener-historia-animal";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
 interface UseGetHistorial {
+  animalId?: string;
   limit?: number;
   offset?: number;
-  veterinario?: string;
   fechaInicio?: string;
   fechaFin?: string;
-  identificador?: string;
 }
 
-const useGetHistorialVeterinario = ({
+const useGetHistorialAnimal = ({
+  animalId,
   limit = 10,
   offset = 0,
-  veterinario,
   fechaInicio,
   fechaFin,
-  identificador,
 }: UseGetHistorial = {}) => {
   return useQuery({
     queryKey: [
-      "historial-clinico",
+      "historial-clinico-animal",
+      animalId,
       limit,
       offset,
-      veterinario,
+
       fechaInicio,
       fechaFin,
-      identificador,
     ],
     queryFn: () =>
-      ObtenerHistorialVeterinario({
+      ObtenerHistorialAnimal({
+        animalId,
         limit,
         offset,
-        veterinario,
+
         fechaInicio,
         fechaFin,
-        identificador,
       }),
-    enabled: !!veterinario,
+    enabled: !!animalId,
     retry: false,
     staleTime: 60 * 1000 * 5,
   });
 };
 
-export default useGetHistorialVeterinario;
+export default useGetHistorialAnimal;
