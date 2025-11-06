@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, X } from "lucide-react"; // 👈 Usamos X en vez de Search
+import { FileText, Plus, X, Search, Check } from "lucide-react";
 import useGetHistorialVeterinario from "@/hooks/historial-clinico/useGetHistorialVeterinario";
 import HistorialCardSkeleton from "./HistorialCardSkeleton";
 import HistorialCard from "./HistorialCard";
@@ -17,9 +17,30 @@ import {
 import FormHistorialClinico from "./FormHistorialClinico";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import useGetFincasPais from "@/hooks/fincas/useGetFincasPais";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface HistorialClinicoListProps {
   veterinarioId: string;
+}
+
+interface Finca {
+  id: string;
+  nombre_finca: string;
 }
 
 export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
@@ -30,8 +51,18 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [identificador, setIdentificador] = useState("");
+  const [fincaSearch, setFincaSearch] = useState("");
+  const [selectedFinca, setSelectedFinca] = useState<Finca | null>(null);
+  const [openCombobox, setOpenCombobox] = useState(false);
 
   const itemsPerPage = 6;
+
+  const { data: fincasData, isLoading: loadingFincas } = useGetFincasPais({
+    name: fincaSearch,
+    enabled: fincaSearch.length > 1 && openCombobox,
+  });
+
+  const fincas: Finca[] = fincasData?.fincas || [];
 
   const { data: historialData, isLoading } = useGetHistorialVeterinario({
     limit: itemsPerPage,
@@ -40,6 +71,7 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
     fechaInicio: fechaInicio || undefined,
     fechaFin: fechaFin || undefined,
     identificador: identificador || undefined,
+    fincaNombre: selectedFinca?.nombre_finca || undefined,
   });
 
   const historial = historialData?.historial || [];
@@ -50,6 +82,21 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
     setIdentificador("");
     setFechaInicio("");
     setFechaFin("");
+    setFincaSearch("");
+    setSelectedFinca(null);
+    setCurrentPage(1);
+  };
+
+  const handleSelectFinca = (finca: Finca) => {
+    setSelectedFinca(finca);
+    setFincaSearch(finca.nombre_finca);
+    setOpenCombobox(false);
+    setCurrentPage(1);
+  };
+
+  const handleRemoveFinca = () => {
+    setSelectedFinca(null);
+    setFincaSearch("");
     setCurrentPage(1);
   };
 
@@ -65,19 +112,100 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
           </p>
         </div>
         <Button onClick={() => setIsOpen(true)}>
-          <Plus /> Agregar Historial
+          <Plus className="mr-2 h-4 w-4" /> Agregar Historial
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-4 sm:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
+      <div className="grid md:grid-cols-5 sm:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
         <div>
           <Label htmlFor="identificador">Identificador Animal</Label>
           <Input
             id="identificador"
             value={identificador}
-            onChange={(e) => setIdentificador(e.target.value)}
+            onChange={(e) => {
+              setIdentificador(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Ej: VAC-001"
           />
+        </div>
+
+        <div>
+          <Label htmlFor="finca">Finca</Label>
+          <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openCombobox}
+                className="w-full justify-between h-10"
+              >
+                <span
+                  className={cn(
+                    "truncate",
+                    !selectedFinca && "text-muted-foreground"
+                  )}
+                >
+                  {selectedFinca
+                    ? selectedFinca.nombre_finca
+                    : "Buscar finca..."}
+                </span>
+                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Buscar finca por nombre..."
+                  value={fincaSearch}
+                  onValueChange={setFincaSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>
+                    {loadingFincas
+                      ? "Buscando..."
+                      : fincaSearch.length > 1
+                        ? "No se encontraron fincas."
+                        : "Escribe al menos 2 caracteres..."}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {fincas.map((finca) => (
+                      <CommandItem
+                        key={finca.id}
+                        value={finca.nombre_finca}
+                        onSelect={() => handleSelectFinca(finca)}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedFinca?.id === finca.id
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {finca.nombre_finca}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {selectedFinca && (
+            <div className="mt-2 flex items-center gap-2">
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {selectedFinca.nombre_finca}
+                <button
+                  type="button"
+                  onClick={handleRemoveFinca}
+                  className="ml-1 rounded-full hover:bg-muted"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            </div>
+          )}
         </div>
 
         <div>
@@ -86,7 +214,10 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
             id="fechaInicio"
             type="date"
             value={fechaInicio}
-            onChange={(e) => setFechaInicio(e.target.value)}
+            onChange={(e) => {
+              setFechaInicio(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
 
@@ -96,7 +227,10 @@ export const HistorialClinicoList: React.FC<HistorialClinicoListProps> = ({
             id="fechaFin"
             type="date"
             value={fechaFin}
-            onChange={(e) => setFechaFin(e.target.value)}
+            onChange={(e) => {
+              setFechaFin(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
 

@@ -8,6 +8,7 @@ interface UseGetHistorial {
   fechaInicio?: string;
   fechaFin?: string;
   identificador?: string;
+  fincaNombre?: string;
 }
 
 const useGetHistorialVeterinario = ({
@@ -17,6 +18,7 @@ const useGetHistorialVeterinario = ({
   fechaInicio,
   fechaFin,
   identificador,
+  fincaNombre,
 }: UseGetHistorial = {}) => {
   return useQuery({
     queryKey: [
@@ -27,6 +29,7 @@ const useGetHistorialVeterinario = ({
       fechaInicio,
       fechaFin,
       identificador,
+      fincaNombre,
     ],
     queryFn: () =>
       ObtenerHistorialVeterinario({
@@ -36,6 +39,7 @@ const useGetHistorialVeterinario = ({
         fechaInicio,
         fechaFin,
         identificador,
+        fincaNombre,
       }),
     enabled: !!veterinario,
     retry: false,
