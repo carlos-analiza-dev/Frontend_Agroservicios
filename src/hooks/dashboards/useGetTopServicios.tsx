@@ -6,8 +6,8 @@ const useGetTopServicios = (filtros: FiltrosIngresos = {}) => {
   return useQuery({
     queryKey: ["top-servicios", filtros],
     queryFn: () => ObtenerTopServicios(filtros),
-    refetchInterval: 300000,
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 10000,
+    staleTime: 10000,
   });
 };
 

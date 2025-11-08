@@ -5,8 +5,8 @@ const useGetTendencia = () => {
   return useQuery({
     queryKey: ["tendencias"],
     queryFn: ObtenerTendencia,
-    refetchInterval: 300000,
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 10000,
+    staleTime: 10000,
   });
 };
 

@@ -6,8 +6,8 @@ const useGetTopSucursales = (filtros: FiltrosIngresos = {}) => {
   return useQuery({
     queryKey: ["top-sucursales", filtros],
     queryFn: () => ObtenerTopSucursales(filtros),
-    refetchInterval: 300000,
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 10000,
+    staleTime: 10000,
   });
 };
 
