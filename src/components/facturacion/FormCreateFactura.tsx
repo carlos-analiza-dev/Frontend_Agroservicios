@@ -24,7 +24,14 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, AlertTriangle, Search, Eye } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  AlertTriangle,
+  Search,
+  Eye,
+  DollarSign,
+} from "lucide-react";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetServiciosDisponibles from "@/hooks/servicios/useGetServiciosDisponibles";
 import { toast } from "react-toastify";
@@ -130,6 +137,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
       descuentos_rebajas: 0,
       importe_exento: 0,
       importe_exonerado: 0,
+      cargos_extra: 0, // ← Nuevo campo agregado
       descuento_id: null,
     },
   });
@@ -144,6 +152,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
   const descuentos = watch("descuentos_rebajas") || 0;
   const importeExento = watch("importe_exento") || 0;
   const importeExonerado = watch("importe_exonerado") || 0;
+  const cargosExtra = watch("cargos_extra") || 0; // ← Nuevo campo
 
   const actualizarExistencias = () => {
     setForceUpdate((prev) => prev + 1);
@@ -359,9 +368,12 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
     );
   }, [JSON.stringify(detalles)]);
 
+  // ← Cálculo actualizado con cargos extra
   const totalGeneral = useMemo(() => {
-    return subTotal - descuentos + importeExento + importeExonerado;
-  }, [subTotal, descuentos, importeExento, importeExonerado]);
+    return (
+      subTotal - descuentos + importeExento + importeExonerado + cargosExtra
+    );
+  }, [subTotal, descuentos, importeExento, importeExonerado, cargosExtra]);
 
   useEffect(() => {
     setValue("sub_total", subTotal);
@@ -591,10 +603,34 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                 </div>
 
                 <div className="space-y-1">
+                  <Label className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4 text-blue-600" />
+                    Cargos Extra
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0.0"
+                    step="1"
+                    {...register("cargos_extra", {
+                      min: { value: 0, message: "No puede ser negativo" },
+                      valueAsNumber: true,
+                    })}
+                    placeholder="0.00"
+                    className="text-right border-blue-200 bg-blue-50"
+                  />
+                  {errors.cargos_extra && (
+                    <p className="text-sm text-red-500">
+                      {errors.cargos_extra.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
                   <Label>Importe Exento</Label>
                   <Input
                     type="number"
-                    step="0.01"
+                    min="0.0"
+                    step="1"
                     {...register("importe_exento", {
                       min: { value: 0, message: "No puede ser negativo" },
                       valueAsNumber: true,
@@ -613,7 +649,8 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
                   <Label>Importe Exonerado</Label>
                   <Input
                     type="number"
-                    step="0.01"
+                    min="0.0"
+                    step="1"
                     {...register("importe_exonerado", {
                       min: { value: 0, message: "No puede ser negativo" },
                       valueAsNumber: true,
@@ -995,6 +1032,7 @@ const FormCreateFactura = ({ onSuccess }: Props) => {
           subTotal={subTotal}
           fields={fields}
           totalGeneral={totalGeneral}
+          cargosExtra={cargosExtra}
         />
         <div className="flex justify-end pt-4">
           <Button

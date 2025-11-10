@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Save, Search, AlertTriangle } from "lucide-react";
+import { Trash2, Save, Search, AlertTriangle, DollarSign } from "lucide-react";
 import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetServiciosDisponibles from "@/hooks/servicios/useGetServiciosDisponibles";
 import { toast } from "react-toastify";
@@ -102,6 +102,7 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
       descuentos_rebajas: parseFloat(factura.descuentos_rebajas) || 0,
       importe_exento: parseFloat(factura.importe_exento) || 0,
       importe_exonerado: parseFloat(factura.importe_exonerado) || 0,
+      cargos_extra: parseFloat(factura.cargos_extra || "0") || 0,
       descuento_id: factura.descuento?.id,
     },
   });
@@ -159,6 +160,7 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
   const descuentos = watch("descuentos_rebajas") || 0;
   const importeExento = watch("importe_exento") || 0;
   const importeExonerado = watch("importe_exonerado") || 0;
+  const cargosExtra = watch("cargos_extra") || 0;
   const descuentoId = watch("descuento_id");
 
   const actualizarExistencias = () => {
@@ -374,9 +376,12 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
     );
   }, [JSON.stringify(detalles)]);
 
+  // ← Cálculo actualizado con cargos extra
   const totalGeneral = React.useMemo(() => {
-    return subTotal - descuentos + importeExento + importeExonerado;
-  }, [subTotal, descuentos, importeExento, importeExonerado]);
+    return (
+      subTotal - descuentos + importeExento + importeExonerado + cargosExtra
+    );
+  }, [subTotal, descuentos, importeExento, importeExonerado, cargosExtra]);
 
   useEffect(() => {
     setValue("sub_total", subTotal);
@@ -614,6 +619,29 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
                 />
               </div>
 
+              {/* ← NUEVO CAMPO: CARGOS EXTRA */}
+              <div className="space-y-1">
+                <Label className="flex items-center gap-1">
+                  <DollarSign className="h-4 w-4 text-blue-600" />
+                  Cargos Extra
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register("cargos_extra", {
+                    min: { value: 0, message: "No puede ser negativo" },
+                    valueAsNumber: true,
+                  })}
+                  placeholder="0.00"
+                  className="text-right border-blue-200 bg-blue-50"
+                />
+                {errors.cargos_extra && (
+                  <p className="text-sm text-red-500">
+                    {errors.cargos_extra.message}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <Label>Importe Exento</Label>
                 <Input
@@ -697,7 +725,6 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
               )}
             </div>
           </CardContent>
-          s
         </Card>
       </div>
 
@@ -997,6 +1024,7 @@ const FormEditFactura = ({ factura, onSuccess, onCancel }: Props) => {
         subTotal={subTotal}
         fields={fields}
         totalGeneral={totalGeneral}
+        cargosExtra={cargosExtra} // ← Nuevo prop
       />
 
       <div className="flex justify-end gap-4 pt-4">

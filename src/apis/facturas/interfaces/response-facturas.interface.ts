@@ -27,6 +27,7 @@ export interface Factura {
   isv_15: string;
   isv_18: string;
   total: string;
+  cargos_extra: string;
   total_letras: string;
   created_at: Date;
   updated_at: Date;

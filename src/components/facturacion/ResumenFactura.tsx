@@ -17,11 +17,12 @@ interface Props {
     "id"
   >[];
   totalGeneral: number;
+  cargosExtra: number;
 }
 
 const ResumenFactura = ({
   subTotal,
-
+  cargosExtra,
   fields,
   totalGeneral,
 }: Props) => {
@@ -36,7 +37,7 @@ const ResumenFactura = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div className="space-y-2">
             <Badge variant="secondary" className="w-full">
               Sub Total
@@ -45,14 +46,14 @@ const ResumenFactura = ({
               {simbolo} {subTotal.toFixed(2)}
             </p>
           </div>
-          {/*     <div className="space-y-2">
-            <Badge variant="secondary" className="w-full">
-              Descuentos
-            </Badge>
-            <p className="text-xl font-bold text-red-600">
-              -{simbolo} {descuentos.toFixed(2)}
-            </p>
-          </div> */}
+          {cargosExtra > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Cargos Extra:</span>
+              <span className="font-medium text-blue-600">
+                + {simbolo} {cargosExtra.toFixed(2)}
+              </span>
+            </div>
+          )}
           <div className="space-y-2">
             <Badge variant="secondary" className="w-full">
               Items

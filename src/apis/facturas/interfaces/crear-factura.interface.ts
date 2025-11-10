@@ -8,7 +8,7 @@ export interface CrearFacturaInterface {
   descuento_id?: string | null;
   importe_exento: number;
   importe_exonerado: number;
-
+  cargos_extra?: number;
   estado: string;
   detalles: Detalle[];
 }

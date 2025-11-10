@@ -24,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/helpers/funciones/formatCurrency";
 import { formatDate } from "@/helpers/funciones/formatDate";
 import { User } from "@/interfaces/auth/user";
@@ -36,6 +37,11 @@ import {
   CheckCircle,
   FileText,
   XCircle,
+  Receipt,
+  Info,
+  User as UserIcon,
+  Phone,
+  Mail,
 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
@@ -51,6 +57,7 @@ type DialogType = "procesar" | "facturar" | "cancelar" | null;
 const PedidoCard = ({ pedido, user }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<DialogType>(null);
+  const [mostrarImpuestos, setMostrarImpuestos] = useState(false);
   const queryClient = useQueryClient();
   const simbolo = user?.pais.simbolo_moneda || "$";
 
@@ -165,6 +172,13 @@ const PedidoCard = ({ pedido, user }: Props) => {
     return dialogType ? configs[dialogType] : configs.cancelar;
   };
 
+  const totalImpuestos =
+    (parseFloat(pedido.isv_15) || 0) + (parseFloat(pedido.isv_18) || 0);
+
+  const baseGravableTotal =
+    (parseFloat(pedido.importe_gravado_15) || 0) +
+    (parseFloat(pedido.importe_gravado_18) || 0);
+
   const dialogConfig = getDialogConfig();
 
   return (
@@ -188,6 +202,15 @@ const PedidoCard = ({ pedido, user }: Props) => {
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(pedido.total, simbolo)}
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMostrarImpuestos(!mostrarImpuestos)}
+                className="mt-1 text-xs"
+              >
+                <Receipt className="h-3 w-3 mr-1" />
+                {mostrarImpuestos ? "Ocultar" : "Ver"} impuestos
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -195,6 +218,41 @@ const PedidoCard = ({ pedido, user }: Props) => {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  Información del Cliente
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium text-blue-700">Nombre:</span>
+                    <p className="text-blue-900">{pedido.cliente.nombre}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-blue-700">
+                      Identificación:
+                    </span>
+                    <p className="text-blue-900">
+                      {pedido.cliente.identificacion}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3 w-3 text-blue-600" />
+                    <span className="text-blue-900">
+                      {pedido.cliente.telefono}
+                    </span>
+                  </div>
+                  {pedido.cliente.email && (
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-3 w-3 text-blue-600" />
+                      <span className="text-blue-900">
+                        {pedido.cliente.email}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
@@ -205,6 +263,55 @@ const PedidoCard = ({ pedido, user }: Props) => {
                   <p className="text-sm text-gray-500">
                     {pedido.sucursal.direccion_complemento}
                   </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Entrega</h3>
+                  <p className="text-sm text-gray-600 capitalize">
+                    {pedido.tipo_entrega}
+                  </p>
+                  {pedido.direccion_entrega && (
+                    <p className="text-sm text-gray-500">
+                      {pedido.direccion_entrega}
+                    </p>
+                  )}
+                  {pedido.nombre_finca && (
+                    <p className="text-sm text-gray-500">
+                      Finca: {pedido.nombre_finca}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 text-sm flex items-center gap-1">
+                  <Info className="h-4 w-4" />
+                  Resumen Fiscal
+                </h4>
+                <div className="mt-2 space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-blue-700">Subtotal:</span>
+                    <span className="font-medium">
+                      {formatCurrency(pedido.sub_total, simbolo)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-700">Impuestos:</span>
+                    <span className="font-medium text-red-600">
+                      +{formatCurrency(totalImpuestos.toString(), simbolo)}
+                    </span>
+                  </div>
+                  {pedido.tipo_entrega === TipoEntrega.DELIVERY && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Delivery:</span>
+                      <span className="font-medium text-orange-600">
+                        +{formatCurrency(pedido.costo_delivery, simbolo)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -277,28 +384,120 @@ const PedidoCard = ({ pedido, user }: Props) => {
                 ))}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Subtotal</span>
-                  <span className="font-medium">
-                    {formatCurrency(pedido.total, simbolo)}
-                  </span>
+              {mostrarImpuestos && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Desglose de Impuestos
+                  </h4>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">
+                          Base Gravable 15%:
+                        </span>
+                        <div className="font-medium">
+                          {formatCurrency(pedido.importe_gravado_15, simbolo)}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">
+                          Base Gravable 18%:
+                        </span>
+                        <div className="font-medium">
+                          {formatCurrency(pedido.importe_gravado_18, simbolo)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Importe Exento:</span>
+                        <div className="font-medium text-green-600">
+                          {formatCurrency(pedido.importe_exento, simbolo)}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">
+                          Importe Exonerado:
+                        </span>
+                        <div className="font-medium text-green-600">
+                          {formatCurrency(pedido.importe_exonerado, simbolo)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">ISV 15%:</span>
+                        <div className="font-medium text-red-600">
+                          +{formatCurrency(pedido.isv_15, simbolo)}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">ISV 18%:</span>
+                        <div className="font-medium text-red-600">
+                          +{formatCurrency(pedido.isv_18, simbolo)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-yellow-800 font-medium">
+                          Total Impuestos:
+                        </span>
+                        <span className="text-red-600 font-bold">
+                          +{formatCurrency(totalImpuestos.toString(), simbolo)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {pedido.tipo_entrega === TipoEntrega.DELIVERY && (
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm text-gray-600">
-                      Delivery (Incluido en el total)
-                    </span>
-                    <span className="text-lg font-bold text-green-600">
-                      {formatCurrency(pedido.costo_delivery, simbolo)}
+              )}
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Subtotal</span>
+                    <span className="font-medium">
+                      {formatCurrency(pedido.sub_total, simbolo)}
                     </span>
                   </div>
-                )}
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-gray-600">Total</span>
-                  <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(pedido.total, simbolo)}
-                  </span>
+
+                  {totalImpuestos > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Impuestos</span>
+                      <span className="text-red-600 font-medium">
+                        +{formatCurrency(totalImpuestos.toString(), simbolo)}
+                      </span>
+                    </div>
+                  )}
+
+                  {pedido.tipo_entrega === TipoEntrega.DELIVERY && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Costo de Delivery
+                      </span>
+                      <span className="text-orange-600 font-medium">
+                        +{formatCurrency(pedido.costo_delivery, simbolo)}
+                      </span>
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-gray-900">
+                      Total General
+                    </span>
+                    <span className="text-xl font-bold text-green-600">
+                      {formatCurrency(pedido.total, simbolo)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
