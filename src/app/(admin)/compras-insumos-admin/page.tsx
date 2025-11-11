@@ -33,6 +33,7 @@ import {
 import useGetComprasInsumos from "@/hooks/compras-insumos/useGetComprasInsumos";
 import TableCompras from "./ui/TableCompras";
 import FormCompraInsumos from "./ui/FormCompraInsumos";
+import Paginacion from "@/components/generics/Paginacion";
 
 const ComprasInsumosPage = () => {
   const { user } = useAuthStore();
@@ -58,8 +59,11 @@ const ComprasInsumosPage = () => {
     todosPagos
   );
 
-  const handlePageChange = (newOffset: number) => {
-    setOffset(newOffset);
+  const totalPages = comprasData ? Math.ceil(comprasData.total / limit) : 1;
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const handlePageChange = (page: number) => {
+    setOffset((page - 1) * limit);
   };
 
   const clearFilters = () => {
@@ -68,7 +72,6 @@ const ComprasInsumosPage = () => {
     setTipoPago("");
     setOffset(0);
   };
-
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mt-5">
@@ -148,44 +151,11 @@ const ComprasInsumosPage = () => {
 
         {comprasData && comprasData.total > limit && (
           <div className="mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      handlePageChange(Math.max(0, offset - limit))
-                    }
-                    className={
-                      offset === 0 ? "pointer-events-none opacity-50" : ""
-                    }
-                  />
-                </PaginationItem>
-
-                {[...Array(Math.ceil(comprasData.total / limit))].map(
-                  (_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        isActive={offset === index * limit}
-                        onClick={() => handlePageChange(index * limit)}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => handlePageChange(offset + limit)}
-                    className={
-                      offset + limit >= comprasData.total
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <Paginacion
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>

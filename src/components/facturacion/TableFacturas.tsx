@@ -57,6 +57,7 @@ interface Props {
 }
 
 const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
+  const userId = user?.id || "";
   const rolUsuario = user?.role.name || "";
   const esAdministrador = rolUsuario === "Administrador";
   const queryClient = useQueryClient();
@@ -348,7 +349,9 @@ const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
         <TableHeader>
           <TableRow>
             <TableHead className="text-center">N° Factura</TableHead>
+            <TableHead className="text-center">Facturado</TableHead>
             <TableHead className="text-center">Cliente</TableHead>
+
             <TableHead className="text-center">Estado</TableHead>
             <TableHead className="text-center">Sub Total</TableHead>
             <TableHead className="text-center">Total</TableHead>
@@ -362,6 +365,23 @@ const TableFacturas = ({ facturas, onFacturaActualizada, user }: Props) => {
                 <div className="flex justify-center items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-500" />
                   {factura.numero_factura}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex justify-center items-center gap-2">
+                  <User2 className="h-4 w-4 text-gray-500" />
+                  {factura.usuario && userId === factura.usuario.id ? (
+                    <p className="font-medium">Tú</p>
+                  ) : factura.usuario ? (
+                    <div>
+                      <p className="font-medium">{factura.usuario.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {factura.usuario.identificacion}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 italic">Sin asignar</p>
+                  )}
                 </div>
               </TableCell>
               <TableCell>

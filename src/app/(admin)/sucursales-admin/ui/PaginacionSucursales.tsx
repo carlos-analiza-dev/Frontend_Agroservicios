@@ -12,16 +12,47 @@ import React from "react";
 interface Props {
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  getVisiblePages: () => number[];
   totalPages: number;
 }
 
-const PaginacionSucursales = ({
-  page,
-  setPage,
-  getVisiblePages,
-  totalPages,
-}: Props) => {
+const PaginacionSucursales = ({ page, setPage, totalPages }: Props) => {
+  const maxVisiblePages = 7;
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) {
+          pages.push("ellipsis");
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          pages.push("ellipsis");
+        }
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
   return (
     <Pagination>
       <PaginationContent>
@@ -32,30 +63,31 @@ const PaginacionSucursales = ({
               e.preventDefault();
               if (page > 1) setPage(page - 1);
             }}
-            className={page === 1 ? "pointer-events-none opacity-50" : ""}
+            className={
+              page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+            }
           />
         </PaginationItem>
 
-        {getVisiblePages().map((pageNumber) => (
-          <PaginationItem key={pageNumber}>
-            <PaginationLink
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setPage(pageNumber);
-              }}
-              isActive={pageNumber === page}
-            >
-              {pageNumber}
-            </PaginationLink>
+        {pageNumbers.map((num, index) => (
+          <PaginationItem key={index}>
+            {num === "ellipsis" ? (
+              <PaginationEllipsis />
+            ) : (
+              <PaginationLink
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPage(num as number);
+                }}
+                isActive={num === page}
+                className="cursor-pointer"
+              >
+                {num}
+              </PaginationLink>
+            )}
           </PaginationItem>
         ))}
-
-        {totalPages > getVisiblePages()[getVisiblePages().length - 1] && (
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-        )}
 
         <PaginationItem>
           <PaginationNext
@@ -65,7 +97,9 @@ const PaginacionSucursales = ({
               if (page < totalPages) setPage(page + 1);
             }}
             className={
-              page === totalPages ? "pointer-events-none opacity-50" : ""
+              page === totalPages
+                ? "pointer-events-none opacity-50"
+                : "cursor-pointer"
             }
           />
         </PaginationItem>

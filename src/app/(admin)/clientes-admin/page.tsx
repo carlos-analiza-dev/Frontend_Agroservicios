@@ -32,6 +32,7 @@ import usePaises from "@/hooks/paises/usePaises";
 import useGetClientesPagination from "@/hooks/clientes/useGetClientes";
 import TableClientes from "./ui/TableClientes";
 import FormClientes from "./ui/FormClientes";
+import PaginacionUsers from "@/components/users/PaginacionUsers";
 
 const ClientesAdminPage = () => {
   const limit = 10;
@@ -160,39 +161,12 @@ const ClientesAdminPage = () => {
               {data?.data?.total || 0} usuarios
             </div>
 
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={handlePreviousPage}
-                    isActive={currentPage <= 1}
-                    className={
-                      currentPage <= 1
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-
-                <PaginationItem>
-                  <span className="px-4">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={handleNextPage}
-                    isActive={currentPage >= totalPages}
-                    className={
-                      currentPage >= totalPages
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginacionUsers
+              handlePreviousPage={handlePreviousPage}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handleNextPage={handleNextPage}
+            />
           </div>
         )}
       </div>

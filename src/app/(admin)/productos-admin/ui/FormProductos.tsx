@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { UnidadMedida } from "@/helpers/data/unidadMedidas";
+import { getUnidadesFraccionamiento } from "@/helpers/funciones/getUnidadesFraccionamiento";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
 import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
@@ -55,53 +56,6 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
   useEffect(() => {
     setUnidadVentaSeleccionada(unidadVenta || "");
   }, [unidadVenta]);
-
-  const getUnidadesFraccionamiento = () => {
-    switch (unidadVentaSeleccionada) {
-      case "kilogramo":
-        return UnidadMedida.filter((u) =>
-          ["gramo", "libra", "onza"].includes(u.value)
-        );
-
-      case "gramo":
-        return UnidadMedida.filter((u) => ["miligramo"].includes(u.value));
-
-      case "libra":
-        return UnidadMedida.filter((u) => ["onza"].includes(u.value));
-
-      case "galon":
-        return UnidadMedida.filter((u) =>
-          ["litro", "mililitro"].includes(u.value)
-        );
-
-      case "litro":
-        return UnidadMedida.filter((u) =>
-          ["mililitro", "centilitro"].includes(u.value)
-        );
-
-      case "mililitro":
-        return UnidadMedida.filter((u) => ["centilitro"].includes(u.value));
-
-      case "metro":
-        return UnidadMedida.filter((u) =>
-          ["centimetro", "milimetro", "pie", "pulgada"].includes(u.value)
-        );
-
-      case "m2":
-        return UnidadMedida.filter((u) => ["cm2", "pie2"].includes(u.value));
-
-      case "m3":
-        return UnidadMedida.filter((u) =>
-          ["litro", "mililitro"].includes(u.value)
-        );
-
-      case "pieza":
-        return UnidadMedida.filter((u) => ["unidad"].includes(u.value));
-
-      default:
-        return [];
-    }
-  };
 
   useEffect(() => {
     if (isEdit && editSubServicio) {
@@ -393,11 +347,13 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
                 <SelectValue placeholder="Selecciona unidad de fraccionamiento" />
               </SelectTrigger>
               <SelectContent>
-                {getUnidadesFraccionamiento().map((unidad) => (
-                  <SelectItem key={unidad.value} value={unidad.value}>
-                    {unidad.label}
-                  </SelectItem>
-                ))}
+                {getUnidadesFraccionamiento(unidadVentaSeleccionada).map(
+                  (unidad) => (
+                    <SelectItem key={unidad.value} value={unidad.value}>
+                      {unidad.label}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>

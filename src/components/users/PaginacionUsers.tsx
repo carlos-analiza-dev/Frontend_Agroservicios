@@ -8,20 +8,22 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "../ui/pagination";
+} from "@/components/ui/pagination";
 
 interface Props {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
-  className?: string;
+  handlePreviousPage: () => void;
+  handleNextPage: () => void;
+  onPageChange?: (page: number) => void;
 }
 
-const Paginacion = ({
+const PaginacionUsers = ({
   currentPage,
   totalPages,
+  handlePreviousPage,
+  handleNextPage,
   onPageChange,
-  className = "",
 }: Props) => {
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -40,9 +42,7 @@ const Paginacion = ({
       const start = Math.max(2, currentPage - half);
       const end = Math.min(totalPages - 1, currentPage + half);
 
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
+      for (let i = start; i <= end; i++) pages.push(i);
 
       if (currentPage < totalPages - (half + 1)) {
         pages.push("ellipsis");
@@ -57,14 +57,14 @@ const Paginacion = ({
   const pageNumbers = getPageNumbers();
 
   return (
-    <Pagination className={className}>
+    <Pagination>
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+            onClick={() => currentPage > 1 && handlePreviousPage()}
             className={
-              currentPage === 1
-                ? "pointer-events-none opacity-50"
+              currentPage <= 1
+                ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer"
             }
           />
@@ -77,7 +77,7 @@ const Paginacion = ({
             ) : (
               <PaginationLink
                 isActive={currentPage === page}
-                onClick={() => onPageChange(page as number)}
+                onClick={() => onPageChange && onPageChange(page as number)}
                 className="cursor-pointer"
               >
                 {page}
@@ -88,12 +88,10 @@ const Paginacion = ({
 
         <PaginationItem>
           <PaginationNext
-            onClick={() =>
-              currentPage < totalPages && onPageChange(currentPage + 1)
-            }
+            onClick={() => currentPage < totalPages && handleNextPage()}
             className={
-              currentPage === totalPages
-                ? "pointer-events-none opacity-50"
+              currentPage >= totalPages
+                ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer"
             }
           />
@@ -103,4 +101,4 @@ const Paginacion = ({
   );
 };
 
-export default Paginacion;
+export default PaginacionUsers;

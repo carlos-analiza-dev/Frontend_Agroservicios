@@ -28,6 +28,7 @@ import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 
 import { Badge } from "@/components/ui/badge";
 import { exportProductosFaltantes } from "@/helpers/funciones/exportProductosFaltantes";
+import Paginacion from "@/components/generics/Paginacion";
 
 const ProductosFaltantesPage = () => {
   const { user } = useAuthStore();
@@ -41,6 +42,7 @@ const ProductosFaltantesPage = () => {
   const [fechaInicio, setFechaInicio] = useState<string>("");
   const [fechaFin, setFechaFin] = useState<string>("");
   const [showDateFilters, setShowDateFilters] = useState(false);
+
   const { data: sucursales, isLoading: cargandoSucursales } =
     useGetSucursalesPais(paisId);
 
@@ -75,26 +77,27 @@ const ProductosFaltantesPage = () => {
     exportProductosFaltantes(filteredProductos, simbolo);
   };
 
-  const handleApplyDateFilters = () => {
-    setOffset(0);
-  };
-
+  const handleApplyDateFilters = () => setOffset(0);
   const handleClearDateFilters = () => {
     setFechaInicio("");
     setFechaFin("");
     setOffset(0);
   };
-
   const handleClearSucursalFilter = () => {
     setSucursalFilter("all");
     setOffset(0);
   };
-
   const handleRefetch = () => {
     setOffset(0);
     refetch();
   };
 
+  const totalPages = data ? Math.ceil(data.total / limit) : 1;
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const handlePageChange = (page: number) => {
+    setOffset((page - 1) * limit);
+  };
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -269,7 +272,6 @@ const ProductosFaltantesPage = () => {
               </div>
             )}
 
-            {/* Indicadores de Filtros Activos */}
             {(fechaInicio || fechaFin || sucursalFilter !== "all") && (
               <div className="flex flex-wrap items-center gap-2 text-sm text-blue-600">
                 <Filter className="h-4 w-4" />
@@ -354,32 +356,13 @@ const ProductosFaltantesPage = () => {
       </Card>
 
       {data && data.total > limit && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Mostrando {Math.min(limit, filteredProductos.length)} de{" "}
-                {data.total} productos
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  disabled={offset === 0}
-                  onClick={() => setOffset((prev) => Math.max(0, prev - limit))}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={offset + limit >= data.total}
-                  onClick={() => setOffset((prev) => prev + limit)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex justify-center mt-4">
+          <Paginacion
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       )}
     </div>
   );

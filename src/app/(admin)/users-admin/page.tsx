@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -13,13 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/helpers/funciones/useDebounce";
 import dynamic from "next/dynamic";
 import useGetRoles from "@/hooks/roles/useGetRoles";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import useGetUsersPagination from "@/hooks/users/useGetUsersInfinityScroll";
 import {
   AlertDialog,
@@ -35,6 +28,7 @@ import TitlePages from "@/components/generics/TitlePages";
 import { Skeleton } from "@/components/ui/skeleton";
 import usePaises from "@/hooks/paises/usePaises";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
+import PaginacionUsers from "@/components/users/PaginacionUsers";
 
 const TableUsers = dynamic(() => import("./ui/TableUsers"), {
   loading: () => <TableUsersSkeleton />,
@@ -200,39 +194,12 @@ const UsersAdminPage = () => {
               {data?.data?.total || 0} usuarios
             </div>
 
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={handlePreviousPage}
-                    isActive={currentPage <= 1}
-                    className={
-                      currentPage <= 1
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-
-                <PaginationItem>
-                  <span className="px-4">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={handleNextPage}
-                    isActive={currentPage >= totalPages}
-                    className={
-                      currentPage >= totalPages
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginacionUsers
+              handlePreviousPage={handlePreviousPage}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handleNextPage={handleNextPage}
+            />
           </div>
         )}
       </div>

@@ -33,6 +33,7 @@ import { useAuthStore } from "@/providers/store/useAuthStore";
 import { tiposPagos } from "@/helpers/data/tiposPagos";
 import FormCompraProductos from "@/app/(admin)/compras-productos-admin/ui/FormCompraProductos";
 import TableCompras from "@/components/generics/TableCompras";
+import Paginacion from "@/components/generics/Paginacion";
 
 const ComprasProductosPage = () => {
   const { user } = useAuthStore();
@@ -58,8 +59,11 @@ const ComprasProductosPage = () => {
     todosPagos
   );
 
-  const handlePageChange = (newOffset: number) => {
-    setOffset(newOffset);
+  const totalPages = comprasData ? Math.ceil(comprasData.total / limit) : 1;
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const handlePageChange = (page: number) => {
+    setOffset((page - 1) * limit);
   };
 
   const clearFilters = () => {
@@ -68,7 +72,6 @@ const ComprasProductosPage = () => {
     setTipoPago("");
     setOffset(0);
   };
-
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mt-5">
@@ -147,45 +150,12 @@ const ComprasProductosPage = () => {
         </div>
 
         {comprasData && comprasData.total > limit && (
-          <div className="mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      handlePageChange(Math.max(0, offset - limit))
-                    }
-                    className={
-                      offset === 0 ? "pointer-events-none opacity-50" : ""
-                    }
-                  />
-                </PaginationItem>
-
-                {[...Array(Math.ceil(comprasData.total / limit))].map(
-                  (_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        isActive={offset === index * limit}
-                        onClick={() => handlePageChange(index * limit)}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => handlePageChange(offset + limit)}
-                    className={
-                      offset + limit >= comprasData.total
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+          <div className="mt-4 flex justify-center">
+            <Paginacion
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>

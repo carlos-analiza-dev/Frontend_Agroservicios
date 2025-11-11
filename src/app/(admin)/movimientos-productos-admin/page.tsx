@@ -17,19 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TableMovimientosProductos from "./ui/TableMovimientosProductos";
+import PaginacionMovimientos from "./ui/PaginacionMovimientos";
 
 const MovimientosProductosAdmin = () => {
   const { user } = useAuthStore();
@@ -198,60 +191,11 @@ const MovimientosProductosAdmin = () => {
 
               {totalPaginas > 1 && (
                 <div className="mt-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (paginaActual > 1)
-                              setPaginaActual(paginaActual - 1);
-                          }}
-                          className={
-                            paginaActual === 1
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
-
-                      {Array.from(
-                        { length: totalPaginas },
-                        (_, i) => i + 1
-                      ).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPaginaActual(page);
-                            }}
-                            isActive={page === paginaActual}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (paginaActual < totalPaginas)
-                              setPaginaActual(paginaActual + 1);
-                          }}
-                          className={
-                            paginaActual === totalPaginas
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  <PaginacionMovimientos
+                    paginaActual={paginaActual}
+                    setPaginaActual={setPaginaActual}
+                    totalPaginas={totalPaginas}
+                  />
                 </div>
               )}
             </>

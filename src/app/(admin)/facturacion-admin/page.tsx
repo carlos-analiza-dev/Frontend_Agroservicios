@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Plus, Filter, Calendar, Building } from "lucide-react";
-import { formatCurrency } from "@/helpers/funciones/formatCurrency";
 import {
   Pagination,
   PaginationContent,
@@ -38,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CardIsvImportes from "./ui/CardIsvImportes";
+import Paginacion from "@/components/generics/Paginacion";
 
 const FacturacionPage = () => {
   const { user } = useAuthStore();
@@ -66,13 +66,8 @@ const FacturacionPage = () => {
   const totalPages = facturas ? Math.ceil(facturas.total / limit) : 0;
   const currentPage = Math.floor(offset / limit) + 1;
 
-  const handlePageChange = (newPage: number) => {
-    const newOffset = (newPage - 1) * limit;
-    setOffset(newOffset);
-  };
-
-  const handleFiltroChange = () => {
-    setOffset(0);
+  const handlePageChange = (page: number) => {
+    setOffset((page - 1) * limit);
   };
 
   const limpiarFiltros = () => {
@@ -80,24 +75,6 @@ const FacturacionPage = () => {
     setFechaInicio("");
     setFechaFin("");
     setOffset(0);
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
   };
 
   const getNombreSucursal = () => {
@@ -111,9 +88,7 @@ const FacturacionPage = () => {
   };
 
   const sucursalesValidas =
-    sucursales?.filter(
-      (sucursal) => sucursal.id && sucursal.id.trim() !== ""
-    ) || [];
+    sucursales?.filter((s) => s.id?.trim() !== "") || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -143,7 +118,7 @@ const FacturacionPage = () => {
                 value={sucursalSeleccionada}
                 onValueChange={(value) => {
                   setSucursalSeleccionada(value);
-                  handleFiltroChange();
+                  setOffset(0);
                 }}
               >
                 <SelectTrigger>
@@ -179,7 +154,7 @@ const FacturacionPage = () => {
                 value={fechaInicio}
                 onChange={(e) => {
                   setFechaInicio(e.target.value);
-                  handleFiltroChange();
+                  setOffset(0);
                 }}
               />
             </div>
@@ -194,7 +169,7 @@ const FacturacionPage = () => {
                 value={fechaFin}
                 onChange={(e) => {
                   setFechaFin(e.target.value);
-                  handleFiltroChange();
+                  setOffset(0);
                 }}
               />
             </div>
@@ -268,88 +243,12 @@ const FacturacionPage = () => {
               <TableFacturas facturas={facturas} user={user} />
 
               {facturas && facturas.total > limit && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
-                    Mostrando {offset + 1} -{" "}
-                    {Math.min(offset + limit, facturas.total)} de{" "}
-                    {facturas.total} facturas
-                  </div>
-
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
-
-                      {getPageNumbers()[0] > 1 && (
-                        <>
-                          <PaginationItem>
-                            <PaginationLink
-                              onClick={() => handlePageChange(1)}
-                              className="cursor-pointer"
-                            >
-                              1
-                            </PaginationLink>
-                          </PaginationItem>
-                          {getPageNumbers()[0] > 2 && (
-                            <PaginationItem>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          )}
-                        </>
-                      )}
-
-                      {getPageNumbers().map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(page)}
-                            isActive={page === currentPage}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                      {getPageNumbers()[getPageNumbers().length - 1] <
-                        totalPages && (
-                        <>
-                          {getPageNumbers()[getPageNumbers().length - 1] <
-                            totalPages - 1 && (
-                            <PaginationItem>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          )}
-                          <PaginationItem>
-                            <PaginationLink
-                              onClick={() => handlePageChange(totalPages)}
-                              className="cursor-pointer"
-                            >
-                              {totalPages}
-                            </PaginationLink>
-                          </PaginationItem>
-                        </>
-                      )}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                <div className="flex justify-center mt-6">
+                  <Paginacion
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </>
