@@ -7,16 +7,19 @@ import SidebarAdmin from "@/components/generics/SidebarAdmin";
 import ShetContentComp from "@/components/generics/ShetContentComp";
 import NavBar from "@/components/generics/NavBar";
 import { FullScreenLoader } from "@/components/generics/FullScreenLoader";
+import { isTokenExpired } from "@/helpers/funciones/tokenExpired";
+import { SessionExpiredModal } from "@/components/generics/SessionExpiredModal";
 
 export default function VeterinarioLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { logout, user } = useAuthStore();
+  const { logout, user, token } = useAuthStore();
   const router = useRouter();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -34,16 +37,58 @@ export default function VeterinarioLayout({
     }
   };
 
+  const checkTokenExpiration = () => {
+    if (token && isTokenExpired(token)) {
+      setShowSessionModal(true);
+      return true;
+    }
+    return false;
+  };
+
+  const handleSessionExpired = async () => {
+    setShowSessionModal(false);
+    setLoading(true);
+
+    try {
+      await logout();
+      toast.info("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+      router.push("/");
+    } catch (error) {
+      toast.error("Error al cerrar sesión expirada");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       if (!user || user.role.name !== "Veterinario") {
         await logout();
         router.push("/");
       }
+      if (checkTokenExpiration()) {
+        return;
+      }
     };
 
     checkUser();
   }, [user, logout, router]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (token) {
+        checkTokenExpiration();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      checkTokenExpiration();
+    }
+  }, [token]);
 
   if (loading) {
     return <FullScreenLoader />;
@@ -69,6 +114,10 @@ export default function VeterinarioLayout({
           {children}
         </main>
       </div>
+      <SessionExpiredModal
+        isOpen={showSessionModal}
+        onClose={handleSessionExpired}
+      />
     </div>
   );
 }

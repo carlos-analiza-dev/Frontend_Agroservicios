@@ -170,13 +170,6 @@ export const navItems = [
       },
     ],
   },
-  {
-    category: "Administración",
-    items: [
-      { name: "Reportes", href: "/admin/reports", icon: FileText },
-      { name: "Configuración", href: "/admin/settings", icon: Settings },
-    ],
-  },
 ];
 
 export const navItemsVete = [
