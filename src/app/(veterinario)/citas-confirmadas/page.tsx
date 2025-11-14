@@ -63,11 +63,11 @@ const CitasConfirmadasVeterinario = () => {
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
 
-  const [selectedInsumos, setSelectedInsumos] = useState<{
+  /* const [selectedInsumos, setSelectedInsumos] = useState<{
     [citaId: string]: {
       [insumoId: string]: { insumo: InsumoDis; quantity: number };
     };
-  }>({});
+  }>({}); */
 
   const [selectedProductos, setSelectedProductos] = useState<{
     [citaId: string]: {
@@ -143,7 +143,7 @@ const CitasConfirmadasVeterinario = () => {
     if (!selectedCita) return;
 
     if (type === "insumo") {
-      setSelectedInsumos((prev) => {
+      /* setSelectedInsumos((prev) => {
         const newProducts = { ...prev };
         if (
           newProducts[selectedCita.id] &&
@@ -157,7 +157,7 @@ const CitasConfirmadasVeterinario = () => {
           }
         }
         return newProducts;
-      });
+      }); */
     } else {
       setSelectedProductos((prev) => {
         const newProducts = { ...prev };
@@ -184,7 +184,7 @@ const CitasConfirmadasVeterinario = () => {
     if (!selectedCita) return;
 
     if (type === "insumo") {
-      const insumo = item as InsumoDis;
+      /*   const insumo = item as InsumoDis;
       setSelectedInsumos((prev) => {
         const currentCitaProducts = prev[selectedCita.id] || {};
         const newSelection = { ...prev };
@@ -200,7 +200,7 @@ const CitasConfirmadasVeterinario = () => {
         }
 
         return newSelection;
-      });
+      }); */
     } else {
       const producto = item as Producto;
       setSelectedProductos((prev) => {
@@ -230,7 +230,7 @@ const CitasConfirmadasVeterinario = () => {
     if (!selectedCita || quantity < 1) return;
 
     if (type === "insumo") {
-      setSelectedInsumos((prev) => {
+      /*  setSelectedInsumos((prev) => {
         const currentCitaProducts = prev[selectedCita.id] || {};
         const product = currentCitaProducts[id]?.insumo;
 
@@ -254,7 +254,7 @@ const CitasConfirmadasVeterinario = () => {
         }, 0);
 
         return updated;
-      });
+      }); */
     } else {
       setSelectedProductos((prev) => {
         const currentCitaProducts = prev[selectedCita.id] || {};
@@ -286,13 +286,13 @@ const CitasConfirmadasVeterinario = () => {
 
   const calculateTotal = useCallback(
     (citaId: string) => {
-      const insumosTotal = selectedInsumos[citaId]
+      /* const insumosTotal = selectedInsumos[citaId]
         ? Object.values(selectedInsumos[citaId]).reduce(
             (total, { insumo, quantity }) =>
               total + parseFloat(insumo.costo) * quantity,
             0
           )
-        : 0;
+        : 0; */
 
       const productosTotal = selectedProductos[citaId]
         ? Object.values(selectedProductos[citaId]).reduce(
@@ -304,9 +304,9 @@ const CitasConfirmadasVeterinario = () => {
           )
         : 0;
 
-      return insumosTotal + productosTotal;
+      return /* insumosTotal + */ productosTotal;
     },
-    [selectedInsumos, selectedProductos]
+    [/* selectedInsumos */ selectedProductos]
   );
 
   useEffect(() => {
@@ -317,13 +317,13 @@ const CitasConfirmadasVeterinario = () => {
       ...prev,
       [selectedCita.id]: newTotal,
     }));
-  }, [selectedInsumos, selectedProductos, selectedCita, calculateTotal]);
+  }, [/* selectedInsumos, */ selectedProductos, selectedCita, calculateTotal]);
 
   const handleSaveProducts = async () => {
     if (!selectedCita) return;
 
     try {
-      if (selectedInsumos[selectedCita.id]) {
+      /* if (selectedInsumos[selectedCita.id]) {
         const insumosPromises = Object.values(
           selectedInsumos[selectedCita.id]
         ).map(async ({ insumo, quantity }) => {
@@ -338,7 +338,7 @@ const CitasConfirmadasVeterinario = () => {
         });
 
         await Promise.all(insumosPromises);
-      }
+      } */
 
       if (selectedProductos[selectedCita.id]) {
         const productosPromises = Object.values(
@@ -405,7 +405,7 @@ const CitasConfirmadasVeterinario = () => {
       });
 
       setSelectedCita(null);
-      setSelectedInsumos({});
+      /*  setSelectedInsumos({}); */
       setSelectedProductos({});
       setTotalAdicional({});
       await refetch();
@@ -435,7 +435,7 @@ const CitasConfirmadasVeterinario = () => {
     const totalFinal = totalServicio + totalInsumos;
 
     try {
-      if (selectedInsumos[id]) {
+      /*  if (selectedInsumos[id]) {
         const sinStock = Object.values(selectedInsumos[id]).filter(
           ({ insumo, quantity }) => quantity > getExistenciaInsumo(insumo.id)
         );
@@ -446,7 +446,7 @@ const CitasConfirmadasVeterinario = () => {
               .join(", ")}`
           );
         }
-      }
+      } */
 
       if (selectedProductos[id]) {
         const sinStock = Object.values(selectedProductos[id]).filter(
@@ -462,7 +462,7 @@ const CitasConfirmadasVeterinario = () => {
         }
       }
 
-      if (selectedInsumos[id]) {
+      /*  if (selectedInsumos[id]) {
         const insumosPromises = Object.values(selectedInsumos[id]).map(
           async ({ insumo, quantity }) => {
             const data = {
@@ -475,7 +475,7 @@ const CitasConfirmadasVeterinario = () => {
           }
         );
         await Promise.all(insumosPromises);
-      }
+      } */
 
       if (selectedProductos[id]) {
         const productosPromises = Object.values(selectedProductos[id]).map(
@@ -547,7 +547,7 @@ const CitasConfirmadasVeterinario = () => {
                   item={item}
                   onComplete={() => handleCompleteCita(item.id)}
                   onAddProducts={() => handleAddProducts(item)}
-                  selectedInsumos={selectedInsumos[item.id] || {}}
+                  /* selectedInsumos={selectedInsumos[item.id] || {}} */
                   selectedProductos={selectedProductos[item.id] || {}}
                   totalAdicional={totalAdicional[item.id] || 0}
                   onRemoveProduct={(productId, type) => {
@@ -587,7 +587,7 @@ const CitasConfirmadasVeterinario = () => {
         <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center justify-between">
-              <span>Seleccionar Insumos/Productos</span>
+              <span>Seleccionar Productos</span>
               <Badge variant="outline" className="ml-2">
                 Sucursal: {user?.sucursal.nombre}
               </Badge>
@@ -595,13 +595,11 @@ const CitasConfirmadasVeterinario = () => {
           </DialogHeader>
           <Tabs
             value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(value as "insumos" | "productos")
-            }
+            onValueChange={(value) => setActiveTab(value as "productos")}
             className="flex-shrink-0"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="insumos">Insumos</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1">
+              {/* <TabsTrigger value="insumos">Insumos</TabsTrigger> */}
               <TabsTrigger value="productos">Productos</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -610,7 +608,7 @@ const CitasConfirmadasVeterinario = () => {
             <div className="flex-1 min-w-0">
               <ScrollArea className="h-full border rounded-lg">
                 <div className="space-y-3 p-4">
-                  {activeTab === "insumos"
+                  {/* activeTab === "insumos"
                     ? insumos_disponibles?.insumos.map((insumo) => {
                         const isSelected =
                           selectedCita &&
@@ -633,33 +631,33 @@ const CitasConfirmadasVeterinario = () => {
                           />
                         );
                       })
-                    : productos_disponibles?.data.productos.map((producto) => {
-                        const isSelected =
-                          selectedCita &&
-                          selectedProductos[selectedCita.id]?.[producto.id];
-                        const precio =
-                          producto.preciosPorPais?.[0]?.precio || "0";
-                        const existenciaReal = getExistenciaProducto(
-                          producto.id
-                        );
-                        const disponible = existenciaReal > 0;
+                    : */ productos_disponibles?.data.productos.map(
+                    (producto) => {
+                      const isSelected =
+                        selectedCita &&
+                        selectedProductos[selectedCita.id]?.[producto.id];
+                      const precio =
+                        producto.preciosPorPais?.[0]?.precio || "0";
+                      const existenciaReal = getExistenciaProducto(producto.id);
+                      const disponible = existenciaReal > 0;
 
-                        return (
-                          <CardDetailsProductos
-                            key={producto.id}
-                            producto={producto}
-                            isSelected={isSelected}
-                            disponible={disponible}
-                            handleProductSelection={handleProductSelection}
-                            user={user}
-                            existenciaReal={existenciaReal}
-                            updateProductQuantity={updateProductQuantity}
-                            selectedProductos={selectedProductos}
-                            selectedCita={selectedCita}
-                            precio={precio}
-                          />
-                        );
-                      })}
+                      return (
+                        <CardDetailsProductos
+                          key={producto.id}
+                          producto={producto}
+                          isSelected={isSelected}
+                          disponible={disponible}
+                          handleProductSelection={handleProductSelection}
+                          user={user}
+                          existenciaReal={existenciaReal}
+                          updateProductQuantity={updateProductQuantity}
+                          selectedProductos={selectedProductos}
+                          selectedCita={selectedCita}
+                          precio={precio}
+                        />
+                      );
+                    }
+                  )}
                 </div>
               </ScrollArea>
             </div>
@@ -668,7 +666,7 @@ const CitasConfirmadasVeterinario = () => {
               <ResumenCita
                 selectedCita={selectedCita}
                 selectedProductos={selectedProductos}
-                selectedInsumos={selectedInsumos}
+                /* selectedInsumos={selectedInsumos} */
                 totalAdicional={totalAdicional}
                 user={user}
               />
@@ -678,20 +676,17 @@ const CitasConfirmadasVeterinario = () => {
             <Button
               onClick={handleSaveProducts}
               disabled={
-                !selectedCita ||
-                ((!selectedInsumos[selectedCita.id] ||
-                  Object.keys(selectedInsumos[selectedCita.id]).length === 0) &&
-                  (!selectedProductos[selectedCita.id] ||
-                    Object.keys(selectedProductos[selectedCita.id]).length ===
-                      0))
+                !selectedCita /* (!selectedInsumos[selectedCita.id] ||
+                  Object.keys(selectedInsumos[selectedCita.id]).length === 0) && */ ||
+                !selectedProductos[selectedCita.id] ||
+                Object.keys(selectedProductos[selectedCita.id]).length === 0
               }
               className="w-full"
             >
-              {selectedCita &&
-              ((selectedInsumos[selectedCita.id] &&
-                Object.keys(selectedInsumos[selectedCita.id]).length > 0) ||
-                (selectedProductos[selectedCita.id] &&
-                  Object.keys(selectedProductos[selectedCita.id]).length > 0))
+              {selectedCita /* (selectedInsumos[selectedCita.id] &&
+                Object.keys(selectedInsumos[selectedCita.id]).length > 0) || */ &&
+              selectedProductos[selectedCita.id] &&
+              Object.keys(selectedProductos[selectedCita.id]).length > 0
                 ? `Agregar a la cita`
                 : "Selecciona al menos un insumo o producto"}
             </Button>

@@ -16,14 +16,14 @@ interface Props {
       };
     };
   };
-  selectedInsumos: {
+  /* selectedInsumos: {
     [citaId: string]: {
       [insumoId: string]: {
         insumo: InsumoDis;
         quantity: number;
       };
     };
-  };
+  }; */
   totalAdicional: {
     [citaId: string]: number;
   };
@@ -33,7 +33,7 @@ interface Props {
 const ResumenCita = ({
   selectedCita,
   selectedProductos,
-  selectedInsumos,
+  /*  selectedInsumos, */
   totalAdicional,
   user,
 }: Props) => {
@@ -42,7 +42,7 @@ const ResumenCita = ({
       <CardContent className="p-4">
         <h4 className="font-semibold mb-3">Resumen</h4>
 
-        {selectedCita && selectedInsumos[selectedCita.id] && (
+        {/*  {selectedCita && selectedInsumos[selectedCita.id] && (
           <>
             <h5 className="font-medium mb-2">Insumos:</h5>
             {Object.values(selectedInsumos[selectedCita.id]).map(
@@ -62,7 +62,7 @@ const ResumenCita = ({
               )
             )}
           </>
-        )}
+        )} */}
 
         {selectedCita && selectedProductos[selectedCita.id] && (
           <>

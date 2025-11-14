@@ -365,7 +365,7 @@ const CardCitasMedico = ({
         {hasSelectedItems && (
           <div className="p-4 bg-orange-50 rounded-lg space-y-3 border border-orange-200">
             <h4 className="text-xs font-semibold text-orange-600 uppercase tracking-wide">
-              Productos e Insumos Seleccionados
+              Productos Seleccionados
             </h4>
 
             {Object.values(selectedProductos).length > 0 && (
