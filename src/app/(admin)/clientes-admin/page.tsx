@@ -11,13 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/helpers/funciones/useDebounce";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,

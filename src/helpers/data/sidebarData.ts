@@ -33,6 +33,8 @@ import {
   PackageSearch,
   PackageCheck,
   NotepadTextIcon,
+  User,
+  UserCheck,
 } from "lucide-react";
 
 export const navItems = [
@@ -154,6 +156,19 @@ export const navItems = [
         name: "Nota de Credito",
         href: "/nota-credito-admin",
         icon: NotepadTextIcon,
+      },
+    ],
+  },
+
+  {
+    category: "Permisos",
+    items: [
+      { name: "Ganaderos", href: "/permisos-clientes", icon: User },
+
+      {
+        name: "Veterinarios",
+        href: "/permisos-veterinarios",
+        icon: UserCheck,
       },
     ],
   },
