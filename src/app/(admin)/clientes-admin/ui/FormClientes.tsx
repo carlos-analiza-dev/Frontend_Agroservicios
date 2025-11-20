@@ -33,6 +33,7 @@ interface Props {
 const FormClientes = ({ clienteId, onSuccess }: Props) => {
   const [prefijoNumber, setPrefijoNumber] = useState("");
   const { data: cliente } = useGetClienteById(clienteId ?? "");
+
   const queryClient = useQueryClient();
   const [codigoPais, setCodigoPais] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -47,29 +48,41 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
   } = useForm<CrearClienteInterface>();
 
   useEffect(() => {
-    if (cliente) {
+    if (cliente?.data) {
+      const extractTelefonoNumber = (telefono: string | undefined): string => {
+        if (!telefono) return "";
+
+        const parts = telefono.split(" ");
+        return parts.length > 1 ? parts[1] : telefono;
+      };
+
       reset({
-        email: cliente.data.email,
-        nombre: cliente.data.nombre,
-        identificacion: cliente.data.identificacion,
-        direccion: cliente.data.direccion,
-        telefono: cliente.data.telefono.split(" ")[1],
-        pais: cliente.data.pais.id,
-        sexo: cliente.data.sexo,
-        departamento: cliente.data.departamento.id,
-        municipio: cliente.data.municipio.id,
-        isActive: cliente.data.isActive,
+        email: cliente.data.email || "",
+        nombre: cliente.data.nombre || "",
+        identificacion: cliente.data.identificacion || "",
+        direccion: cliente.data.direccion || "",
+        telefono: extractTelefonoNumber(cliente.data.telefono),
+        pais: cliente.data.pais?.id || "",
+        sexo: cliente.data.sexo || "",
+        departamento: cliente.data.departamento?.id || "",
+        municipio: cliente.data.municipio?.id || "",
+        isActive: cliente.data.isActive ?? true,
       });
 
-      setCodigoPais(cliente.data.pais.code);
-      setPrefijoNumber(cliente.data.pais.code_phone);
+      setCodigoPais(cliente.data.pais?.code || "");
+      setPrefijoNumber(cliente.data.pais?.code_phone || "");
 
-      setValue("departamento", cliente.data.departamento.id, {
-        shouldValidate: true,
-      });
-      setValue("municipio", cliente.data.municipio.id, {
-        shouldValidate: true,
-      });
+      if (cliente.data.departamento?.id) {
+        setValue("departamento", cliente.data.departamento.id, {
+          shouldValidate: true,
+        });
+      }
+
+      if (cliente.data.municipio?.id) {
+        setValue("municipio", cliente.data.municipio.id, {
+          shouldValidate: true,
+        });
+      }
     }
   }, [cliente, reset, setValue]);
 
@@ -104,7 +117,7 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
   const { data: pais } = usePaisesById(paisId);
 
   useEffect(() => {
-    if (pais) {
+    if (pais?.data) {
       setCodigoPais(pais.data.code);
       setPrefijoNumber(pais.data.code_phone);
     }
@@ -325,7 +338,7 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
         <div className="space-y-2">
           <Label htmlFor="departamento">Departamento*</Label>
           <Select
-            value={watch("departamento") || cliente?.data.departamento.id}
+            value={watch("departamento") || cliente?.data?.departamento?.id}
             onValueChange={(value) => {
               setValue("departamento", value);
               setValue("municipio", "");
@@ -343,7 +356,9 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
                   </SelectItem>
                 ))
               ) : (
-                <p>No hay departamentos disponibles</p>
+                <div className="px-2 py-1.5 text-sm text-gray-500 text-center">
+                  No hay departamentos disponibles
+                </div>
               )}
             </SelectContent>
           </Select>
@@ -357,7 +372,7 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
         <div className="space-y-2">
           <Label htmlFor="municipio">Municipio*</Label>
           <Select
-            value={watch("municipio") || cliente?.data.municipio.id}
+            value={watch("municipio") || cliente?.data?.municipio?.id}
             onValueChange={(value) => {
               setValue("municipio", value);
             }}
@@ -373,7 +388,9 @@ const FormClientes = ({ clienteId, onSuccess }: Props) => {
                   </SelectItem>
                 ))
               ) : (
-                <p>No hay municipios disponibles</p>
+                <div className="px-2 py-1.5 text-sm text-gray-500 text-center">
+                  No hay municipios disponibles
+                </div>
               )}
             </SelectContent>
           </Select>

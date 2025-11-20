@@ -2,7 +2,6 @@ import { PermisosClientes } from "@/apis/permisos-clientes/interfaces/response-p
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Edit } from "lucide-react";
 import React from "react";
 import { Permiso } from "../page";
@@ -48,15 +47,6 @@ const CardPermisos = ({ permiso, openModal }: Props) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={permiso.isActive}
-                onCheckedChange={(checked) => {
-                  console.log(`Cambiando permiso ${permiso.id} a:`, checked);
-                }}
-              />
-              <span className="text-sm text-gray-600">Activo</span>
-            </div>
             <Button
               variant="outline"
               size="icon"
