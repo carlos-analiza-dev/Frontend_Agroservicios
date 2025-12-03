@@ -137,12 +137,19 @@ const PaginaDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <RendimientoMensual
+        {/* <RendimientoMensual
           datosRendimiento={datosRendimiento}
           simbolo={simbolo}
-        />
+        /> */}
 
         <TendenciaGanancias datosTendencia={datosTendencia} simbolo={simbolo} />
+
+        <TopSucursales
+          datosSucursalesTop={datosSucursalesTop}
+          cargando_sucursales={cargando_sucursales}
+          simbolo={simbolo}
+          COLORES={COLORES}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -158,13 +165,6 @@ const PaginaDashboard = () => {
           isLoading={cargando_servicios}
           COLORES={COLORES}
           tipo="servicios"
-        />
-
-        <TopSucursales
-          datosSucursalesTop={datosSucursalesTop}
-          cargando_sucursales={cargando_sucursales}
-          simbolo={simbolo}
-          COLORES={COLORES}
         />
       </div>
     </div>

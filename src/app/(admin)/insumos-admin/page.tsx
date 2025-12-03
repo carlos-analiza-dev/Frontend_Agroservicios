@@ -72,11 +72,13 @@ const InsumosAdminPage = () => {
 
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const {
-    data: insumos,
-    isLoading,
-    isError,
-  } = useGetInsumos(itemsPerPage, offset, paisId, proveedorId, marcaId);
+  const { data: insumos, isLoading } = useGetInsumos(
+    itemsPerPage,
+    offset,
+    paisId,
+    proveedorId,
+    marcaId
+  );
 
   const insumos_total = insumos?.data.data || [];
   const totalInsumos = insumos?.data?.total || 0;
@@ -101,22 +103,6 @@ const InsumosAdminPage = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  if (isError) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-destructive py-8">
-            <Package className="h-12 w-12 mx-auto mb-4" />
-            <p>Error al cargar los insumos</p>
-            <p className="text-sm mt-2">
-              Por favor, intenta nuevamente más tarde
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">

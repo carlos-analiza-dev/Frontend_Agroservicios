@@ -38,31 +38,10 @@ const RangosFacturaPage = () => {
 
   const offset = (currentPage - 1) * pageSize;
 
-  const { data, isLoading, error, isError } = useGetRangosFactura(
-    pageSize,
-    offset
-  );
+  const { data, isLoading } = useGetRangosFactura(pageSize, offset);
 
   if (isLoading) {
     return <TableUsersSkeleton />;
-  }
-
-  if (isError) {
-    return (
-      <div className="container mx-auto py-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-red-500">
-              <p>Error al cargar los rangos de factura:</p>
-              <p className="text-sm">{error?.message}</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">
-                Reintentar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
 
   return (

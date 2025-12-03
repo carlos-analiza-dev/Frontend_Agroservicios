@@ -34,7 +34,7 @@ const ProveedoresAdmin = () => {
   const offset = (currentPage - 1) * itemsPerPage;
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data, isLoading, error } = useGetAllProveedores(
+  const { data, isLoading } = useGetAllProveedores(
     paisId,
     itemsPerPage,
     offset
@@ -47,16 +47,6 @@ const ProveedoresAdmin = () => {
       setCurrentPage(page);
     }
   };
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="text-destructive text-center">
-          Error al cargar los proveedores: {error.message}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6">

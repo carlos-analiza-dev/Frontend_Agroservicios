@@ -40,16 +40,20 @@ const SheetContentComp = ({
 
   return (
     <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-      <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="border-b border-gray-200">
+      <SheetContent
+        side="left"
+        className="w-64 p-0 flex flex-col max-h-screen overflow-hidden"
+      >
+        <SheetHeader className="border-b border-gray-200 shrink-0">
           <div className="flex h-16 items-center justify-between px-6">
             <SheetTitle className="text-xl font-bold text-gray-900">
               Panel
             </SheetTitle>
           </div>
         </SheetHeader>
-        <div className="flex flex-1 flex-col overflow-y-auto">
-          <nav className="flex-1 space-y-1 px-4 py-4">
+
+        <div className="flex-1 overflow-y-auto">
+          <nav className="space-y-1 px-4 py-4">
             <Accordion type="multiple" className="w-full">
               {itemSideBar?.map((category) => (
                 <AccordionItem
@@ -101,7 +105,8 @@ const SheetContentComp = ({
               ))}
             </Accordion>
           </nav>
-          <div className="p-4">
+
+          <div className="p-4 mt-auto">
             <Separator className="my-4" />
             <button
               onClick={handleLogout}
