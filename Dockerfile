@@ -6,12 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 
 
-RUN npm install --omit=dev --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
-COPY .next ./.next
-COPY public ./public
-COPY next.config.ts ./
-COPY tsconfig.json ./
+COPY . .
+
+RUN npm run build
 
 EXPOSE 3000
 
