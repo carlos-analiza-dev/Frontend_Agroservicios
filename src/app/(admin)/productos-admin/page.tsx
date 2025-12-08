@@ -23,10 +23,10 @@ import { useAuthStore } from "@/providers/store/useAuthStore";
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import dynamic from "next/dynamic";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import Paginacion from "@/components/generics/Paginacion";
+import useGetAllMarcas from "@/hooks/marcas/useGetAllMarcas";
 
 const FormProductos = dynamic(() => import("./ui/FormProductos"), {
   loading: () => <LoaderComponents />,
@@ -62,7 +62,7 @@ const PageProductosAdmin = () => {
     proveedor: proveedorId,
   });
 
-  const { data: marcas } = useGetMarcasActivas();
+  const { data: marcas } = useGetAllMarcas(10, 0);
   const { data: categorias } = useGetCategorias();
   const { data: proveedores } = useGetProveedoresActivos();
 
@@ -146,7 +146,7 @@ const PageProductosAdmin = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las marcas</SelectItem>
-              {marcas?.map((marca) => (
+              {marcas?.data.map((marca) => (
                 <SelectItem key={marca.id} value={marca.id.toString()}>
                   {marca.nombre}
                 </SelectItem>

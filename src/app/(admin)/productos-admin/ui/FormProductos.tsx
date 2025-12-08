@@ -17,7 +17,7 @@ import { UnidadMedida } from "@/helpers/data/unidadMedidas";
 import { getUnidadesFraccionamiento } from "@/helpers/funciones/getUnidadesFraccionamiento";
 import useGetCategorias from "@/hooks/categorias/useGetCategorias";
 import useGetTaxesPais from "@/hooks/impuestos/useGetTaxesPais";
-import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
+import useGetAllMarcas from "@/hooks/marcas/useGetAllMarcas";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,7 +37,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
   const queryClient = useQueryClient();
   const [unidadVentaSeleccionada, setUnidadVentaSeleccionada] = useState("");
 
-  const { data: marcasActivas } = useGetMarcasActivas();
+  const { data: marcasActivas } = useGetAllMarcas(10, 0);
   const { data: proveedoresActivos } = useGetProveedoresActivos();
   const { data: categorias } = useGetCategorias();
   const { data: impuestos } = useGetTaxesPais();
@@ -265,7 +265,7 @@ const FormProductos = ({ onSuccess, editSubServicio, isEdit }: Props) => {
             <SelectValue placeholder="Selecciona una marca" />
           </SelectTrigger>
           <SelectContent>
-            {marcasActivas?.map((marca) => (
+            {marcasActivas?.data.map((marca) => (
               <SelectItem key={marca.id} value={marca.id}>
                 {marca.nombre}
               </SelectItem>

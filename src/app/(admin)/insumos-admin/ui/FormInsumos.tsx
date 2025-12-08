@@ -12,9 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { UnidadMedida } from "@/helpers/data/unidadMedidas";
-import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
+import useGetAllMarcas from "@/hooks/marcas/useGetAllMarcas";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -42,7 +41,7 @@ const FormInsumos = ({ onSuccess, editInsumo, isEdit }: Props) => {
     formState: { errors },
   } = useForm<CrearInsumoInterface>();
 
-  const { data: marcas } = useGetMarcasActivas();
+  const { data: marcas } = useGetAllMarcas(10, 0);
   const { data: proveedores } = useGetProveedoresActivos();
 
   useEffect(() => {
@@ -169,7 +168,7 @@ const FormInsumos = ({ onSuccess, editInsumo, isEdit }: Props) => {
               <SelectValue placeholder="Selecciona una marca" />
             </SelectTrigger>
             <SelectContent>
-              {marcas?.map((marca) => (
+              {marcas?.data.map((marca) => (
                 <SelectItem key={marca.id} value={marca.id}>
                   {marca.nombre}
                 </SelectItem>

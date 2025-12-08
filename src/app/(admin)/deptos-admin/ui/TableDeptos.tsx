@@ -71,7 +71,8 @@ const TableDeptos = ({ departamentos, handleEdit }: Props) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {departamentos?.departamentos.length ? (
+          {departamentos?.departamentos &&
+          departamentos?.departamentos.length ? (
             departamentos.departamentos.map((depto) => (
               <TableRow key={depto.id}>
                 <TableCell>

@@ -14,15 +14,6 @@ import { Package, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import TitlePages from "@/components/generics/TitlePages";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
@@ -33,7 +24,6 @@ import {
 import LoaderComponents from "@/components/generics/LoaderComponents";
 import dynamic from "next/dynamic";
 import TableUsersSkeleton from "@/components/generics/SkeletonTable";
-import useGetMarcasActivas from "@/hooks/marcas/useGetMarcasActivas";
 import useGetProveedoresActivos from "@/hooks/proveedores/useGetProveedoresActivos";
 import {
   Select,
@@ -43,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Paginacion from "@/components/generics/Paginacion";
+import useGetAllMarcas from "@/hooks/marcas/useGetAllMarcas";
 
 const FormInsumos = dynamic(() => import("./ui/FormInsumos"), {
   loading: () => <LoaderComponents />,
@@ -67,7 +58,7 @@ const InsumosAdminPage = () => {
 
   const marcaId = selectedMarca === "all" ? "" : selectedMarca;
 
-  const { data: marcas } = useGetMarcasActivas();
+  const { data: marcas } = useGetAllMarcas(10, 0);
   const { data: proveedores } = useGetProveedoresActivos();
 
   const offset = (currentPage - 1) * itemsPerPage;
@@ -128,7 +119,7 @@ const InsumosAdminPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las marcas</SelectItem>
-              {marcas?.map((marca) => (
+              {marcas?.data.map((marca) => (
                 <SelectItem key={marca.id} value={marca.id.toString()}>
                   {marca.nombre}
                 </SelectItem>

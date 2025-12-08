@@ -1,6 +1,5 @@
 "use client";
 import useGetExistenciaProductos from "@/hooks/existencias/useGetExistenciaProductos";
-import useGetProductosDisponibles from "@/hooks/productos/useGetProductosDisponibles";
 import useGetSucursalesPais from "@/hooks/sucursales/useGetSucursalesPais";
 import { useAuthStore } from "@/providers/store/useAuthStore";
 import React, { useState, useEffect } from "react";
@@ -31,7 +30,7 @@ const ExistenciaProductosAdmin = () => {
   const sucursalUsuario = user?.sucursal.id || "";
 
   const [selectedProducto, setSelectedProducto] = useState<string>("");
-  const [selectedSucursal, setSelectedSucursal] = useState<string>("");
+  const [selectedSucursal, setSelectedSucursal] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -48,7 +47,6 @@ const ExistenciaProductosAdmin = () => {
     sucursalId
   );
 
-  const { data: productos } = useGetProductosDisponibles();
   const { data: sucursales } = useGetSucursalesPais(paisId);
 
   const sucursalActual =
@@ -67,6 +65,12 @@ const ExistenciaProductosAdmin = () => {
       (total, item) => total + parseFloat(item.existenciaTotal),
       0
     ) || 0;
+
+  const handleClearFilters = () => {
+    setSelectedProducto("");
+    setSelectedSucursal(sucursalUsuario || "all");
+    setSearchTerm("");
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -94,7 +98,7 @@ const ExistenciaProductosAdmin = () => {
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -106,42 +110,32 @@ const ExistenciaProductosAdmin = () => {
             </div>
 
             <Select
-              value={selectedProducto}
-              onValueChange={setSelectedProducto}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por producto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los productos</SelectItem>
-                {productos?.data.productos.map((producto) => (
-                  <SelectItem key={producto.id} value={producto.id}>
-                    {producto.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
               value={selectedSucursal}
               onValueChange={setSelectedSucursal}
             >
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    selectedSucursal === sucursalUsuario
+                    selectedSucursal === sucursalUsuario && sucursalUsuario
                       ? sucursalActual
                       : "Filtrar por sucursal"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={sucursalUsuario}>
-                  {sucursalActual} (Actual)
-                </SelectItem>
+                {sucursalUsuario && (
+                  <SelectItem value={sucursalUsuario}>
+                    {sucursalActual} (Actual)
+                  </SelectItem>
+                )}
                 <SelectItem value="all">Todas las sucursales</SelectItem>
                 {sucursales
-                  ?.filter((sucursal) => sucursal.id !== sucursalUsuario)
+                  ?.filter(
+                    (sucursal) =>
+                      sucursal.id &&
+                      sucursal.id.trim() !== "" &&
+                      sucursal.id !== sucursalUsuario
+                  )
                   .map((sucursal) => (
                     <SelectItem key={sucursal.id} value={sucursal.id}>
                       {sucursal.nombre}
@@ -150,14 +144,7 @@ const ExistenciaProductosAdmin = () => {
               </SelectContent>
             </Select>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSelectedProducto("");
-                setSelectedSucursal(sucursalUsuario);
-                setSearchTerm("");
-              }}
-            >
+            <Button variant="outline" onClick={handleClearFilters}>
               <Filter className="h-4 w-4 mr-2" />
               Limpiar filtros
             </Button>
@@ -197,7 +184,9 @@ const ExistenciaProductosAdmin = () => {
                     No se encontraron resultados
                   </h3>
                   <p className="text-muted-foreground">
-                    {searchTerm || selectedProducto || selectedSucursal
+                    {searchTerm ||
+                    selectedProducto ||
+                    (selectedSucursal !== "all" && selectedSucursal)
                       ? "Intenta ajustar los filtros de búsqueda"
                       : "No hay datos de existencia disponibles"}
                   </p>
