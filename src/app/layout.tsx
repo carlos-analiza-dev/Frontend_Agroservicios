@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TanStackProvider from "@/providers/TanStackProvider";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Raleway } from "next/font/google";
+import ToastProvider from "@/components/generics/ToastProvider";
 
 const poppins = Raleway({
   subsets: ["latin"],
@@ -28,7 +28,7 @@ export default function RootLayout({
         <TanStackProvider>
           <AuthProvider>
             {children}
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ToastProvider />
           </AuthProvider>
         </TanStackProvider>
       </body>
